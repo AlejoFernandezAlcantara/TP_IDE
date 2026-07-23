@@ -10,4 +10,8 @@
 		<ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Properties\" />
+	</ItemGroup>
+
 </Project>
