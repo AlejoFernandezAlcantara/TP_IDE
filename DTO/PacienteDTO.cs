@@ -3,23 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Model;
+
 
 namespace DTO
 {
     public class PacienteDTO
     {
-        public int NroPaciente { get; private set; }
-        public string Nombre { get; private set; }
-        public string Apellido { get; private set; }
-        public string Direccion { get; private set; }
-        public string Telefono { get; private set; }
-        public string Mail { get; private set; }
-        public int NroDocumento { get; private set; }
-        public EstadoTipoDoc TipoDocumento { get; private set; }
-        public enum EstadoTipoDoc
-        {
-            DNI,
-            Pasaporte
-        }
+        public int NroPaciente { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Apellido { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string Telefono { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

@@ -9,5 +9,10 @@ namespace Data
 {
     public interface IPacienteRepository
     {
+        List<Paciente> GetAll();
+        Paciente? GetByNroPaciente(int nroPaciente);
+        void Add(Paciente paciente);
+        void Update(Paciente paciente);
+        void Delete(int nroPaciente);
     }
 }

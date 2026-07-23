@@ -17,14 +17,12 @@ namespace Domain.Model
         public DateTime? FechaRealizacion { get; set; }
         public string? Resultado { get; set; }
 
-        //FK Paciente
-        public int _pacienteId;
-        public Paciente? _paciente;
+        private int _pacienteId;
+        private Paciente? _paciente;
 
 
-        //FK Odontologo
-        public string _odontologoMatricula;
-        public Odontologo? _odontologo; 
+        private string _odontologoMatricula = string.Empty;
+        private Odontologo? _odontologo;
 
         public enum EstadoReserva
         {

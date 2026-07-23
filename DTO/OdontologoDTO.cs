@@ -4,22 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+using Domain.Model;
+
 namespace DTO
 {
     public class OdontologoDTO
     {
-        public string Matricula { get; private set; }
-        public int NroDocumento { get; private set; }
-        public EstadoTipoDoc TipoDocumento { get; private set; }
-        public string Especialidad { get; private set; }
-        public string Nombre { get; private set; }
-        public string Apellido { get; private set; }
-        public string Email { get; private set; }
-
-        public enum EstadoTipoDoc
-        {
-            DNI,
-            Pasaporte
-        }
+        public string Matricula { get; set; } = string.Empty;
+        public int NroDocumento { get; set; }
+        public EstadoTipoDoc TipoDocumento { get; set; }
+        public string Especialidad { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public string Apellido { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }
