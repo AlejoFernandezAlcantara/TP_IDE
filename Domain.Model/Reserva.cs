@@ -37,16 +37,80 @@ namespace Domain.Model
 
         public Reserva(string obs, float importe, float coseguro)
         {
-
-
-            setObs(obs);
-            setImp(importe);
-            setC(coseguro);
+            SetFecha();
+            SetEst();
+            SetObs(obs);
+            SetImp(importe);
+            SetC(coseguro);
         }
+        public void SetFecha()
+        {
 
+        }
+        public void SetEst()
+        {
+
+        }
+        public void SetObs(string obs)
+        {
+
+        }
+        public void SetImp(float importe)
+        {
+
+        }
+        public void SetC(float coseguro)
+        {
+
+        }
+        public void SetFechaRealizacion(DateTime fecha)
+        {
+
+        }
+        public void SetResultado(string resultado)
+        {
+
+        }
 
 
 
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
