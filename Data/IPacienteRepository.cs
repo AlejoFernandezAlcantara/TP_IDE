@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Model;
 
-namespace DTO
+namespace Data
 {
-    public class Class1
+    public interface IPacienteRepository
     {
     }
 }
