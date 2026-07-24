@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Model
 {
-    public enum EstadoTipoDoc
+    public enum EstadoTipoDoc_enum
     {
         DNI,
         Pasaporte

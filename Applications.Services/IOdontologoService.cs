@@ -5,16 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Model;
 using Data;
+using DTO;
 
 
 namespace Applications.Services
 {
     public interface IOdontologoService
     {
-        List<Odontologo> GetAll();
-        Odontologo? GetByMatricula(string matricula);
-        void Crear(Odontologo odontologo);
-        void Actualizar(Odontologo odontologo);
+        List<OdontologoDTO> GetAll();
+        OdontologoDTO? GetByMatricula(string matricula);
+        void Crear(OdontologoDTO odontologo);
+        void Actualizar(OdontologoDTO odontologo);
         void Eliminar(string matricula);
     }
 }

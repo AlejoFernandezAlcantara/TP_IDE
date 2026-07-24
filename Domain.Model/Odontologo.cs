@@ -11,20 +11,15 @@ namespace Domain.Model
     {
         public string Matricula { get; private set; }
         public int NroDocumento { get; private set; }
-        public EstadoTipoDoc TipoDocumento { get; private set; }
+        public EstadoTipoDoc_enum TipoDocumento { get; private set; }
         public string Especialidad { get; private set; }
         public string Nombre { get; private set; }
         public string Apellido { get; private set; }
 
         public override string Rol => "Odontologo";
 
-        public enum EstadoTipoDoc
-        {
-            DNI,
-            Pasaporte
-        }
 
-        public Odontologo(string matricula, int nroDocumento, EstadoTipoDoc tipoDocumento,
+        public Odontologo(string matricula, int nroDocumento, EstadoTipoDoc_enum tipoDocumento,
                            string especialidad, string nombre, string apellido,
                            string email, string passwordHash)
             : base(email, passwordHash)
@@ -65,7 +60,7 @@ namespace Domain.Model
             NroDocumento = nroDocumento;
         }
 
-        public void SetTipoDoc(EstadoTipoDoc tipoDocumento)
+        public void SetTipoDoc(EstadoTipoDoc_enum tipoDocumento)
         {
             TipoDocumento = tipoDocumento;
         }

@@ -13,7 +13,7 @@ namespace DTO
     {
         public string Matricula { get; set; } = string.Empty;
         public int NroDocumento { get; set; }
-        public EstadoTipoDoc TipoDocumento { get; set; }
+        public EstadoTipoDoc_enum TipoDocumento { get; set; }
         public string Especialidad { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public string Apellido { get; set; } = string.Empty;

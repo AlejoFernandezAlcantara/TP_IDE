@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Model;
 using Data;
+using DTO;
 
 namespace Applications.Services
 {
@@ -17,14 +18,49 @@ namespace Applications.Services
             _repository = repository;
         }
 
-        public List<Paciente> GetAll() => _repository.GetAll();
+        public List<PacienteDTO> GetAll() => _repository.GetAll().Select(ToDto).ToList();
 
-        public Paciente? GetByNroPaciente(int nroPaciente) => _repository.GetByNroPaciente(nroPaciente);
+        public PacienteDTO? GetByNroPaciente(int nroPaciente)
+        {
+            var domain = _repository.GetByNroPaciente(nroPaciente);
+            return domain is null ? null : ToDto(domain);
+        }
 
-        public void Crear(Paciente paciente) => _repository.Add(paciente);
+        public void Crear(PacienteDTO paciente)
+        {
+            var domain = ToDomain(paciente);
+            _repository.Add(domain);
+        }
 
-        public void Actualizar(Paciente paciente) => _repository.Update(paciente);
+        public void Actualizar(PacienteDTO paciente)
+        {
+            var domain = ToDomain(paciente);
+            _repository.Update(domain);
+        }
 
         public void Eliminar(int nroPaciente) => _repository.Delete(nroPaciente);
+
+        private static PacienteDTO ToDto(Paciente p) //mapeo entre DTO y modelo de dominiooo
+            => new PacienteDTO
+            {
+                NroPaciente = p.NroPaciente,
+                Nombre = p.Nombre,
+                Apellido = p.Apellido,
+                Direccion = p.Direccion,
+                Telefono = p.Telefono,
+                Email = p.Email,
+                Password = string.Empty 
+            };
+
+        private static Paciente ToDomain(PacienteDTO dto)
+            => new Paciente(
+                dto.NroPaciente,
+                dto.Nombre,
+                dto.Apellido,
+                dto.Direccion,
+                dto.Telefono,
+                dto.Email,
+                dto.Password ?? string.Empty 
+            );
     }
 }

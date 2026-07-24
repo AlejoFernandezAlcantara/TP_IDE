@@ -27,22 +27,17 @@ namespace WebAPI
             // PacienteEndpoints.cs
             group.MapPost("/", (PacienteDTO dto, IPacienteService service) =>
             {
-                var paciente = new Paciente(
-                    dto.NroPaciente,
-                    dto.Nombre,
-                    dto.Apellido,
-                    dto.Direccion,
-                    dto.Telefono,
-                    dto.Email,
-                    BCrypt.Net.BCrypt.HashPassword(dto.Password)
-                );
-                service.Crear(paciente);
-                return Results.Created($"/api/pacientes/{paciente.NroPaciente}", paciente);
+                // Hashear la contraseña antes de enviarla al servicio (o hacerlo dentro del servicio)
+                dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? string.Empty);
+
+                service.Crear(dto);
+
+                return Results.Created($"/api/pacientes/{dto.NroPaciente}", dto);
             });
 
-            group.MapPut("/", (Paciente paciente, IPacienteService service) =>
+            group.MapPut("/", (PacienteDTO dto, IPacienteService service) =>
             {
-                service.Actualizar(paciente);
+                service.Actualizar(dto);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Paciente"));

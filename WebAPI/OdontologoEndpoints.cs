@@ -1,5 +1,6 @@
 ﻿using Applications.Services;
 using Domain.Model;
+using DTO;
 
 namespace WebAPI
 {
@@ -20,16 +21,16 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            group.MapPost("/", (Odontologo odontologo, IOdontologoService service) =>
+            group.MapPost("/", (OdontologoDTO dto, IOdontologoService service) =>
             {
-                service.Crear(odontologo);
-                return Results.Created($"/api/odontologos/{odontologo.Matricula}", odontologo);
+                service.Crear(dto);
+                return Results.Created($"/api/odontologos/{dto.Matricula}", dto);
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));   // 👈 solo admin
 
-            group.MapPut("/", (Odontologo odontologo, IOdontologoService service) =>
+            group.MapPut("/", (OdontologoDTO    dto, IOdontologoService service) =>
             {
-                service.Actualizar(odontologo);
+                service.Actualizar(dto);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));

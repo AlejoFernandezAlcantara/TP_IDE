@@ -13,7 +13,7 @@ namespace Domain.Model
         public string PasswordHash { get; protected set; }
         public bool Activo { get; protected set; } = true;
 
-        // Cada clase hija define su rol
+        // DEFINICION DE ROLES
         public abstract string Rol { get; }
 
         protected Usuario(string email, string passwordHash)
