@@ -63,7 +63,7 @@ namespace Applications.Services
                 dto.Nombre,
                 dto.Apellido,
                 dto.Email,
-                dto.Password ?? string.Empty
+                dto.Password ?? string.Empty //lo mismo
             );
     }
 }

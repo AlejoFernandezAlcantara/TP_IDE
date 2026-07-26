@@ -11,7 +11,7 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/pacientes").WithTags("Pacientes");
 
-            // Público: cualquiera puede ver la lista (opcional restringir si preferís)
+            // Público (todos ven la lista)
             group.MapGet("/", (IPacienteService service) =>
                 Results.Ok(service.GetAll()))
                 .RequireAuthorization();
@@ -23,11 +23,11 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            // Público: autorregistro. El admin también puede usarlo, sin restricción no hace falta distinguir.
+            // Público
             // PacienteEndpoints.cs
             group.MapPost("/", (PacienteDTO dto, IPacienteService service) =>
             {
-                // Hashear la contraseña antes de enviarla al servicio (o hacerlo dentro del servicio)
+                // Hashear la contraseña antes de enviarla al servicio (o hacerlo dentro del servicio)??
                 dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? string.Empty);
 
                 service.Crear(dto);

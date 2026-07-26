@@ -16,9 +16,5 @@ namespace Domain.Model
 
         public Cara Cara { get; set; }
 
-
-    // Si el rombo tuviera atributos propios (ej: "estado", "observacion"),
-    // también irían acá. En tu diagrama el rombo no muestra atributos propios,
-    // así que esta clase queda solo con las dos FKs.
 }
 }

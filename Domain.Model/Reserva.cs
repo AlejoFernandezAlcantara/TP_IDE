@@ -76,7 +76,6 @@ namespace Domain.Model
             SetObs(obs);
             SetImp(importe);
             SetC(coseguro);
-            //hacer get y set de odontologo y paciente
 
         }
         public void SetFecha()

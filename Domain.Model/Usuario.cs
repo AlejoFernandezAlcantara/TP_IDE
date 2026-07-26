@@ -8,7 +8,7 @@ namespace Domain.Model
 {
     public abstract class Usuario
     {
-        public int Id { get; protected set; }
+        public int Id { get; protected set; } //id manual (hacerlo autoincremental en la base de datos)
         public string Email { get; protected set; }
         public string PasswordHash { get; protected set; }
         public bool Activo { get; protected set; } = true;
