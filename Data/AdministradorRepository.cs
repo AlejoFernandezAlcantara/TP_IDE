@@ -25,7 +25,7 @@ namespace Data
             _administradores.Add(admin);
         }
 
-        public Administrador? GetByEmail(string email) =>
-            _administradores.FirstOrDefault(a => a.Email == email);
+        public async Task<Administrador?> GetByEmailAsync(string email) =>
+            await Task.FromResult(_administradores.FirstOrDefault(a => a.Email == email));
     }
 }

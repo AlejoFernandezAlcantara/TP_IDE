@@ -18,28 +18,28 @@ namespace Applications.Services
             _repository = repository;
         }
 
-        public List<OdontologoDTO> GetAll()
-            => _repository.GetAll().Select(ToDto).ToList();
+        public async Task<List<OdontologoDTO>> GetAllAsync()
+            => (await _repository.GetAllAsync()).Select(ToDto).ToList();
 
-        public OdontologoDTO? GetByMatricula(string matricula)
+        public async Task<OdontologoDTO?> GetByMatriculaAsync(string matricula)
         {
-            var domain = _repository.GetByMatricula(matricula);
+            var domain = await _repository.GetByMatriculaAsync(matricula);
             return domain is null ? null : ToDto(domain);
         }
 
-        public void Crear(OdontologoDTO odontologo)
+        public async Task CrearAsync(OdontologoDTO odontologo)
         {
             var domain = ToDomain(odontologo);
-            _repository.Add(domain);
+            await _repository.AddAsync(domain);
         }
 
-        public void Actualizar(OdontologoDTO odontologo)
+        public async Task ActualizarAsync(OdontologoDTO odontologo)
         {
             var domain = ToDomain(odontologo);
-            _repository.Update(domain);
+            await _repository.AddAsync(domain);
         }
 
-        public void Eliminar(string matricula) => _repository.Delete(matricula);
+        public async Task EliminarAsync(string matricula) => await _repository.DeleteAsync(matricula);
 
         private static OdontologoDTO ToDto(Odontologo o) // Mapeo entre Odontologo y  OdontologoDTO
             => new OdontologoDTO

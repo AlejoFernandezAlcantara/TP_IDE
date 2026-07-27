@@ -18,27 +18,27 @@ namespace Applications.Services
             _repository = repository;
         }
 
-        public List<PacienteDTO> GetAll() => _repository.GetAll().Select(ToDto).ToList();
+        public async Task<List<PacienteDTO>> GetAllAsync() => (await _repository.GetAllAsync()).Select(ToDto).ToList();
 
-        public PacienteDTO? GetByNroPaciente(int nroPaciente)
+        public async Task<PacienteDTO?> GetByNroPacienteAsync(int nroPaciente)
         {
-            var domain = _repository.GetByNroPaciente(nroPaciente);
+            var domain = await _repository.GetByNroPacienteAsync(nroPaciente);
             return domain is null ? null : ToDto(domain);
         }
 
-        public void Crear(PacienteDTO paciente)
+        public async Task CrearAsync(PacienteDTO paciente)
         {
             var domain = ToDomain(paciente);
-            _repository.Add(domain);
+            await _repository.AddAsync(domain);
         }
 
-        public void Actualizar(PacienteDTO paciente)
+        public async Task ActualizarAsync(PacienteDTO paciente)
         {
             var domain = ToDomain(paciente);
-            _repository.Update(domain);
+            await _repository.UpdateAsync(domain);
         }
 
-        public void Eliminar(int nroPaciente) => _repository.Delete(nroPaciente);
+        public async Task EliminarAsync(int nroPaciente) => await _repository.DeleteAsync(nroPaciente);
 
         private static PacienteDTO ToDto(Paciente p) //mapeo entre DTO y modelo de dominiooo
             => new PacienteDTO

@@ -9,10 +9,10 @@ namespace Data
 {
     public interface IPacienteRepository
     {
-        List<Paciente> GetAll();
-        Paciente? GetByNroPaciente(int nroPaciente);
-        void Add(Paciente paciente);
-        void Update(Paciente paciente);
-        void Delete(int nroPaciente);
+        Task<List<Paciente>> GetAllAsync();
+        Task<Paciente?> GetByNroPacienteAsync(int nroPaciente);
+        Task AddAsync(Paciente paciente);
+        Task UpdateAsync(Paciente paciente);
+        Task DeleteAsync(int nroPaciente);
     }
 }

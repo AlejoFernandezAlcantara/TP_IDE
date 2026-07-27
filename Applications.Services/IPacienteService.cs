@@ -12,10 +12,10 @@ namespace Applications.Services
 {
     public interface IPacienteService
     {
-        List<PacienteDTO> GetAll();
-        PacienteDTO? GetByNroPaciente(int nroPaciente);
-        void Crear(PacienteDTO paciente);
-        void Actualizar(PacienteDTO paciente);
-        void Eliminar(int nroPaciente);
+        Task<List<PacienteDTO>> GetAllAsync();
+        Task<PacienteDTO?> GetByNroPacienteAsync(int nroPaciente);
+        Task CrearAsync(PacienteDTO paciente);
+        Task ActualizarAsync(PacienteDTO paciente);
+        Task EliminarAsync(int nroPaciente);
     }
 }

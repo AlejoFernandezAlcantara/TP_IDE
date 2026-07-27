@@ -17,20 +17,15 @@ namespace Domain.Model
         public DateTime? FechaRealizacion { get; set; }
         public string? Resultado { get; set; }
 
+        //FK PACIENTE
         private int _pacienteId;
         private Paciente? _paciente;
 
-
+        //FK ODONTOLOGO
         private string _odontologoMatricula = string.Empty;
         private Odontologo? _odontologo;
 
-        public enum EstadoReserva
-        {
-            Pendiente,
-            Confirmada,
-            Cancelada,
-            Completada
-        }
+        
         //get y set de las 2FK
         public int PacienteId
         {
@@ -113,7 +108,7 @@ namespace Domain.Model
         {
             if (coseguro < 0)
             {
-                throw new ArgumentException("El importe del coseguro no puede ser negativo.");
+                throw new ArgumentException("El coseguro no puede ser negativo.");
             }
             else
             {
@@ -136,10 +131,6 @@ namespace Domain.Model
                 Resultado = resultado;
             }
         }
-
-
-
-
     }
 }
 

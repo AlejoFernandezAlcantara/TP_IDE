@@ -10,6 +10,6 @@ namespace Data
 {
     public interface IAdministradorRepository
     {
-        Administrador? GetByEmail(string email);
+        Task<Administrador?> GetByEmailAsync(string email);
     }
 }

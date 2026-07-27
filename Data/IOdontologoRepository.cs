@@ -9,10 +9,11 @@ namespace Data
 {
     public interface IOdontologoRepository
     {
-        List<Odontologo> GetAll();
-        Odontologo? GetByMatricula(string matricula);
-        void Add(Odontologo odontologo);
-        void Update(Odontologo odontologo);
-        void Delete(string matricula);
+        Task<List<Odontologo>> GetAllAsync();
+        Task<Odontologo?> GetByMatriculaAsync(string matricula);
+        Task AddAsync(Odontologo odontologo);
+        Task UpdateAsync(Odontologo odontologo);
+        Task DeleteAsync(string matricula);
+        
     }
 }

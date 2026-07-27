@@ -25,12 +25,12 @@ namespace Applications.Services
             _administradorRepo = administradorRepo;
         }
 
-        public Usuario? ValidarCredenciales(string email, string password)
+        public async Task<Usuario?> ValidarCredencialesAsync(string email, string password)
         {
             Usuario? usuario =
-                _administradorRepo.GetByEmail(email)
-                ?? (Usuario?)_odontologoRepo.GetAll().FirstOrDefault(o => o.Email == email)
-                ?? _pacienteRepo.GetAll().FirstOrDefault(p => p.Email == email);
+                await _administradorRepo.GetByEmailAsync(email)
+                ?? (Usuario?) (await _odontologoRepo.GetAllAsync()).FirstOrDefault(o => o.Email == email)
+                ?? (await _pacienteRepo.GetAllAsync()).FirstOrDefault(p => p.Email == email);
 
             if (usuario == null)
                 return null;

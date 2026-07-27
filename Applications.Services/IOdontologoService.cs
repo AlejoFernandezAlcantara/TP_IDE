@@ -12,10 +12,10 @@ namespace Applications.Services
 {
     public interface IOdontologoService
     {
-        List<OdontologoDTO> GetAll();
-        OdontologoDTO? GetByMatricula(string matricula);
-        void Crear(OdontologoDTO odontologo);
-        void Actualizar(OdontologoDTO odontologo);
-        void Eliminar(string matricula);
+        Task<List<OdontologoDTO>> GetAllAsync();
+        Task<OdontologoDTO?> GetByMatriculaAsync(string matricula);
+        Task CrearAsync(OdontologoDTO odontologo);
+        Task ActualizarAsync(OdontologoDTO odontologo);
+        Task EliminarAsync(string matricula);
     }
 }
