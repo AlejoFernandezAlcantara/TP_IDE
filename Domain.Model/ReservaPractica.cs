@@ -6,17 +6,13 @@ using System.Threading.Tasks;
 
 namespace Domain.Model
 {
-    public class Turno
+    public class ReservaPractica
     {
-        public int Codigo { get; set; } //ver forma de asignacion de codigo
-        public DateTime FechaHoraInicio { get; set; }
-        public int Duracion { get; set; }
-        public EstadoTurno Estado { get; set; }
+        public string? Observaciones { get; set; }
 
-        // FK DE ODONTOLOGO
-        public string _odontologoMatricula { get; set; }
-        public Odontologo _odontologo { get; set; }
-
+        //FK DE PRACTICA
+        public int _practicaCodigo { get; set; }
+        public Practica _practica { get; set; }
         // FK DE RESERVA
         public int _reservaPacienteId { get; set; }
         public string _reservaOdontologoMatricula { get; set; }
@@ -24,21 +20,20 @@ namespace Domain.Model
         public Reserva _reserva { get; set; }
 
         //GET Y SET DE LAS 2FK
-        public string OdontologoMatricula
+        public int PracticaCodigo
         {
-            get => _odontologo?.Matricula ?? _odontologoMatricula;
-            set => _odontologoMatricula = value;
+            get => _practica?.CodigoPractica ?? _practicaCodigo;
+            set => _practicaCodigo = value;
         }
-
-        public Odontologo? Odontologo
+        public Practica? Practica
         {
-            get => _odontologo;
+            get => _practica;
             set
             {
-                _odontologo = value;
-                if (value != null && _odontologoMatricula != value.Matricula)
+                _practica = value;
+                if (value != null && _practicaCodigo != value.CodigoPractica)
                 {
-                    _odontologoMatricula = value.Matricula; // Sincronizar automáticamente
+                    _practicaCodigo = value.CodigoPractica; // Sincronizar automáticamente
                 }
             }
         }
@@ -71,30 +66,18 @@ namespace Domain.Model
                 }
             }
         }
-        // CONSTRUCTOR
-
-        public Turno(DateTime FechaIni)
+        //CONSTRUCTOR
+        public ReservaPractica(string observaciones)
         {
-            SetCod();
-            SetFechaIni(FechaIni);
-            SetDuracion();
-            SetEstado();
+            SetObservaciones(observaciones);
         }
-    public void SetCod()
+        public void SetObservaciones(string observaciones)
         {
-            Codigo = 0;
-        }
-    public void SetFechaIni(DateTime fecha)
-        {
-            FechaHoraInicio = fecha;
-        }
-    public void SetDuracion()
-        {
-            Duracion = 30;
-        }
-    public void SetEstado()
-        {
-            Estado = EstadoTurno.Disponible;
+            if (string.IsNullOrWhiteSpace(observaciones))
+            {
+                throw new ArgumentException("Las observaciones no pueden estar vacías.");
+            }
+            Observaciones = observaciones;
         }
 
     }

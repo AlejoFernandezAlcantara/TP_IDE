@@ -24,4 +24,11 @@ namespace Domain.Model
         Reservado,
         Cancelado
     }
+    public enum TipoDiente
+    {
+        Incisivo,
+        Canino,
+        Premolar,
+        Molar
+    }
 }

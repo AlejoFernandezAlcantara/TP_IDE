@@ -26,7 +26,7 @@ namespace Domain.Model
         private Odontologo? _odontologo;
 
         
-        //get y set de las 2FK
+        //GET Y SET DE LAS 2FK
         public int PacienteId
         {
             get => _paciente?.NroPaciente ?? _pacienteId;
