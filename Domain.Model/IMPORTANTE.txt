@@ -14,3 +14,13 @@ DIENTECARA
 
 
 FALTA VER QUE USUARIO Y ADMIN FUNCIONEN CORRECTAMENTE
+
+
+Entrega 2: Servicios + Entity Framework + Interfaz Escritorio (Windows Forms) 
+
+Hacer los cambios y agregados necesarios en la arquitectura tomando de referencia la propuesta por la cátedra (en el Ejemplo 2).
+Incorporar persistencia de datos utilizando Microsoft SQL Server y Entity Framework. La base de datos debe autogenerarse en caso de no existir.
+Desarrollar una interfaz de escritorio (Windows Forms), que permita operar los CRUD implementados en la entrega previa. Incluir:
+Pantalla principal (con menú de navegación).
+Formularios para cada entidad.
+Funcionalidad de login/logout.
