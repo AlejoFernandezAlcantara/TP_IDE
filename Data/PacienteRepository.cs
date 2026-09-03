@@ -4,41 +4,62 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Model;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
     public class PacienteRepository : IPacienteRepository
     {
-        private readonly List<Paciente> _pacientes = new();
+        private readonly AppDbContext _context;
 
-        public List<Paciente> GetAll() => _pacientes;
-
-        public Paciente? GetByNroPaciente(int nroPaciente) =>
-            _pacientes.FirstOrDefault(p => p.NroPaciente == nroPaciente);
-
-        public void Add(Paciente paciente)
+        public PacienteRepository(AppDbContext context)
         {
-            if (GetByNroPaciente(paciente.NroPaciente) != null)
-                throw new InvalidOperationException("Ya existe un paciente con ese número.");
-            _pacientes.Add(paciente);
+            _context = context;
         }
 
-        public void Update(Paciente paciente)
+        public async Task<List<Paciente>> GetAllAsync()
         {
-            var existente = GetByNroPaciente(paciente.NroPaciente);
-            if (existente == null)
-                throw new InvalidOperationException("Paciente no encontrado.");
-            _pacientes.Remove(existente);
-            _pacientes.Add(paciente);
+            return await _context.Pacientes.ToListAsync();
         }
 
-        public void Delete(int nroPaciente)
+        public async Task<Paciente?> GetByNroPacienteAsync(int nroPaciente)
         {
-            var existente = GetByNroPaciente(nroPaciente);
+            return await _context.Pacientes
+                .FirstOrDefaultAsync(p => p.NroPaciente == nroPaciente);
+        }
+
+        public async Task AddAsync(Paciente paciente)
+        {
+            _context.Pacientes.Add(paciente);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Paciente paciente)
+        {
+            var existente = await _context.Pacientes
+                .FirstOrDefaultAsync(p => p.NroPaciente == paciente.NroPaciente);
+
             if (existente == null)
                 throw new InvalidOperationException("Paciente no encontrado.");
-            _pacientes.Remove(existente);
+
+            existente.SetNombre(paciente.Nombre);
+            existente.SetApellido(paciente.Apellido);
+            existente.SetDireccion(paciente.Direccion);
+            existente.SetTelefono(paciente.Telefono);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int nroPaciente)
+        {
+            var existente = await _context.Pacientes
+                .FirstOrDefaultAsync(p => p.NroPaciente == nroPaciente);
+
+            if (existente == null)
+                throw new InvalidOperationException("Paciente no encontrado.");
+
+            _context.Pacientes.Remove(existente);
+            await _context.SaveChangesAsync();
         }
     }
 }
