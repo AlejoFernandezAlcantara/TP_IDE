@@ -10,20 +10,27 @@ namespace Data
 {
     public class AppDbContext : DbContext
     {
-         DbSet<Paciente> Pacientes
-        // TODO: DbSet<Odontologo> Odontologos
-        // TODO: DbSet<Administrador> Administradores
+        public DbSet<Paciente> Pacientes { get; set; }
+        public DbSet<Odontologo> Odontologos { get; set; }
+        public DbSet<Administrador> Administradores { get; set; }   
 
         private readonly string _connectionString;
 
         public AppDbContext(string connectionString)
         {
-            // TODO: guardar connectionString en el campo
+            _connectionString = connectionString;
+
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // TODO: si todavía no está configurado, usar UseSqlServer con _connectionString
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(_connectionString); 
+            }
+
+
         }
     }
 }
