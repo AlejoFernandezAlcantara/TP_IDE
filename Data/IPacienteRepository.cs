@@ -4,15 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Model;
+using DTO;
 
-namespace Data
+namespace Applications.Services
 {
-    public interface IPacienteRepository
+    public interface IPacienteService
     {
-        Task<List<Paciente>> GetAllAsync();
-        Task<Paciente?> GetByNroPacienteAsync(int nroPaciente);
-        Task AddAsync(Paciente paciente);
-        Task UpdateAsync(Paciente paciente);
-        Task DeleteAsync(int nroPaciente);
+        Task<List<PacienteDTO>> GetAllAsync();
+
+        Task<PacienteDTO?> GetByNroPacienteAsync(int nroPaciente);
+
+        Task CrearAsync(PacienteDTO paciente);
+
+        Task ActualizarAsync(PacienteDTO paciente);
+
+        Task EliminarAsync(int nroPaciente);
     }
 }

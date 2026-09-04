@@ -8,6 +8,7 @@ namespace Domain.Model
 {
     public class Practica
     {
+        private static int incCodigoPractica = 0;
         public int CodigoPractica { get; set; }
 
         public string Detalle { get; set; }
@@ -15,19 +16,16 @@ namespace Domain.Model
         public float Precio { get; set; }
 
 
-    public Practica(int codigoPractica, string detalle, float precio)
+    public Practica( string detalle, float precio)
         {
-            SetCodigoPractica(codigoPractica);
+            SetCodigoPractica();
             SetDetalle(detalle);
             SetPrecio(precio);
         }
-        public void SetCodigoPractica(int codigoPractica)
+        public void SetCodigoPractica()
         {
-            if (codigoPractica <= 0)
-            {
-                throw new ArgumentException("El código de la práctica debe ser un número positivo.");
-            }
-            CodigoPractica = codigoPractica;
+            incCodigoPractica++;
+            CodigoPractica = incCodigoPractica;
         }
         public void SetDetalle(string detalle)
         {

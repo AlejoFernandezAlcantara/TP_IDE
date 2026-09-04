@@ -2,7 +2,6 @@
 using Domain.Model;
 using DTO;
 
-
 namespace WebAPI
 {
     public static class PacienteEndpoints
@@ -11,40 +10,46 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/pacientes").WithTags("Pacientes");
 
-            // Público (todos ven la lista)
-            group.MapGet("/", (IPacienteService service) =>
-                Results.Ok(service.GetAll()))
+            // Obtener todos
+            group.MapGet("/", async (IPacienteService service) =>
+                Results.Ok(await service.GetAllAsync()))
                 .RequireAuthorization();
 
-            group.MapGet("/{nroPaciente}", (int nroPaciente, IPacienteService service) =>
+            // Obtener por número de paciente
+            group.MapGet("/{nroPaciente}", async (int nroPaciente, IPacienteService service) =>
             {
-                var paciente = service.GetByNroPaciente(nroPaciente);
-                return paciente is null ? Results.NotFound() : Results.Ok(paciente);
+                var paciente = await service.GetByNroPacienteAsync(nroPaciente);
+
+                return paciente is null
+                    ? Results.NotFound()
+                    : Results.Ok(paciente);
             })
             .RequireAuthorization();
 
-            // Público
-            // PacienteEndpoints.cs
-            group.MapPost("/", (PacienteDTO dto, IPacienteService service) =>
+            // Crear paciente
+            group.MapPost("/", async (PacienteDTO dto, IPacienteService service) =>
             {
-                // Hashear la contraseña antes de enviarla al servicio (o hacerlo dentro del servicio)??
                 dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? string.Empty);
 
-                service.Crear(dto);
+                await service.CrearAsync(dto);
 
                 return Results.Created($"/api/pacientes/{dto.NroPaciente}", dto);
             });
 
-            group.MapPut("/", (PacienteDTO dto, IPacienteService service) =>
+            // Actualizar paciente
+            group.MapPut("/", async (PacienteDTO dto, IPacienteService service) =>
             {
-                service.Actualizar(dto);
+                await service.ActualizarAsync(dto);
+
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Paciente"));
 
-            group.MapDelete("/{nroPaciente}", (int nroPaciente, IPacienteService service) =>
+            // Eliminar paciente
+            group.MapDelete("/{nroPaciente}", async (int nroPaciente, IPacienteService service) =>
             {
-                service.Eliminar(nroPaciente);
+                await service.EliminarAsync(nroPaciente);
+
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));

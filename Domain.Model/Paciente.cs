@@ -10,29 +10,41 @@ namespace Domain.Model
 {
     public class Paciente : Usuario
     {
+        private static int incNroPaciente = 0;
         public int NroPaciente { get; private set; }
         public string Nombre { get; private set; }
         public string Apellido { get; private set; }
         public string Direccion { get; private set; }
-        public string Telefono { get; private set; }   //agregar dni y tipo dni
+        public string Telefono { get; private set; }   
+        public int NroDni { get; private set; }
+        public tiposEnumerados  TipoDni { get; private set; }
+
 
         public override string Rol => "Paciente";
 
-        public Paciente(int nroPaciente, string nombre, string apellido, string direccion, string telefono, string email, string passwordHash)
+        public Paciente( string nombre, string apellido, string direccion, string telefono, string email,int nro,tiposEnumerados tipo, string passwordHash)
             : base(email, passwordHash)
         {
-            SetNroPaciente(nroPaciente);
+            SetNroPaciente();
             SetNombre(nombre);
             SetApellido(apellido);
             SetDireccion(direccion);
             SetTelefono(telefono);
+            SetDniTipo(nro, tipo);
+        }
+        public void SetDniTipo(int nro, tiposEnumerados tipo) 
+        {
+            if (nro <= 0)
+                throw new ArgumentException("El número de DNI debe ser mayor a cero.", nameof(nro));
+            NroDni = nro;
+            TipoDni = tipo;
         }
 
-        public void SetNroPaciente(int nroPaciente)
+        public void SetNroPaciente()
         {
-            if (nroPaciente <= 0)
-                throw new ArgumentException("El número de paciente debe ser mayor a cero.", nameof(nroPaciente));
-            NroPaciente = nroPaciente;
+            incNroPaciente++;
+            NroPaciente = incNroPaciente;
+
         }
 
         public void SetNombre(string nombre)

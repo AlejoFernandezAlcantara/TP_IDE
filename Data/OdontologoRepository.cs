@@ -1,43 +1,66 @@
-﻿using System;
+﻿using Domain.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Model;
 
 namespace Data
 {
     public class OdontologoRepository : IOdontologoRepository
     {
-        private readonly List<Odontologo> _odontologos = new();
+        private readonly AppDbContext _context;
 
-        public List<Odontologo> GetAll() => _odontologos;
-
-        public Odontologo? GetByMatricula(string matricula) =>
-            _odontologos.FirstOrDefault(o => o.Matricula == matricula);
-
-        public void Add(Odontologo odontologo)
+        public OdontologoRepository(AppDbContext context)
         {
-            if (GetByMatricula(odontologo.Matricula) != null)
-                throw new InvalidOperationException("Ya existe un odontólogo con esa matrícula.");
-            _odontologos.Add(odontologo);
+            _context = context;
         }
 
-        public void Update(Odontologo odontologo)
+        public async Task<List<Odontologo>> GetAllAsync()
         {
-            var existente = GetByMatricula(odontologo.Matricula);
-            if (existente == null)
-                throw new InvalidOperationException("Odontólogo no encontrado.");
-            _odontologos.Remove(existente);
-            _odontologos.Add(odontologo);
+            return await _context.Odontologos.ToListAsync();
         }
 
-        public void Delete(string matricula)
+        public async Task<Odontologo?> GetByMatriculaAsync(string matricula)
         {
-            var existente = GetByMatricula(matricula);
+            return await _context.Odontologos
+                .FirstOrDefaultAsync(o => o.Matricula == matricula);
+        }
+
+        public async Task AddAsync(Odontologo odontologo)
+        {
+            _context.Odontologos.Add(odontologo);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Odontologo odontologo)
+        {
+            var existente = await _context.Odontologos
+                .FirstOrDefaultAsync(o => o.Matricula == odontologo.Matricula);
+
             if (existente == null)
-                throw new InvalidOperationException("Odontólogo no encontrado.");
-            _odontologos.Remove(existente);
+                throw new InvalidOperationException("Odontologo no encontrado.");
+
+            existente.SetNombre(odontologo.Nombre);
+            existente.SetApellido(odontologo.Apellido);
+            existente.SetNroDoc(odontologo.NroDocumento);
+            existente.SetTipoDoc(odontologo.TipoDocumento);
+            existente.SetEspecialidad(odontologo.Especialidad);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(string matricula)
+        {
+            var existente = await _context.Odontologos
+                .FirstOrDefaultAsync(o => o.Matricula == matricula);
+
+            if (existente == null)
+                throw new InvalidOperationException("Odontologo no encontrado.");
+
+            _context.Odontologos.Remove(existente);
+            await _context.SaveChangesAsync();
         }
     }
 }

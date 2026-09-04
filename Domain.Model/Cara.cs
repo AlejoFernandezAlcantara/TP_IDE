@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace Domain.Model
 {
     public class Cara
-    {
+    {   
+        private static int incIdCara =0;
         public int IdCara { get; set; }
         public string Nombre { get; set; }
         public string Detalle { get; set; }
@@ -19,7 +20,8 @@ namespace Domain.Model
         }
         public void SetIdCara()
         {
-            IdCara = 0;
+            incIdCara++;
+            IdCara = incIdCara;
         }
         public void SetNombre(string nombre)
         {

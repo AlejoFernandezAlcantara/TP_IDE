@@ -14,6 +14,7 @@ namespace Data
         Task AddAsync(Odontologo odontologo);
         Task UpdateAsync(Odontologo odontologo);
         Task DeleteAsync(string matricula);
-        
     }
+
+
 }

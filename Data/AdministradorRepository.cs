@@ -1,31 +1,30 @@
-﻿using System;
+﻿using BCrypt.Net;
+using Domain.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Linq;
 using Domain.Model;
-using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
     public class AdministradorRepository : IAdministradorRepository
     {
-        private readonly List<Administrador> _administradores = new();
+        private readonly AppDbContext _context;
 
-        // Se precarga un único admin al levantar la app
-        public AdministradorRepository()
+        public AdministradorRepository(AppDbContext context)
         {
-            var admin = new Administrador(
-                nombre: "Super",
-                apellido: "Admin",
-                email: "admin@clinica.com",
-                passwordHash: BCrypt.Net.BCrypt.HashPassword("Admin123!")
-            );
-            _administradores.Add(admin);
+            _context = context;
         }
 
-        public async Task<Administrador?> GetByEmailAsync(string email) =>
-            await Task.FromResult(_administradores.FirstOrDefault(a => a.Email == email));
+        public async Task<Administrador?> GetByEmailAsync(string email)
+        {
+            return await _context.Administradores
+                .FirstOrDefaultAsync(a => a.Email == email);
+        }
     }
 }

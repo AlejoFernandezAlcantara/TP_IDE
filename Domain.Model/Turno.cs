@@ -8,7 +8,8 @@ namespace Domain.Model
 {
     public class Turno
     {
-        public int Codigo { get; set; } //ver forma de asignacion de codigo
+        private static int incCodigo = 0;
+        public int Codigo { get; set; } 
         public DateTime FechaHoraInicio { get; set; }
         public int Duracion { get; set; }
         public EstadoTurno Estado { get; set; }
@@ -82,7 +83,8 @@ namespace Domain.Model
         }
     public void SetCod()
         {
-            Codigo = 0;
+            incCodigo++;
+            Codigo = incCodigo;
         }
     public void SetFechaIni(DateTime fecha)
         {

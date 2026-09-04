@@ -40,27 +40,29 @@ namespace Applications.Services
 
         public async Task EliminarAsync(int nroPaciente) => await _repository.DeleteAsync(nroPaciente);
 
-        private static PacienteDTO ToDto(Paciente p) //mapeo entre DTO y modelo de dominiooo
-            => new PacienteDTO
-            {
-                NroPaciente = p.NroPaciente,
-                Nombre = p.Nombre,
-                Apellido = p.Apellido,
-                Direccion = p.Direccion,
-                Telefono = p.Telefono,
-                Email = p.Email,
-                Password = string.Empty 
-            };
+        private static PacienteDTO ToDto(Paciente p)
+      => new PacienteDTO
+      {
+          NroPaciente = p.NroPaciente,
+          Nombre = p.Nombre,
+          Apellido = p.Apellido,
+          NroDni = p.NroDni,
+          TipoDni = p.TipoDni,
+          Direccion = p.Direccion,
+          Telefono = p.Telefono,
+          Email = p.Email,
+          Password = string.Empty
+      };
 
         private static Paciente ToDomain(PacienteDTO dto)
-            => new Paciente(
-                dto.NroPaciente,
-                dto.Nombre,
-                dto.Apellido,
-                dto.Direccion,
-                dto.Telefono,
-                dto.Email,
-                dto.Password ?? string.Empty 
-            );
+    => new Paciente(
+        dto.Nombre,
+        dto.Apellido,
+        dto.Direccion,
+        dto.Telefono,
+        dto.Email,
+        dto.NroDni,
+        dto.TipoDni,
+        dto.Password ?? string.Empty );
     }
 }
