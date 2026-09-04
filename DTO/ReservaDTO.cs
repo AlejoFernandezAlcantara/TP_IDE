@@ -18,17 +18,10 @@ namespace DTO
         public string? Resultado { get; set; }
 
         //FK Paciente
-        public int _pacienteId;
+        public int _pacienteId { get; set; }
         
         //FK Odontologo
-        public string _odontologoMatricula;
+        public string _odontologoMatricula { get; set; }
         
-        public enum EstadoReserva
-        {
-            Pendiente,
-            Confirmada,
-            Cancelada,
-            Completada
-        }
     }
 }
