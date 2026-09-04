@@ -10,34 +10,34 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/odontologos").WithTags("Odontologos");
 
-            group.MapGet("/", (IOdontologoService service) =>
-                Results.Ok(service.GetAll()))
+            group.MapGet("/", async (IOdontologoService service) =>
+                Results.Ok(await service.GetAllAsync()))
                 .RequireAuthorization();
 
-            group.MapGet("/{matricula}", (string matricula, IOdontologoService service) =>
+            group.MapGet("/{matricula}", async (string matricula, IOdontologoService service) =>
             {
-                var odontologo = service.GetByMatricula(matricula);
+                var odontologo = await service.GetByMatriculaAsync(matricula);
                 return odontologo is null ? Results.NotFound() : Results.Ok(odontologo);
             })
             .RequireAuthorization();
 
-            group.MapPost("/", (OdontologoDTO dto, IOdontologoService service) =>
+            group.MapPost("/", async (OdontologoDTO dto, IOdontologoService service) =>
             {
-                service.Crear(dto);
+                await service.CrearAsync(dto);
                 return Results.Created($"/api/odontologos/{dto.Matricula}", dto);
             })
-            .RequireAuthorization(policy => policy.RequireRole("Administrador"));   // 👈 solo admin
+            .RequireAuthorization(policy => policy.RequireRole("Administrador"));
 
-            group.MapPut("/", (OdontologoDTO    dto, IOdontologoService service) =>
+            group.MapPut("/", async (OdontologoDTO dto, IOdontologoService service) =>
             {
-                service.Actualizar(dto);
+                await service.ActualizarAsync(dto);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
 
-            group.MapDelete("/{matricula}", (string matricula, IOdontologoService service) =>
+            group.MapDelete("/{matricula}", async (string matricula, IOdontologoService service) =>
             {
-                service.Eliminar(matricula);
+                await service.EliminarAsync(matricula);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));

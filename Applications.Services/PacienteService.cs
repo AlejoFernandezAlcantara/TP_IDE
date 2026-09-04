@@ -55,7 +55,7 @@ namespace Applications.Services
       };
 
         private static Paciente ToDomain(PacienteDTO dto)
-    => new Paciente(
+        => new Paciente(
         dto.Nombre,
         dto.Apellido,
         dto.Direccion,

@@ -1,57 +1,56 @@
-﻿
-    using Applications.Services;
-    using DTO;
-    using Microsoft.IdentityModel.Tokens;
-    using System.IdentityModel.Tokens.Jwt;
-    using System.Security.Claims;
-    using System.Text;
-    using Domain.Model;
+﻿using Applications.Services;
+using DTO;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Domain.Model;
 
 namespace WebAPI
+{
+    public static class AuthEndpoints
     {
-        public static class AuthEndpoints
+        public static void MapAuthEndpoints(this WebApplication app)
         {
-            public static void MapAuthEndpoints(this WebApplication app)
+            var group = app.MapGroup("/api/auth").WithTags("Auth");
+
+            group.MapPost("/login", async (LoginRequestDTO request, IAuthService authService, IConfiguration config) =>
             {
-                var group = app.MapGroup("/api/auth").WithTags("Auth");
+                var usuario = await authService.ValidarCredencialesAsync(request.Email, request.Password);
+                if (usuario == null)
+                    return Results.Unauthorized();
 
-                group.MapPost("/login", (LoginRequestDTO request, IAuthService authService, IConfiguration config) =>
+                var jwtKey = config["Jwt:Key"]!;
+                var claims = new[]
                 {
-                    var usuario = authService.ValidarCredenciales(request.Email, request.Password);
-                    if (usuario == null)
-                        return Results.Unauthorized();
-
-                    var jwtKey = config["Jwt:Key"]!;
-                    var claims = new[]
-                    {
                     new Claim(ClaimTypes.Email, usuario.Email),
                     new Claim(ClaimTypes.Role, usuario.Rol)
                 };
 
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                    var token = new JwtSecurityToken(
-                        issuer: config["Jwt:Issuer"],
-                        claims: claims,
-                        expires: DateTime.UtcNow.AddMinutes(double.Parse(config["Jwt:ExpiresMinutes"]!)),
-                        signingCredentials: creds);
+                var token = new JwtSecurityToken(
+                    issuer: config["Jwt:Issuer"],
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddMinutes(double.Parse(config["Jwt:ExpiresMinutes"]!)),
+                    signingCredentials: creds);
 
-                    var response = new LoginResponseDTO
+                var response = new LoginResponseDTO
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Nombre = usuario.Rol switch
                     {
-                        Token = new JwtSecurityTokenHandler().WriteToken(token),
-                        Nombre = usuario.Rol switch
-                        {
-                            "Administrador" => ((Administrador)usuario).Nombre,
-                            "Odontologo" => ((Odontologo)usuario).Nombre,
-                            "Paciente" => ((Paciente)usuario).Nombre,
-                            _ => ""
-                        },
-                        Rol = usuario.Rol
-                    };
+                        "Administrador" => ((Administrador)usuario).Nombre,
+                        "Odontologo" => ((Odontologo)usuario).Nombre,
+                        "Paciente" => ((Paciente)usuario).Nombre,
+                        _ => ""
+                    },
+                    Rol = usuario.Rol
+                };
 
-                    return Results.Ok(response);
-                });
-            }
+                return Results.Ok(response);
+            });
         }
     }
+}
