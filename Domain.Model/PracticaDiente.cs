@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Model
 {
-    internal class PracticaDiente
+    public class PracticaDiente
     {
         //FK DE PRACTICA
         public int _practicaCodigo { get; set; }
