@@ -64,15 +64,15 @@ namespace Domain.Model
             }
         }
         //constructor
-        public Reserva(string obs, float importe, float coseguro)
+        public Reserva(string observaciones, float? importe, float? coseguro)
         {
             SetFecha();
             SetEst();
-            SetObs(obs);
+            SetObs(observaciones);
             SetImp(importe);
             SetC(coseguro);
-
         }
+
         public void SetFecha()
         {
             FechaCreacion = DateTime.Now;
@@ -92,9 +92,9 @@ namespace Domain.Model
                 Observaciones = obs; 
             }
         }
-        public void SetImp(float importe)
+        public void SetImp(float? importe)
         {
-            if(importe < 0)
+            if (importe < 0)
             {
                 throw new ArgumentException("El importe no puede ser negativo.");
             }
@@ -102,9 +102,9 @@ namespace Domain.Model
             {
                 Importe = importe;
             }
-
         }
-        public void SetC(float coseguro)
+
+        public void SetC(float? coseguro)
         {
             if (coseguro < 0)
             {

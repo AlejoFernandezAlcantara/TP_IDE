@@ -22,15 +22,15 @@ namespace Domain.Model
 
         public override string Rol => "Paciente";
 
-        public Paciente( string nombre, string apellido, string direccion, string telefono, string email,int nro,tiposEnumerados tipo, string passwordHash)
-            : base(email, passwordHash)
+        public Paciente(string nombre, string apellido, string direccion, string telefono, string email, int nroDni, tiposEnumerados tipoDni, string passwordHash)
+        : base(email, passwordHash)
         {
             SetNroPaciente();
             SetNombre(nombre);
             SetApellido(apellido);
             SetDireccion(direccion);
             SetTelefono(telefono);
-            SetDniTipo(nro, tipo);
+            SetDniTipo(nroDni, tipoDni);
         }
         public void SetDniTipo(int nro, tiposEnumerados tipo) 
         {
@@ -40,6 +40,12 @@ namespace Domain.Model
             TipoDni = tipo;
         }
 
+        public static void InicializarContador(int ultimoNumeroUsado)
+        {
+            incNroPaciente = ultimoNumeroUsado;
+        }
+
+
         public void SetNroPaciente()
         {
             incNroPaciente++;
@@ -47,6 +53,7 @@ namespace Domain.Model
 
         }
 
+        
         public void SetNombre(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre))

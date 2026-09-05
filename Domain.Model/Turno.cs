@@ -74,14 +74,14 @@ namespace Domain.Model
         }
         // CONSTRUCTOR
 
-        public Turno(DateTime FechaIni)
+        public Turno(DateTime fechaHoraInicio)
         {
             SetCod();
-            SetFechaIni(FechaIni);
+            SetFechaIni(fechaHoraInicio);
             SetDuracion();
             SetEstado();
         }
-    public void SetCod()
+        public void SetCod()
         {
             incCodigo++;
             Codigo = incCodigo;

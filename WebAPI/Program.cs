@@ -1,5 +1,6 @@
 using Applications.Services;
 using Data;
+using Domain.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -37,8 +38,11 @@ builder.Services.AddSwaggerGen(options =>
 
 // Repositorios
 // Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core -> Scoped (siguen el ciclo de vida del DbContext)
-builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
+builder.Services.AddScoped<AppDbContext>(sp =>
+    new AppDbContext(builder.Configuration.GetConnectionString("Default")!));
+
 builder.Services.AddScoped<IOdontologoRepository, OdontologoRepository>();
+builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
 builder.Services.AddScoped<IAdministradorRepository, AdministradorRepository>();
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
@@ -69,6 +73,23 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.EnsureCreated();
+
+    if (!context.Administradores.Any())
+    {
+        var admin = new Administrador(
+            nombre: "Super",
+            apellido: "Admin",
+            email: "admin@clinica.com",
+            passwordHash: BCrypt.Net.BCrypt.HashPassword("Admin123!")
+        );
+        context.Administradores.Add(admin);
+        context.SaveChanges();
+    }
+}
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
