@@ -29,6 +29,7 @@ namespace Data
              {
                  optionsBuilder.UseSqlServer(_connectionString); 
              }
+         }
          */
 
         public DbSet<Usuario> Usuarios { get; set; }
