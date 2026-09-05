@@ -9,11 +9,12 @@ namespace Domain.Model
     public class PracticaDiente
     {
         //FK DE PRACTICA
-        public int _practicaCodigo { get; set; }
-        public Practica _practica { get; set; }
+        private int _practicaCodigo;
+        private Practica? _practica;
         //FK DE DIENTE
-        public int _dienteNro { get; set; }  
-        public Diente _diente { get; set; }
+        private int _dienteNro;
+        private Diente? _diente;
+
         //GET Y SET DE LAS 2FK
         public int PracticaCodigo
         {
@@ -49,6 +50,5 @@ namespace Domain.Model
                 }
             }
         }
-
     }
 }

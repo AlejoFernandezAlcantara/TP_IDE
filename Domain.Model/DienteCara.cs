@@ -8,14 +8,12 @@ namespace Domain.Model
 {
     public class DienteCara
     {
-
-
         //FK DE DIENTE
-        public int _dienteNro { get; set; }
-        public Diente _diente { get; set; }
+        private int _dienteNro;
+        private Diente? _diente;
         //FK DE CARA
-        public int _caraId { get; set; }
-        public Cara _cara { get; set; }
+        private int _caraId;
+        private Cara? _cara;
 
         public int DienteNro
         {

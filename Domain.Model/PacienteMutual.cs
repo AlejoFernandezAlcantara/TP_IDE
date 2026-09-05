@@ -10,13 +10,14 @@ namespace Domain.Model
     {
         public int NroAfiliado { get; set; }
         public bool Cubre { get; set; }
+
         //FK MUTUAL
-        public int _mutualCuit { get; set; }
-        public Mutual _mutual { get; set; }
+        private int _mutualCuit;
+        private Mutual? _mutual;
 
         //FK PACIENTE
-        public int _pacienteId { get; set; }
-        public Paciente _paciente { get; set; }
+        private int _pacienteId;
+        private Paciente? _paciente;
 
         //GET Y SET DE LAS 2FK
         public int PacienteId
@@ -54,6 +55,7 @@ namespace Domain.Model
                 }
             }
         }
+
         //CONSTRUCTOR
         public PacienteMutual(int nroAfiliado, bool cubre)
         {

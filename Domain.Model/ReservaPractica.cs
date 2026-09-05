@@ -11,13 +11,13 @@ namespace Domain.Model
         public string? Observaciones { get; set; }
 
         //FK DE PRACTICA
-        public int _practicaCodigo { get; set; }
-        public Practica _practica { get; set; }
+        private int _practicaCodigo;
+        private Practica? _practica;
         // FK DE RESERVA
-        public int _reservaPacienteId { get; set; }
-        public string _reservaOdontologoMatricula { get; set; }
-        public DateTime _reservaFechaCreacion { get; set; }
-        public Reserva _reserva { get; set; }
+        private int _reservaPacienteId;
+        private string _reservaOdontologoMatricula = string.Empty;
+        private DateTime _reservaFechaCreacion;
+        private Reserva? _reserva;
 
         //GET Y SET DE LAS 2FK
         public int PracticaCodigo
@@ -66,6 +66,7 @@ namespace Domain.Model
                 }
             }
         }
+
         //CONSTRUCTOR
         public ReservaPractica(string observaciones)
         {
@@ -79,6 +80,5 @@ namespace Domain.Model
             }
             Observaciones = observaciones;
         }
-
     }
 }

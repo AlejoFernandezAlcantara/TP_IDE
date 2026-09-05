@@ -10,13 +10,13 @@ namespace Domain.Model
     {
         public int NroAfiliado { get; set; }
 
-
         //FK MUTUAL
-        public int _mutualCuit { get; set; }
-        public Mutual _mutual { get; set; }
+        private int _mutualCuit;
+        private Mutual? _mutual;
         //FK ODONTOLOGO
-        public string _odontologoMatricula { get; set; }
-        public Odontologo _odontologo { get; set; }
+        private string _odontologoMatricula = string.Empty;
+        private Odontologo? _odontologo;
+
         //GET Y SET DE LAS 2FK
         public string OdontologoMatricula
         {
@@ -52,6 +52,7 @@ namespace Domain.Model
                 }
             }
         }
+
         public OdontologoMutual(int nroAfiliado)
         {
             SetNroAfiliado(nroAfiliado);

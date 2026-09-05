@@ -9,20 +9,20 @@ namespace Domain.Model
     public class Turno
     {
         private static int incCodigo = 0;
-        public int Codigo { get; set; } 
+        public int Codigo { get; set; }
         public DateTime FechaHoraInicio { get; set; }
         public int Duracion { get; set; }
         public EstadoTurno Estado { get; set; }
 
         // FK DE ODONTOLOGO
-        public string _odontologoMatricula { get; set; }
-        public Odontologo _odontologo { get; set; }
+        private string _odontologoMatricula = string.Empty;
+        private Odontologo? _odontologo;
 
         // FK DE RESERVA
-        public int _reservaPacienteId { get; set; }
-        public string _reservaOdontologoMatricula { get; set; }
-        public DateTime _reservaFechaCreacion { get; set; }
-        public Reserva _reserva { get; set; }
+        private int _reservaPacienteId;
+        private string _reservaOdontologoMatricula = string.Empty;
+        private DateTime _reservaFechaCreacion;
+        private Reserva? _reserva;
 
         //GET Y SET DE LAS 2FK
         public string OdontologoMatricula
@@ -72,8 +72,8 @@ namespace Domain.Model
                 }
             }
         }
-        // CONSTRUCTOR
 
+        // CONSTRUCTOR
         public Turno(DateTime fechaHoraInicio)
         {
             SetCod();
@@ -86,18 +86,17 @@ namespace Domain.Model
             incCodigo++;
             Codigo = incCodigo;
         }
-    public void SetFechaIni(DateTime fecha)
+        public void SetFechaIni(DateTime fecha)
         {
             FechaHoraInicio = fecha;
         }
-    public void SetDuracion()
+        public void SetDuracion()
         {
             Duracion = 30;
         }
-    public void SetEstado()
+        public void SetEstado()
         {
             Estado = EstadoTurno.Disponible;
         }
-
     }
 }
