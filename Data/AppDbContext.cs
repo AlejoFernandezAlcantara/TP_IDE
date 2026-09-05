@@ -32,7 +32,7 @@ namespace Data
          }
          */
 
-        public DbSet<Usuario> Usuarios { get; set; }
+       
         public DbSet<Paciente> Pacientes { get; set; }
         public DbSet<Odontologo> Odontologos { get; set; }
         public DbSet<Administrador> Administradores { get; set; }
@@ -68,25 +68,26 @@ namespace Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ===================== HERENCIA DE USUARIO (TPH) =====================
-            modelBuilder.Entity<Usuario>()
-                .HasKey(u => u.Id);
-
-            modelBuilder.Entity<Usuario>()
-                .Property(u => u.Id)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<Usuario>()
-                .HasDiscriminator<string>("TipoUsuario")
-                .HasValue<Paciente>("Paciente")
-                .HasValue<Odontologo>("Odontologo")
-                .HasValue<Administrador>("Administrador");
+            // ===================== USUARIO / PACIENTE / ODONTOLOGO / ADMINISTRADOR =====================
+            // No mapeamos Usuario como tabla compartida (TPH): EF exige que las claves
+            // (incluidas alternate keys) se configuren en el tipo raíz, y NroPaciente/Matricula
+            // solo existen en los tipos derivados. En cambio, cada tipo concreto tiene su
+            // propia tabla con su propia clave de negocio como Primary Key.
+            // Usuario sigue existiendo en C# como clase base para reutilizar código (Email,
+            // PasswordHash, Rol), pero EF Core la ignora a nivel de base de datos.
+            modelBuilder.Ignore<Usuario>();
 
             modelBuilder.Entity<Paciente>()
-                .HasAlternateKey(p => p.NroPaciente);
+                .HasKey(p => p.NroPaciente);
+            modelBuilder.Entity<Paciente>()
+                .Property(p => p.NroPaciente)
+                .ValueGeneratedNever();
 
             modelBuilder.Entity<Odontologo>()
-                .HasAlternateKey(o => o.Matricula);
+                .HasKey(o => o.Matricula);
+
+            modelBuilder.Entity<Administrador>()
+                .HasKey(a => a.Id);
 
             // ===================== ENTIDADES CON PK PROPIA =====================
             modelBuilder.Entity<Practica>().HasKey(p => p.CodigoPractica);
@@ -94,6 +95,7 @@ namespace Data
             modelBuilder.Entity<Cara>().HasKey(c => c.IdCara);
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
+            modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedNever();
 
             // ===================== RESERVA (clave compuesta) =====================
             modelBuilder.Entity<Reserva>()
@@ -137,12 +139,11 @@ namespace Data
                 .HasPrincipalKey(o => o.Matricula)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Turno>()
-                .HasOne(t => t.Reserva)
-                .WithMany()
-                .HasForeignKey(t => new { t.ReservaPacienteId, t.ReservaOdontologoMatricula, t.ReservaFechaCreacion })
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Nota: el vínculo Turno -> Reserva se deja como columnas simples (sin FK
+            // estricta en la base) porque la clave de Reserva es compuesta y sus
+            // propiedades no son nullable, lo que impide modelarlo como relación
+            // realmente opcional en EF. Se puede revisar más adelante si hace falta.
+            modelBuilder.Entity<Turno>().Ignore(t => t.Reserva);
 
             // ===================== PRACTICADIENTE (Practica <-> Diente) =====================
             modelBuilder.Entity<PracticaDiente>()

@@ -35,15 +35,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Repositorios (en memoria) - Singleton para persistir datos entre requests
-builder.Services.AddSingleton<IOdontologoRepository, OdontologoRepository>();
-builder.Services.AddSingleton<IPacienteRepository, PacienteRepository>();
-builder.Services.AddSingleton<IAdministradorRepository, AdministradorRepository>();
+// Repositorios
+// Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core -> Scoped (siguen el ciclo de vida del DbContext)
+builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
+builder.Services.AddScoped<IOdontologoRepository, OdontologoRepository>();
+builder.Services.AddScoped<IAdministradorRepository, AdministradorRepository>();
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 
 // Servicios
 builder.Services.AddScoped<IOdontologoService, OdontologoService>();
 builder.Services.AddScoped<IPacienteService, PacienteService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IReservaService, ReservaService>();
+builder.Services.AddScoped<ITurnoService, TurnoService>();
 
 // JWT
 var jwtKey = builder.Configuration["Jwt:Key"]!;
@@ -77,6 +82,8 @@ app.UseAuthorization();
 
 app.MapOdontologoEndpoints();
 app.MapPacienteEndpoints();
+app.MapReservaEndpoints();
+app.MapTurnoEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();
