@@ -74,6 +74,7 @@
             dataGridView1.Name = "dataGridView1";
             dataGridView1.Size = new Size(843, 601);
             dataGridView1.TabIndex = 0;
+            dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;  
             // 
             // matriculaDataGridViewTextBoxColumn
             // 
@@ -335,6 +336,7 @@
             Controls.Add(dataGridView1);
             Name = "HomeAdminCRUDOdontologo";
             Text = "Gestion de odontologos";
+            Load += FormCrudOdontologos_Load;   
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)odontologoDTOBindingSource).EndInit();
             ResumeLayout(false);

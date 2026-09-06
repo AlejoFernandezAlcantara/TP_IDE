@@ -29,19 +29,19 @@ namespace Applications.Services
 
         public async Task CrearAsync(OdontologoDTO odontologo)
         {
-            var domain = ToDomain(odontologo);
+            var domain = ToDomain(odontologo, hashearPassword: true);
             await _repository.AddAsync(domain);
         }
 
         public async Task ActualizarAsync(OdontologoDTO odontologo)
         {
-            var domain = ToDomain(odontologo);
-            await _repository.AddAsync(domain);
+            var domain = ToDomain(odontologo, hashearPassword: true);
+            await _repository.UpdateAsync(domain); 
         }
 
         public async Task EliminarAsync(string matricula) => await _repository.DeleteAsync(matricula);
 
-        private static OdontologoDTO ToDto(Odontologo o) // Mapeo entre Odontologo y  OdontologoDTO
+        private static OdontologoDTO ToDto(Odontologo o)
             => new OdontologoDTO
             {
                 Matricula = o.Matricula,
@@ -51,11 +51,16 @@ namespace Applications.Services
                 Nombre = o.Nombre,
                 Apellido = o.Apellido,
                 Email = o.Email,
-                Password = string.Empty  //devuelve vacio por seguridad
+                Password = string.Empty 
             };
 
-        private static Odontologo ToDomain(OdontologoDTO dto)
-            => new Odontologo(
+        private static Odontologo ToDomain(OdontologoDTO dto, bool hashearPassword)
+        {
+            var passwordHash = hashearPassword
+                ? BCrypt.Net.BCrypt.HashPassword(dto.Password ?? string.Empty)
+                : dto.Password ?? string.Empty;
+
+            return new Odontologo(
                 dto.Matricula,
                 dto.NroDocumento,
                 dto.TipoDocumento,
@@ -63,7 +68,8 @@ namespace Applications.Services
                 dto.Nombre,
                 dto.Apellido,
                 dto.Email,
-                dto.Password ?? string.Empty //lo mismo
+                passwordHash
             );
+        }
     }
 }

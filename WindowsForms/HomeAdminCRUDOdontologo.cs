@@ -1,14 +1,9 @@
-﻿
-using Domain.Model;
+﻿using Domain.Model;
 using DTO;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,7 +15,8 @@ namespace WindowsForms
         {
             BaseAddress = new Uri("http://localhost:5232/api/")
         };
-        private int _idSeleccionado;
+        private string? _matriculaSeleccionada;
+
         public HomeAdminCRUDOdontologo()
         {
             InitializeComponent();
@@ -35,27 +31,28 @@ namespace WindowsForms
         {
             await CargarOdontologos();
         }
+
         private async Task CargarOdontologos()
         {
             var lista = await _client.GetFromJsonAsync<List<OdontologoDTO>>("odontologos");
             dataGridView1.DataSource = lista;
-            dataGridView1.Columns["Id"].Visible = false; // ocultás el id
         }
+
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
         {
             if (dataGridView1.SelectedRows.Count == 0) return;
 
-            var fila = dataGridView1.SelectedRows[0];
+            if (dataGridView1.SelectedRows[0].DataBoundItem is not OdontologoDTO odontologo) return;
 
-            _idSeleccionado = Convert.ToInt32(fila.Cells["Id"].Value);
+            _matriculaSeleccionada = odontologo.Matricula;
 
-            textNombre.Text = fila.Cells["Nombre"].Value?.ToString();
-            textApellido.Text = fila.Cells["Apellido"].Value?.ToString();
-            textEmail.Text = fila.Cells["Email"].Value?.ToString();
-            textMatricula.Text = fila.Cells["Matricula"].Value?.ToString();
-            textEspecialidad.Text = fila.Cells["Especialidad"].Value?.ToString();
-            textNroDocumento.Text = fila.Cells["NroDocumento"].Value?.ToString();
-            cmbTipoDocumento.SelectedItem = fila.Cells["TipoDocumento"].Value;
+            textNombre.Text = odontologo.Nombre;
+            textApellido.Text = odontologo.Apellido;
+            textEmail.Text = odontologo.Email;
+            textMatricula.Text = odontologo.Matricula;
+            textEspecialidad.Text = odontologo.Especialidad;
+            textNroDocumento.Text = odontologo.NroDocumento.ToString();
+            cmbTipoDocumento.SelectedItem = odontologo.TipoDocumento;
         }
 
         private async void buttonAdd_Click(object sender, EventArgs e)
@@ -68,7 +65,8 @@ namespace WindowsForms
                 Matricula = textMatricula.Text,
                 Especialidad = textEspecialidad.Text,
                 NroDocumento = Convert.ToInt32(textNroDocumento.Text),
-                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem
+                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
+                Password = textContraseña.Text
             };
 
             var response = await _client.PostAsJsonAsync("odontologos", nuevo);
@@ -88,7 +86,7 @@ namespace WindowsForms
 
         private async void buttonEdit_Click(object sender, EventArgs e)
         {
-            if (_idSeleccionado == 0)
+            if (string.IsNullOrEmpty(_matriculaSeleccionada))
             {
                 MessageBox.Show("Seleccioná un odontólogo primero.");
                 return;
@@ -102,10 +100,11 @@ namespace WindowsForms
                 Matricula = textMatricula.Text,
                 Especialidad = textEspecialidad.Text,
                 NroDocumento = Convert.ToInt32(textNroDocumento.Text),
-                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem
+                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
+                Password = textContraseña.Text
             };
 
-            var response = await _client.PutAsJsonAsync($"odontologos/{_idSeleccionado}", editado);
+            var response = await _client.PutAsJsonAsync("odontologos", editado);
 
             if (response.IsSuccessStatusCode)
             {
@@ -115,13 +114,13 @@ namespace WindowsForms
             else
             {
                 var detalle = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Error al añadir el odontólogo.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
+                MessageBox.Show($"Error al editar el odontólogo.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
             }
         }
 
         private async void buttonDelete_Click(object sender, EventArgs e)
         {
-            if (_idSeleccionado == 0)
+            if (string.IsNullOrEmpty(_matriculaSeleccionada))
             {
                 MessageBox.Show("Seleccioná un odontólogo primero.");
                 return;
@@ -135,14 +134,14 @@ namespace WindowsForms
 
             if (confirmar == DialogResult.Yes)
             {
-                var response = await _client.DeleteAsync($"odontologos/{_idSeleccionado}");
+                var response = await _client.DeleteAsync($"odontologos/{_matriculaSeleccionada}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     await CargarOdontologos();
                     MostrarMensajeExito();
                     LimpiarCampos();
-                    _idSeleccionado = 0;
+                    _matriculaSeleccionada = null;
                 }
                 else
                 {
@@ -155,7 +154,6 @@ namespace WindowsForms
         {
             this.Close();
         }
-
 
         private async void MostrarMensajeExito()
         {
@@ -182,12 +180,11 @@ namespace WindowsForms
             textMatricula.Text = string.Empty;
             textEspecialidad.Text = string.Empty;
             textNroDocumento.Text = string.Empty;
+            textContraseña.Text = string.Empty;   
             cmbTipoDocumento.SelectedIndex = -1;
         }
-
         private void labelAction_Click(object sender, EventArgs e)
         {
-
         }
     }
 }
