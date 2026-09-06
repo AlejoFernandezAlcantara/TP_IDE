@@ -24,12 +24,12 @@ namespace WindowsForms
         public HomeAdminCRUDOdontologo()
         {
             InitializeComponent();
+            cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
         }
 
         private async void FormCrudOdontologos_Load(object sender, EventArgs e)
         {
             await CargarOdontologos();
-            cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
         }
         private async Task CargarOdontologos()
         {

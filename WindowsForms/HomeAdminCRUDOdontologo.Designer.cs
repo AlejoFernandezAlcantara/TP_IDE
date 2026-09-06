@@ -292,7 +292,6 @@
             // cmbTipoDocumento
             // 
             cmbTipoDocumento.FormattingEnabled = true;
-            cmbTipoDocumento.Items.AddRange(new object[] { "DNI", "Pasaporte" });
             cmbTipoDocumento.Location = new Point(849, 22);
             cmbTipoDocumento.Name = "cmbTipoDocumento";
             cmbTipoDocumento.Size = new Size(269, 23);
