@@ -183,8 +183,5 @@ namespace WindowsForms
             textContraseña.Text = string.Empty;   
             cmbTipoDocumento.SelectedIndex = -1;
         }
-        private void labelAction_Click(object sender, EventArgs e)
-        {
-        }
     }
 }
