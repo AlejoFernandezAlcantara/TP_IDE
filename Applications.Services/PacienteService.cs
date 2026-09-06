@@ -34,10 +34,27 @@ namespace Applications.Services
 
         public async Task ActualizarAsync(PacienteDTO paciente)
         {
-            var domain = ToDomain(paciente);
-            await _repository.UpdateAsync(domain);
-        }
+            var existente = await _repository.GetByNroPacienteAsync(paciente.NroPaciente);
+            if (existente is null)
+                throw new Exception("Paciente no encontrado.");
 
+            string? passwordHasheado = null;
+            if (!string.IsNullOrEmpty(paciente.Password))
+                passwordHasheado = BCrypt.Net.BCrypt.HashPassword(paciente.Password);
+
+            existente.Actualizar(
+                paciente.Nombre,
+                paciente.Apellido,
+                paciente.Direccion,
+                paciente.Telefono,
+                paciente.NroDni,
+                paciente.TipoDni,
+                paciente.Email,
+                passwordHasheado
+            );
+
+            await _repository.UpdateAsync(existente);
+        }
         public async Task EliminarAsync(int nroPaciente) => await _repository.DeleteAsync(nroPaciente);
 
         private static PacienteDTO ToDto(Paciente p)

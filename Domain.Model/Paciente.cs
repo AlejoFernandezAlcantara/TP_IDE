@@ -11,13 +11,13 @@ namespace Domain.Model
     public class Paciente : Usuario
     {
         private static int incNroPaciente = 0;
-        public int NroPaciente { get; private set; }
-        public string Nombre { get; private set; }
-        public string Apellido { get; private set; }
-        public string Direccion { get; private set; }
-        public string Telefono { get; private set; }   
-        public int NroDni { get; private set; }
-        public tiposEnumerados  TipoDni { get; private set; }
+        public int NroPaciente { get;  set; }
+        public string Nombre { get;  set; }
+        public string Apellido { get;  set; }
+        public string Direccion { get;  set; }
+        public string Telefono { get;  set; }   
+        public int NroDni { get;  set; }
+        public tiposEnumerados  TipoDni { get;  set; }
 
 
         public override string Rol => "Paciente";
@@ -80,6 +80,22 @@ namespace Domain.Model
             if (string.IsNullOrWhiteSpace(telefono))
                 throw new ArgumentException("El teléfono no puede ser nulo o vacío.", nameof(telefono));
             Telefono = telefono;
+        }
+        public void Actualizar(string nombre, string apellido, string direccion,
+                       string telefono, int nroDni, tiposEnumerados tipoDni,
+                       string? email = null, string? passwordHash = null)
+        {
+            SetNombre(nombre);
+            SetApellido(apellido);
+            SetDireccion(direccion);
+            SetTelefono(telefono);
+            SetDniTipo(nroDni, tipoDni);
+
+            if (!string.IsNullOrEmpty(email))
+                Email = email;
+
+            if (!string.IsNullOrEmpty(passwordHash))
+                PasswordHash = passwordHash; // ya viene hasheado desde el servicio
         }
     }
 }
