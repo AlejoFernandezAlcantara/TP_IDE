@@ -34,11 +34,11 @@
             // lblBienvenida
             // 
             lblBienvenida.AutoSize = true;
-            lblBienvenida.Location = new Point(370, 30);
+            lblBienvenida.Location = new Point(315, 33);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(38, 15);
+            lblBienvenida.Size = new Size(156, 15);
             lblBienvenida.TabIndex = 0;
-            lblBienvenida.Text = "label1";
+            lblBienvenida.Text = "HomePaciente en desarrollo";
             // 
             // HomePaciente
             // 

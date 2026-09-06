@@ -34,11 +34,11 @@
             // lblBienvenida
             // 
             lblBienvenida.AutoSize = true;
-            lblBienvenida.Location = new Point(350, 66);
+            lblBienvenida.Location = new Point(300, 29);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(38, 15);
+            lblBienvenida.Size = new Size(176, 15);
             lblBienvenida.TabIndex = 0;
-            lblBienvenida.Text = "label1";
+            lblBienvenida.Text = "HomeOdontologo en desarrollo";
             // 
             // HomeOdontologo
             // 
