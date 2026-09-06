@@ -51,7 +51,7 @@ namespace WindowsForms
             textMatricula.Text = fila.Cells["Matricula"].Value?.ToString();
             textEspecialidad.Text = fila.Cells["Especialidad"].Value?.ToString();
             textNroDocumento.Text = fila.Cells["NroDocumento"].Value?.ToString();
-            cmbTipoDocumento.SelectedItem = fila.Cells["TipoDocumento"].Value?.ToString();
+            cmbTipoDocumento.SelectedItem = fila.Cells["TipoDocumento"].Value;
         }
 
         private async void buttonAdd_Click(object sender, EventArgs e)
@@ -64,7 +64,7 @@ namespace WindowsForms
                 Matricula = textMatricula.Text,
                 Especialidad = textEspecialidad.Text,
                 NroDocumento = Convert.ToInt32(textNroDocumento.Text),
-                TipoDocumento = Enum.Parse<tiposEnumerados>(cmbTipoDocumento.Text)
+                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem
             };
 
             var response = await _client.PostAsJsonAsync("odontologos", nuevo);
@@ -97,7 +97,7 @@ namespace WindowsForms
                 Matricula = textMatricula.Text,
                 Especialidad = textEspecialidad.Text,
                 NroDocumento = Convert.ToInt32(textNroDocumento.Text),
-                TipoDocumento = Enum.Parse<tiposEnumerados>(cmbTipoDocumento.Text)
+                TipoDocumento = (tiposEnumerados)cmbTipoDocumento.SelectedItem
             };
 
             var response = await _client.PutAsJsonAsync($"odontologos/{_idSeleccionado}", editado);
