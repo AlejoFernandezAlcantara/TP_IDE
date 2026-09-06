@@ -2,48 +2,31 @@ using Data;
 using Domain.Model;
 using Microsoft.EntityFrameworkCore;
 
+using WindowsForms.Auth;
+
 namespace WindowsForms
 {
     internal static class Program
     {
-        public static string ConnectionString =
-            "Server=(localdb)\\MSSQLLocalDB;Database=ClinicaOdontologicaDB;Trusted_Connection=True;TrustServerCertificate=True;";
-
         [STAThread]
         static void Main()
         {
             ApplicationConfiguration.Initialize();
 
-            using var context = new AppDbContext(ConnectionString);
+            AuthServiceProvider.Register(new AuthService());
 
-            InicializarBaseDeDatos(context);
-            InicializarContadorPacientes(context);
-
-            Application.Run(new Form1());
+            Task.Run(async () => await MainAsync()).GetAwaiter().GetResult();
         }
 
-        private static void InicializarBaseDeDatos(AppDbContext context)
+        static async Task MainAsync()
         {
-            context.Database.EnsureCreated();
+            var authService = AuthServiceProvider.Instance;
 
-            if (!context.Administradores.Any())
+            using var loginForm = new LoginForm();
+            if (loginForm.ShowDialog() == DialogResult.OK)
             {
-                var admin = new Administrador(
-                    nombre: "Super",
-                    apellido: "Admin",
-                    email: "admin@clinica.com",
-                    passwordHash: BCrypt.Net.BCrypt.HashPassword("Admin123!")
-                );
-
-                context.Administradores.Add(admin);
-                context.SaveChanges();
+                Application.Run(new Home());
             }
-        }
-
-        private static void InicializarContadorPacientes(AppDbContext context)
-        {
-            var maximo = context.Pacientes.Max(p => (int?)p.NroPaciente) ?? 0;
-            Paciente.InicializarContador(maximo);
         }
     }
 }
