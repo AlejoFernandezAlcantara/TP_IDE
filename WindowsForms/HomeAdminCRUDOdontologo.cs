@@ -25,6 +25,10 @@ namespace WindowsForms
         {
             InitializeComponent();
             cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
+
+            var token = WindowsForms.Auth.AuthServiceProvider.Instance.GetTokenAsync().Result;
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
 
         private async void FormCrudOdontologos_Load(object sender, EventArgs e)
@@ -77,7 +81,8 @@ namespace WindowsForms
             }
             else
             {
-                MessageBox.Show("Error al añadir el odontólogo.");
+                var detalle = await response.Content.ReadAsStringAsync();
+                MessageBox.Show($"Error al añadir el odontólogo.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
             }
         }
 
