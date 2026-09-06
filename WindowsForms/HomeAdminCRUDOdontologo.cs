@@ -150,14 +150,14 @@ namespace WindowsForms
             this.Close();
         }
 
-        
+
         private async void MostrarMensajeExito()
         {
             labelAction.Text = "Acción ejecutada con éxito";
             labelAction.ForeColor = Color.Green;
             labelAction.Visible = true;
 
-            await Task.Delay(3000); 
+            await Task.Delay(3000);
 
             for (int i = 255; i >= 0; i -= 5)
             {
@@ -179,6 +179,9 @@ namespace WindowsForms
             cmbTipoDocumento.SelectedIndex = -1;
         }
 
-       
+        private void labelAction_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

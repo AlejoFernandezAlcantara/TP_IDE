@@ -300,11 +300,11 @@
             // labelAction
             // 
             labelAction.AutoSize = true;
-            labelAction.Location = new Point(916, 532);
+            labelAction.BackColor = SystemColors.ButtonHighlight;
+            labelAction.Location = new Point(974, 551);
             labelAction.Name = "labelAction";
-            labelAction.Size = new Size(125, 15);
+            labelAction.Size = new Size(0, 15);
             labelAction.TabIndex = 22;
-            labelAction.Text = "Resultado de la acción";
             // 
             // HomeAdminCRUDOdontologo
             // 
@@ -334,7 +334,7 @@
             Controls.Add(buttonAdd);
             Controls.Add(dataGridView1);
             Name = "HomeAdminCRUDOdontologo";
-            Text = "Form1";
+            Text = "Gestion de odontologos";
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)odontologoDTOBindingSource).EndInit();
             ResumeLayout(false);
