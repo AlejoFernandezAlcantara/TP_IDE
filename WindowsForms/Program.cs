@@ -1,6 +1,6 @@
-using Data;
+
 using Domain.Model;
-using Microsoft.EntityFrameworkCore;
+
 
 using WindowsForms.Auth;
 
@@ -23,9 +23,23 @@ namespace WindowsForms
             var authService = AuthServiceProvider.Instance;
 
             using var loginForm = new LoginForm();
+
             if (loginForm.ShowDialog() == DialogResult.OK)
             {
-                Application.Run(new Home());
+                Form? home = Sesion.Rol switch
+                {
+                    "Administrador" => new HomeAdmin(),
+                    "Paciente" => new HomePaciente(),
+                    "Odontologo" => new HomeOdontologo(),
+                    _ => null
+                };
+
+                if (home != null)
+                {
+                    Application.Run(home);
+                }
+                else
+                    MessageBox.Show($"Rol no reconocido: {Sesion.Rol}");
             }
         }
     }
