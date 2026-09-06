@@ -81,14 +81,15 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(606, 516);
+            ClientSize = new Size(577, 516);
             Controls.Add(lblBienvenida);
             Controls.Add(buttonCerrarSesion);
             Controls.Add(buttonOdontologos);
             Controls.Add(ButtonPacientes);
             Name = "HomeAdmin";
             Text = "Clínica Odontológica - Administrador";
-            Load += lblBienvenida_Load;
+            this.Load += new EventHandler(this.HomeAdmin_Load);
+            this.Resize += new EventHandler(this.HomeAdmin_Resize);
             ResumeLayout(false);
             PerformLayout();
         }

@@ -102,7 +102,7 @@
             Controls.Add(txtEmail);
             Controls.Add(label1);
             Name = "LoginForm";
-            Text = "LoginForm";
+            Text = "Iniciar Sesión";
             Load += LoginForm_Load;
             ResumeLayout(false);
             PerformLayout();
