@@ -109,7 +109,8 @@ namespace WindowsForms
             }
             else
             {
-                MessageBox.Show("Error al editar el odontólogo.");
+                var detalle = await response.Content.ReadAsStringAsync();
+                MessageBox.Show($"Error al añadir el odontólogo.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
             }
         }
 

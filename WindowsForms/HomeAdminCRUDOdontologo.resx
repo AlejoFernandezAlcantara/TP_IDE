@@ -120,10 +120,7 @@
   <metadata name="odontologoDTOBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-<<<<<<< HEAD
-=======
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>25</value>
   </metadata>
->>>>>>> 6574ca94f2310cc9fb4dcf2945e0d5988123a694
 </root>
