@@ -1,33 +1,5 @@
 ﻿
-CAMBIOS PENDIENTES EN LAS CLASES: (CAMBIAR PARA ENTREGA 3 LAS CLASES PARA QUE SE CORRESPONDA AL DER)
-PACIENTE --
-ODONTOLOGO --
-TURNO --
-RESERVA -- 
-PRACTICA 
-RESERVAPRACTICA
-MUTUAL
-PACIENTEMUTUAL
-ODONTOLOGOMUTUAL
-DIENTE -> VER TIPOS DE DIENTES EN TIPOS ENUMERADOS
-PRACTICADIENTE -> VER SI FALTA PONER ALGUNA OBSERVACION O ALGO
-CARA 
-DIENTECARA
-USUARIO --
-ADMIN --
+SuperAdmin dado de alta harckodeado
 
-PENDIENTES:
-IMPLEMENTAR  LAS INTERFACES DE RESERVAS Y TURNOS EN DATA, IMPLIMENTARLAS EN LA CAPA DE SERVICIOS Y AGREGARLAS EN LOS ENDPOINTS---- ya esta
-IMPLEMENTAR EL WINDOWS FORMS PARA PODER OPERAR LOS CRUD DE TODAS LAS 4 ENTIDADES IMPLEMENTADAS, INCLUIDO EL LOGIN Y LOGOUT
-
-
-
-
-Entrega 2: Servicios + Entity Framework + Interfaz Escritorio (Windows Forms) 
-
-Hacer los cambios y agregados necesarios en la arquitectura tomando de referencia la propuesta por la cátedra (en el Ejemplo 2).
-Incorporar persistencia de datos utilizando Microsoft SQL Server y Entity Framework. La base de datos debe autogenerarse en caso de no existir.
-Desarrollar una interfaz de escritorio (Windows Forms), que permita operar los CRUD implementados en la entrega previa. Incluir:
-Pantalla principal (con menú de navegación).
-Formularios para cada entidad.
-Funcionalidad de login/logout.
+email: "admin@clinica.com"
+passwordHash: "Admin123!"
