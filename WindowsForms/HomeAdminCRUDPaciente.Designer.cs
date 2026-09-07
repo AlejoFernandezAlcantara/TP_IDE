@@ -38,6 +38,8 @@
             buttonEdit = new Button();
             buttonAdd = new Button();
             dataGridView1 = new DataGridView();
+            pacienteDTOBindingSource = new BindingSource(components);
+            lblNroPaciente = new Label();
             nroPacienteDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             nombreDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             apellidoDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
@@ -46,269 +48,288 @@
             direccionDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             telefonoDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             emailDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
-            passwordDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
-            pacienteDTOBindingSource = new BindingSource(components);
-            lblNroPaciente = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pacienteDTOBindingSource).BeginInit();
             SuspendLayout();
-
+            // 
             // labelAction
+            // 
+            labelAction.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelAction.AutoSize = true;
             labelAction.BackColor = SystemColors.ButtonHighlight;
             labelAction.Location = new Point(1019, 555);
             labelAction.Name = "labelAction";
             labelAction.Size = new Size(0, 15);
             labelAction.TabIndex = 44;
-            labelAction.Click += new EventHandler(labelAction_Click);
-
+            labelAction.Click += labelAction_Click;
+            // 
             // cmbTipoDocumento
+            // 
+            cmbTipoDocumento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             cmbTipoDocumento.FormattingEnabled = true;
             cmbTipoDocumento.Location = new Point(948, 19);
             cmbTipoDocumento.Name = "cmbTipoDocumento";
             cmbTipoDocumento.Size = new Size(269, 23);
             cmbTipoDocumento.TabIndex = 43;
-
+            // 
             // label5
+            // 
+            label5.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label5.AutoSize = true;
             label5.Location = new Point(948, 317);
             label5.Name = "label5";
             label5.Size = new Size(67, 15);
             label5.TabIndex = 42;
             label5.Text = "Contraseña";
-
+            // 
             // textContraseña
+            // 
+            textContraseña.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textContraseña.Location = new Point(948, 335);
             textContraseña.Name = "textContraseña";
             textContraseña.Size = new Size(269, 23);
             textContraseña.TabIndex = 41;
             textContraseña.UseSystemPasswordChar = true;
-
+            // 
             // label6
+            // 
+            label6.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label6.AutoSize = true;
             label6.Location = new Point(948, 273);
             label6.Name = "label6";
             label6.Size = new Size(36, 15);
             label6.TabIndex = 40;
             label6.Text = "Email";
-
+            // 
             // textEmail
+            // 
+            textEmail.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textEmail.Location = new Point(948, 291);
             textEmail.Name = "textEmail";
             textEmail.Size = new Size(269, 23);
             textEmail.TabIndex = 39;
-
+            // 
             // label7
+            // 
+            label7.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label7.AutoSize = true;
             label7.Location = new Point(948, 229);
             label7.Name = "label7";
             label7.Size = new Size(53, 15);
             label7.TabIndex = 38;
             label7.Text = "Teléfono";
-
+            // 
             // label8
+            // 
+            label8.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label8.AutoSize = true;
             label8.Location = new Point(948, 182);
             label8.Name = "label8";
             label8.Size = new Size(57, 15);
             label8.TabIndex = 37;
             label8.Text = "Dirección";
-
+            // 
             // textTelefono
+            // 
+            textTelefono.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textTelefono.Location = new Point(948, 247);
             textTelefono.Name = "textTelefono";
             textTelefono.Size = new Size(269, 23);
             textTelefono.TabIndex = 36;
-
+            // 
             // textDireccion
+            // 
+            textDireccion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textDireccion.Location = new Point(948, 200);
             textDireccion.Name = "textDireccion";
             textDireccion.Size = new Size(269, 23);
             textDireccion.TabIndex = 35;
-
+            // 
             // label4
+            // 
+            label4.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label4.AutoSize = true;
             label4.Location = new Point(948, 136);
             label4.Name = "label4";
             label4.Size = new Size(51, 15);
             label4.TabIndex = 34;
             label4.Text = "Nombre";
-
+            // 
             // textNombre
+            // 
+            textNombre.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textNombre.Location = new Point(948, 154);
             textNombre.Name = "textNombre";
             textNombre.Size = new Size(269, 23);
             textNombre.TabIndex = 33;
-
+            // 
             // label3
+            // 
+            label3.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label3.AutoSize = true;
             label3.Location = new Point(948, 92);
             label3.Name = "label3";
             label3.Size = new Size(51, 15);
             label3.TabIndex = 32;
             label3.Text = "Apellido";
-
+            // 
             // textApellido
+            // 
+            textApellido.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textApellido.Location = new Point(948, 110);
             textApellido.Name = "textApellido";
             textApellido.Size = new Size(269, 23);
             textApellido.TabIndex = 31;
-
+            // 
             // label2
+            // 
+            label2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label2.AutoSize = true;
             label2.Location = new Point(948, 48);
             label2.Name = "label2";
             label2.Size = new Size(108, 15);
             label2.TabIndex = 30;
             label2.Text = "Nro de documento";
-
+            // 
             // label1
+            // 
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label1.AutoSize = true;
             label1.Location = new Point(948, 1);
             label1.Name = "label1";
             label1.Size = new Size(113, 15);
             label1.TabIndex = 29;
             label1.Text = "Tipo de Documento";
-
+            // 
             // textNroDni
+            // 
+            textNroDni.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textNroDni.Location = new Point(948, 66);
             textNroDni.Name = "textNroDni";
             textNroDni.Size = new Size(269, 23);
             textNroDni.TabIndex = 28;
-
+            // 
             // buttonReturn
+            // 
+            buttonReturn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonReturn.Location = new Point(980, 503);
             buttonReturn.Name = "buttonReturn";
             buttonReturn.Size = new Size(192, 23);
             buttonReturn.TabIndex = 27;
             buttonReturn.Text = "Volver";
             buttonReturn.UseVisualStyleBackColor = true;
-            buttonReturn.Click += new EventHandler(buttonReturn_Click);
-
+            buttonReturn.Click += buttonReturn_Click;
+            // 
             // buttonDelete
+            // 
+            buttonDelete.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonDelete.Location = new Point(980, 446);
             buttonDelete.Name = "buttonDelete";
             buttonDelete.Size = new Size(192, 23);
             buttonDelete.TabIndex = 26;
             buttonDelete.Text = "Eliminar paciente";
             buttonDelete.UseVisualStyleBackColor = true;
-            buttonDelete.Click += new EventHandler(buttonDelete_Click);
-
+            buttonDelete.Click += buttonDelete_Click;
+            // 
             // buttonEdit
+            // 
+            buttonEdit.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonEdit.Location = new Point(980, 417);
             buttonEdit.Name = "buttonEdit";
             buttonEdit.Size = new Size(192, 23);
             buttonEdit.TabIndex = 25;
             buttonEdit.Text = "Editar paciente";
             buttonEdit.UseVisualStyleBackColor = true;
-            buttonEdit.Click += new EventHandler(buttonEdit_Click);
-
+            buttonEdit.Click += buttonEdit_Click;
+            // 
             // buttonAdd
+            // 
+            buttonAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonAdd.Location = new Point(980, 388);
             buttonAdd.Name = "buttonAdd";
             buttonAdd.Size = new Size(192, 23);
             buttonAdd.TabIndex = 24;
             buttonAdd.Text = "Añadir nuevo paciente";
             buttonAdd.UseVisualStyleBackColor = true;
-            buttonAdd.Click += new EventHandler(buttonAdd_Click);
-
+            buttonAdd.Click += buttonAdd_Click;
+            // 
             // dataGridView1
+            // 
+            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Columns.AddRange(new DataGridViewColumn[] {
-                nroPacienteDataGridViewTextBoxColumn,
-                nombreDataGridViewTextBoxColumn,
-                apellidoDataGridViewTextBoxColumn,
-                nroDniDataGridViewTextBoxColumn,
-                tipoDniDataGridViewTextBoxColumn,
-                direccionDataGridViewTextBoxColumn,
-                telefonoDataGridViewTextBoxColumn,
-                emailDataGridViewTextBoxColumn,
-                passwordDataGridViewTextBoxColumn
-            });
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { nroPacienteDataGridViewTextBoxColumn, nombreDataGridViewTextBoxColumn, apellidoDataGridViewTextBoxColumn, nroDniDataGridViewTextBoxColumn, tipoDniDataGridViewTextBoxColumn, direccionDataGridViewTextBoxColumn, telefonoDataGridViewTextBoxColumn, emailDataGridViewTextBoxColumn });
             dataGridView1.DataSource = pacienteDTOBindingSource;
             dataGridView1.Location = new Point(-1, -1);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.Size = new Size(943, 607);
             dataGridView1.TabIndex = 23;
-            dataGridView1.SelectionChanged += new EventHandler(dataGridView1_SelectionChanged);
-
-            // columnas
-            nroPacienteDataGridViewTextBoxColumn.DataPropertyName = "NroPaciente";
-            nroPacienteDataGridViewTextBoxColumn.HeaderText = "NroPaciente";
-            nroPacienteDataGridViewTextBoxColumn.Name = "nroPacienteDataGridViewTextBoxColumn";
-
-            nombreDataGridViewTextBoxColumn.DataPropertyName = "Nombre";
-            nombreDataGridViewTextBoxColumn.HeaderText = "Nombre";
-            nombreDataGridViewTextBoxColumn.Name = "nombreDataGridViewTextBoxColumn";
-
-            apellidoDataGridViewTextBoxColumn.DataPropertyName = "Apellido";
-            apellidoDataGridViewTextBoxColumn.HeaderText = "Apellido";
-            apellidoDataGridViewTextBoxColumn.Name = "apellidoDataGridViewTextBoxColumn";
-
-            nroDniDataGridViewTextBoxColumn.DataPropertyName = "NroDni";
-            nroDniDataGridViewTextBoxColumn.HeaderText = "NroDni";
-            nroDniDataGridViewTextBoxColumn.Name = "nroDniDataGridViewTextBoxColumn";
-
-            tipoDniDataGridViewTextBoxColumn.DataPropertyName = "TipoDni";
-            tipoDniDataGridViewTextBoxColumn.HeaderText = "TipoDni";
-            tipoDniDataGridViewTextBoxColumn.Name = "tipoDniDataGridViewTextBoxColumn";
-
-            direccionDataGridViewTextBoxColumn.DataPropertyName = "Direccion";
-            direccionDataGridViewTextBoxColumn.HeaderText = "Direccion";
-            direccionDataGridViewTextBoxColumn.Name = "direccionDataGridViewTextBoxColumn";
-
-            telefonoDataGridViewTextBoxColumn.DataPropertyName = "Telefono";
-            telefonoDataGridViewTextBoxColumn.HeaderText = "Telefono";
-            telefonoDataGridViewTextBoxColumn.Name = "telefonoDataGridViewTextBoxColumn";
-
-            emailDataGridViewTextBoxColumn.DataPropertyName = "Email";
-            emailDataGridViewTextBoxColumn.HeaderText = "Email";
-            emailDataGridViewTextBoxColumn.Name = "emailDataGridViewTextBoxColumn";
-
-            passwordDataGridViewTextBoxColumn.DataPropertyName = "Password";
-            passwordDataGridViewTextBoxColumn.HeaderText = "Password";
-            passwordDataGridViewTextBoxColumn.Name = "passwordDataGridViewTextBoxColumn";
-
+            dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;
+            // 
             // pacienteDTOBindingSource
+            // 
             pacienteDTOBindingSource.DataSource = typeof(DTO.PacienteDTO);
-
+            // 
             // lblNroPaciente
+            // 
+            lblNroPaciente.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblNroPaciente.AutoSize = true;
             lblNroPaciente.Location = new Point(948, 361);
             lblNroPaciente.Name = "lblNroPaciente";
-            lblNroPaciente.Size = new Size(89, 15);
+            lblNroPaciente.Size = new Size(86, 15);
             lblNroPaciente.TabIndex = 45;
             lblNroPaciente.Text = "Nro Paciente: -";
-
-            // Anchors para que los controles se reacomoden al redimensionar 
-            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
-            AnchorStyles panelDerecho = AnchorStyles.Top | AnchorStyles.Right;
-            labelAction.Anchor = panelDerecho;
-            cmbTipoDocumento.Anchor = panelDerecho;
-            label1.Anchor = panelDerecho;
-            textNroDni.Anchor = panelDerecho;
-            label2.Anchor = panelDerecho;
-            textApellido.Anchor = panelDerecho;
-            label3.Anchor = panelDerecho;
-            textNombre.Anchor = panelDerecho;
-            label4.Anchor = panelDerecho;
-            textDireccion.Anchor = panelDerecho;
-            label8.Anchor = panelDerecho;
-            textTelefono.Anchor = panelDerecho;
-            label7.Anchor = panelDerecho;
-            textEmail.Anchor = panelDerecho;
-            label6.Anchor = panelDerecho;
-            textContraseña.Anchor = panelDerecho;
-            label5.Anchor = panelDerecho;
-            lblNroPaciente.Anchor = panelDerecho;
-            buttonAdd.Anchor = panelDerecho;
-            buttonEdit.Anchor = panelDerecho;
-            buttonDelete.Anchor = panelDerecho;
-            buttonReturn.Anchor = panelDerecho;
-
+            // 
+            // nroPacienteDataGridViewTextBoxColumn
+            // 
+            nroPacienteDataGridViewTextBoxColumn.DataPropertyName = "NroPaciente";
+            nroPacienteDataGridViewTextBoxColumn.HeaderText = "NroPaciente";
+            nroPacienteDataGridViewTextBoxColumn.Name = "nroPacienteDataGridViewTextBoxColumn";
+            // 
+            // nombreDataGridViewTextBoxColumn
+            // 
+            nombreDataGridViewTextBoxColumn.DataPropertyName = "Nombre";
+            nombreDataGridViewTextBoxColumn.HeaderText = "Nombre";
+            nombreDataGridViewTextBoxColumn.Name = "nombreDataGridViewTextBoxColumn";
+            // 
+            // apellidoDataGridViewTextBoxColumn
+            // 
+            apellidoDataGridViewTextBoxColumn.DataPropertyName = "Apellido";
+            apellidoDataGridViewTextBoxColumn.HeaderText = "Apellido";
+            apellidoDataGridViewTextBoxColumn.Name = "apellidoDataGridViewTextBoxColumn";
+            // 
+            // nroDniDataGridViewTextBoxColumn
+            // 
+            nroDniDataGridViewTextBoxColumn.DataPropertyName = "NroDni";
+            nroDniDataGridViewTextBoxColumn.HeaderText = "NroDni";
+            nroDniDataGridViewTextBoxColumn.Name = "nroDniDataGridViewTextBoxColumn";
+            // 
+            // tipoDniDataGridViewTextBoxColumn
+            // 
+            tipoDniDataGridViewTextBoxColumn.DataPropertyName = "TipoDni";
+            tipoDniDataGridViewTextBoxColumn.HeaderText = "TipoDni";
+            tipoDniDataGridViewTextBoxColumn.Name = "tipoDniDataGridViewTextBoxColumn";
+            // 
+            // direccionDataGridViewTextBoxColumn
+            // 
+            direccionDataGridViewTextBoxColumn.DataPropertyName = "Direccion";
+            direccionDataGridViewTextBoxColumn.HeaderText = "Direccion";
+            direccionDataGridViewTextBoxColumn.Name = "direccionDataGridViewTextBoxColumn";
+            // 
+            // telefonoDataGridViewTextBoxColumn
+            // 
+            telefonoDataGridViewTextBoxColumn.DataPropertyName = "Telefono";
+            telefonoDataGridViewTextBoxColumn.HeaderText = "Telefono";
+            telefonoDataGridViewTextBoxColumn.Name = "telefonoDataGridViewTextBoxColumn";
+            // 
+            // emailDataGridViewTextBoxColumn
+            // 
+            emailDataGridViewTextBoxColumn.DataPropertyName = "Email";
+            emailDataGridViewTextBoxColumn.HeaderText = "Email";
+            emailDataGridViewTextBoxColumn.Name = "emailDataGridViewTextBoxColumn";
+            // 
             // HomeAdminCRUDPaciente
+            // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1231, 610);
@@ -337,7 +358,7 @@
             Controls.Add(dataGridView1);
             Name = "HomeAdminCRUDPaciente";
             Text = "Clínica Odontológica - Administrador";
-            Load += new EventHandler(FormCrudPacientes_Load);
+            Load += FormCrudPacientes_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pacienteDTOBindingSource).EndInit();
             ResumeLayout(false);
@@ -366,6 +387,8 @@
         private Button buttonEdit;
         private Button buttonAdd;
         private DataGridView dataGridView1;
+        private BindingSource pacienteDTOBindingSource;
+        private Label lblNroPaciente;
         private DataGridViewTextBoxColumn nroPacienteDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn nombreDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn apellidoDataGridViewTextBoxColumn;
@@ -374,8 +397,5 @@
         private DataGridViewTextBoxColumn direccionDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn telefonoDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn emailDataGridViewTextBoxColumn;
-        private DataGridViewTextBoxColumn passwordDataGridViewTextBoxColumn;
-        private BindingSource pacienteDTOBindingSource;
-        private Label lblNroPaciente;
     }
 }

@@ -10,7 +10,6 @@ namespace Domain.Model
 {
     public class Paciente : Usuario
     {
-        private static int incNroPaciente = 0;
         public int NroPaciente { get;  set; }
         public string Nombre { get;  set; }
         public string Apellido { get;  set; }
@@ -24,8 +23,7 @@ namespace Domain.Model
 
         public Paciente(string nombre, string apellido, string direccion, string telefono, string email, int nroDni, tiposEnumerados tipoDni, string passwordHash)
         : base(email, passwordHash)
-        {
-            SetNroPaciente();
+        {   
             SetNombre(nombre);
             SetApellido(apellido);
             SetDireccion(direccion);
@@ -39,20 +37,6 @@ namespace Domain.Model
             NroDni = nro;
             TipoDni = tipo;
         }
-
-        public static void InicializarContador(int ultimoNumeroUsado)
-        {
-            incNroPaciente = ultimoNumeroUsado;
-        }
-
-
-        public void SetNroPaciente()
-        {
-            incNroPaciente++;
-            NroPaciente = incNroPaciente;
-
-        }
-
         
         public void SetNombre(string nombre)
         {

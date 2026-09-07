@@ -9,30 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Data
 {
     public class AppDbContext : DbContext
-    {
-        /* public DbSet<Paciente> Pacientes { get; set; }
-         public DbSet<Odontologo> Odontologos { get; set; }
-         public DbSet<Administrador> Administradores { get; set; }   
-
-         private readonly string _connectionString;
-
-         public AppDbContext(string connectionString)
-         {
-             _connectionString = connectionString;
-
-
-         }
-
-         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-         {
-             if (!optionsBuilder.IsConfigured)
-             {
-                 optionsBuilder.UseSqlServer(_connectionString); 
-             }
-         }
-         */
-
-       
+    {      
         public DbSet<Paciente> Pacientes { get; set; }
         public DbSet<Odontologo> Odontologos { get; set; }
         public DbSet<Administrador> Administradores { get; set; }
@@ -81,7 +58,7 @@ namespace Data
                 .HasKey(p => p.NroPaciente);
             modelBuilder.Entity<Paciente>()
                 .Property(p => p.NroPaciente)
-                .ValueGeneratedNever();
+                .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<Odontologo>()
                 .HasKey(o => o.Matricula);

@@ -72,14 +72,14 @@ namespace Applications.Services
       };
 
         private static Paciente ToDomain(PacienteDTO dto)
-        => new Paciente(
-        dto.Nombre,
-        dto.Apellido,
-        dto.Direccion,
-        dto.Telefono,
-        dto.Email,
-        dto.NroDni,
-        dto.TipoDni,
-        dto.Password ?? string.Empty );
+       => new Paciente(
+           dto.Nombre,
+           dto.Apellido,
+           dto.Direccion,
+           dto.Telefono,
+           dto.Email,
+           dto.NroDni,
+           dto.TipoDni,
+           dto.Password ?? string.Empty);
     }
 }
