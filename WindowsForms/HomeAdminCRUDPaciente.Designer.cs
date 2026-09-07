@@ -281,6 +281,33 @@
             lblNroPaciente.TabIndex = 45;
             lblNroPaciente.Text = "Nro Paciente: -";
 
+            // Anchors para que los controles se reacomoden al redimensionar 
+            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            AnchorStyles panelDerecho = AnchorStyles.Top | AnchorStyles.Right;
+            labelAction.Anchor = panelDerecho;
+            cmbTipoDocumento.Anchor = panelDerecho;
+            label1.Anchor = panelDerecho;
+            textNroDni.Anchor = panelDerecho;
+            label2.Anchor = panelDerecho;
+            textApellido.Anchor = panelDerecho;
+            label3.Anchor = panelDerecho;
+            textNombre.Anchor = panelDerecho;
+            label4.Anchor = panelDerecho;
+            textDireccion.Anchor = panelDerecho;
+            label8.Anchor = panelDerecho;
+            textTelefono.Anchor = panelDerecho;
+            label7.Anchor = panelDerecho;
+            textEmail.Anchor = panelDerecho;
+            label6.Anchor = panelDerecho;
+            textContraseña.Anchor = panelDerecho;
+            label5.Anchor = panelDerecho;
+            lblNroPaciente.Anchor = panelDerecho;
+            buttonAdd.Anchor = panelDerecho;
+            buttonEdit.Anchor = panelDerecho;
+            buttonDelete.Anchor = panelDerecho;
+            buttonReturn.Anchor = panelDerecho;
+
             // HomeAdminCRUDPaciente
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;

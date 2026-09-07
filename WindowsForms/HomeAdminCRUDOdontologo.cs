@@ -20,6 +20,7 @@ namespace WindowsForms
         public HomeAdminCRUDOdontologo()
         {
             InitializeComponent();
+            MinimumSize = new Size(1000, 750);
             cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
 
             var token = WindowsForms.Auth.AuthServiceProvider.Instance.GetTokenAsync().Result;
@@ -180,8 +181,13 @@ namespace WindowsForms
             textMatricula.Text = string.Empty;
             textEspecialidad.Text = string.Empty;
             textNroDocumento.Text = string.Empty;
-            textContraseña.Text = string.Empty;   
+            textContraseña.Text = string.Empty;
             cmbTipoDocumento.SelectedIndex = -1;
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }

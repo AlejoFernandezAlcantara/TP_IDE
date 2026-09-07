@@ -37,9 +37,10 @@
             // ButtonPacientes
             // 
             ButtonPacientes.AutoSize = true;
-            ButtonPacientes.Location = new Point(204, 261);
+            ButtonPacientes.Location = new Point(233, 348);
+            ButtonPacientes.Margin = new Padding(3, 4, 3, 4);
             ButtonPacientes.Name = "ButtonPacientes";
-            ButtonPacientes.Size = new Size(161, 25);
+            ButtonPacientes.Size = new Size(184, 33);
             ButtonPacientes.TabIndex = 0;
             ButtonPacientes.Text = "Administrar Pacientes";
             ButtonPacientes.UseVisualStyleBackColor = true;
@@ -48,9 +49,10 @@
             // buttonOdontologos
             // 
             buttonOdontologos.AutoSize = true;
-            buttonOdontologos.Location = new Point(204, 290);
+            buttonOdontologos.Location = new Point(233, 387);
+            buttonOdontologos.Margin = new Padding(3, 4, 3, 4);
             buttonOdontologos.Name = "buttonOdontologos";
-            buttonOdontologos.Size = new Size(161, 25);
+            buttonOdontologos.Size = new Size(188, 33);
             buttonOdontologos.TabIndex = 1;
             buttonOdontologos.Text = "Administrar Odontólogos";
             buttonOdontologos.UseVisualStyleBackColor = true;
@@ -59,9 +61,10 @@
             // buttonCerrarSesion
             // 
             buttonCerrarSesion.AutoSize = true;
-            buttonCerrarSesion.Location = new Point(204, 348);
+            buttonCerrarSesion.Location = new Point(233, 464);
+            buttonCerrarSesion.Margin = new Padding(3, 4, 3, 4);
             buttonCerrarSesion.Name = "buttonCerrarSesion";
-            buttonCerrarSesion.Size = new Size(161, 25);
+            buttonCerrarSesion.Size = new Size(184, 33);
             buttonCerrarSesion.TabIndex = 2;
             buttonCerrarSesion.Text = "Cerrar Sesión";
             buttonCerrarSesion.UseVisualStyleBackColor = true;
@@ -70,26 +73,27 @@
             // lblBienvenida
             // 
             lblBienvenida.AutoSize = true;
-            lblBienvenida.Location = new Point(248, 172);
+            lblBienvenida.Location = new Point(283, 229);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(77, 15);
+            lblBienvenida.Size = new Size(97, 20);
             lblBienvenida.TabIndex = 3;
             lblBienvenida.Text = "Bienvenido/a";
             lblBienvenida.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // HomeAdmin
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(577, 516);
+            ClientSize = new Size(659, 688);
             Controls.Add(lblBienvenida);
             Controls.Add(buttonCerrarSesion);
             Controls.Add(buttonOdontologos);
             Controls.Add(ButtonPacientes);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "HomeAdmin";
             Text = "Clínica Odontológica - Administrador";
-            this.Load += new EventHandler(this.HomeAdmin_Load);
-            this.Resize += new EventHandler(this.HomeAdmin_Resize);
+            Load += HomeAdmin_Load;
+            Resize += HomeAdmin_Resize;
             ResumeLayout(false);
             PerformLayout();
         }

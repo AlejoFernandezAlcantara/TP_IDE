@@ -104,6 +104,7 @@
             Name = "LoginForm";
             Text = "Iniciar Sesión";
             Load += LoginForm_Load;
+            Resize += LoginForm_Resize;
             ResumeLayout(false);
             PerformLayout();
         }

@@ -20,6 +20,7 @@ namespace WindowsForms
         public HomeAdminCRUDPaciente()
         {
             InitializeComponent();
+            MinimumSize = new Size(1000, 750);
             cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
 
             var token = WindowsForms.Auth.AuthServiceProvider.Instance.GetTokenAsync().Result;
