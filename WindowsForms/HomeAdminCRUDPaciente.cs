@@ -3,6 +3,7 @@ using DTO;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -35,126 +36,221 @@ namespace WindowsForms
 
         private async Task CargarPacientes()
         {
-            var lista = await _client.GetFromJsonAsync<List<PacienteDTO>>("pacientes");
-            dataGridView1.DataSource = lista;
+            try
+            {
+                var lista = await _client.GetFromJsonAsync<List<PacienteDTO>>("pacientes");
+                dataGridView1.DataSource = lista;
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show(
+                    "No se pudo conectar con el servidor. Verificá que la API esté funcionando.",
+                    "Error de conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"No se pudo cargar la lista de pacientes.\n\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count == 0) return;
+            try
+            {
+                if (dataGridView1.SelectedRows.Count == 0) return;
 
-            if (dataGridView1.SelectedRows[0].DataBoundItem is not PacienteDTO paciente) return;
+                if (dataGridView1.SelectedRows[0].DataBoundItem is not PacienteDTO paciente) return;
 
-            _nroPacienteSeleccionado = paciente.NroPaciente;
+                _nroPacienteSeleccionado = paciente.NroPaciente;
 
-            // Muestra el nro paciente en el label, no editable
-            lblNroPaciente.Text = $"Nro Paciente: {paciente.NroPaciente}";
+                lblNroPaciente.Text = $"Nro Paciente: {paciente.NroPaciente}";
 
-            textNombre.Text = paciente.Nombre;
-            textApellido.Text = paciente.Apellido;
-            textEmail.Text = paciente.Email;
-            textDireccion.Text = paciente.Direccion;
-            textTelefono.Text = paciente.Telefono;
-            textNroDni.Text = paciente.NroDni.ToString();
-            cmbTipoDocumento.SelectedItem = paciente.TipoDni;
+                textNombre.Text = paciente.Nombre;
+                textApellido.Text = paciente.Apellido;
+                textEmail.Text = paciente.Email;
+                textDireccion.Text = paciente.Direccion;
+                textTelefono.Text = paciente.Telefono;
+                textNroDni.Text = paciente.NroDni.ToString();
+                cmbTipoDocumento.SelectedItem = paciente.TipoDni;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"No se pudo mostrar el paciente seleccionado.\n\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        // POST — no manda NroPaciente, lo genera el servidor
         private async void buttonAdd_Click(object sender, EventArgs e)
         {
-            var nuevo = new PacienteDTO
+            try
             {
-                Nombre = textNombre.Text,
-                Apellido = textApellido.Text,
-                Email = textEmail.Text,
-                Direccion = textDireccion.Text,
-                Telefono = textTelefono.Text,
-                NroDni = Convert.ToInt32(textNroDni.Text),
-                TipoDni = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
-                Password = textContraseña.Text
-            };
+                if (cmbTipoDocumento.SelectedItem == null)
+                {
+                    MessageBox.Show("Seleccioná un tipo de documento.", "Datos incompletos",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-            var response = await _client.PostAsJsonAsync("pacientes", nuevo);
+                var nuevo = new PacienteDTO
+                {
+                    Nombre = textNombre.Text,
+                    Apellido = textApellido.Text,
+                    Email = textEmail.Text,
+                    Direccion = textDireccion.Text,
+                    Telefono = textTelefono.Text,
+                    NroDni = Convert.ToInt32(textNroDni.Text),
+                    TipoDni = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
+                    Password = textContraseña.Text
+                };
 
-            if (response.IsSuccessStatusCode)
-            {
-                await CargarPacientes();
-                MostrarMensajeExito();
-                LimpiarCampos();
-            }
-            else
-            {
-                var detalle = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Error al añadir el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
-            }
-        }
-
-        // PUT — manda NroPaciente para identificar cuál editar
-        private async void buttonEdit_Click(object sender, EventArgs e)
-        {
-            if (_nroPacienteSeleccionado == 0)
-            {
-                MessageBox.Show("Seleccioná un paciente primero.");
-                return;
-            }
-
-            var editado = new PacienteDTO
-            {
-                NroPaciente = _nroPacienteSeleccionado, // viene de la variable, no del TextBox
-                Nombre = textNombre.Text,
-                Apellido = textApellido.Text,
-                Email = textEmail.Text,
-                Direccion = textDireccion.Text,
-                Telefono = textTelefono.Text,
-                NroDni = Convert.ToInt32(textNroDni.Text),
-                TipoDni = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
-                Password = textContraseña.Text
-            };
-
-            var response = await _client.PutAsJsonAsync("pacientes", editado);
-
-            if (response.IsSuccessStatusCode)
-            {
-                await CargarPacientes();
-                MostrarMensajeExito();
-            }
-            else
-            {
-                var detalle = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Error al editar el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}");
-            }
-        }
-
-        // DELETE — usa la variable _nroPacienteSeleccionado
-        private async void buttonDelete_Click(object sender, EventArgs e)
-        {
-            if (_nroPacienteSeleccionado == 0)
-            {
-                MessageBox.Show("Seleccioná un paciente primero.");
-                return;
-            }
-
-            var confirmar = MessageBox.Show(
-                "¿Estás seguro que querés eliminar este paciente?",
-                "Confirmar",
-                MessageBoxButtons.YesNo
-            );
-
-            if (confirmar == DialogResult.Yes)
-            {
-                var response = await _client.DeleteAsync($"pacientes/{_nroPacienteSeleccionado}");
+                var response = await _client.PostAsJsonAsync("pacientes", nuevo);
 
                 if (response.IsSuccessStatusCode)
                 {
                     await CargarPacientes();
                     MostrarMensajeExito();
                     LimpiarCampos();
-                    _nroPacienteSeleccionado = 0;
                 }
                 else
                 {
-                    MessageBox.Show("Error al eliminar el paciente.");
+                    var detalle = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error al añadir el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show(
+                    "El número de DNI debe ser un valor numérico válido.",
+                    "Dato inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show(
+                    "No se pudo conectar con el servidor. Verificá que la API esté funcionando.",
+                    "Error de conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Ocurrió un error inesperado al añadir el paciente.\n\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void buttonEdit_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_nroPacienteSeleccionado == 0)
+                {
+                    MessageBox.Show("Seleccioná un paciente primero.", "Atención",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (cmbTipoDocumento.SelectedItem == null)
+                {
+                    MessageBox.Show("Seleccioná un tipo de documento.", "Datos incompletos",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var editado = new PacienteDTO
+                {
+                    NroPaciente = _nroPacienteSeleccionado,
+                    Nombre = textNombre.Text,
+                    Apellido = textApellido.Text,
+                    Email = textEmail.Text,
+                    Direccion = textDireccion.Text,
+                    Telefono = textTelefono.Text,
+                    NroDni = Convert.ToInt32(textNroDni.Text),
+                    TipoDni = (tiposEnumerados)cmbTipoDocumento.SelectedItem,
+                    Password = textContraseña.Text
+                };
+
+                var response = await _client.PutAsJsonAsync("pacientes", editado);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await CargarPacientes();
+                    MostrarMensajeExito();
+                }
+                else
+                {
+                    var detalle = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error al editar el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show(
+                    "El número de DNI debe ser un valor numérico válido.",
+                    "Dato inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show(
+                    "No se pudo conectar con el servidor. Verificá que la API esté funcionando.",
+                    "Error de conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Ocurrió un error inesperado al editar el paciente.\n\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void buttonDelete_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_nroPacienteSeleccionado == 0)
+                {
+                    MessageBox.Show("Seleccioná un paciente primero.", "Atención",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var confirmar = MessageBox.Show(
+                    "¿Estás seguro que querés eliminar este paciente?",
+                    "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (confirmar == DialogResult.Yes)
+                {
+                    var response = await _client.DeleteAsync($"pacientes/{_nroPacienteSeleccionado}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await CargarPacientes();
+                        MostrarMensajeExito();
+                        LimpiarCampos();
+                        _nroPacienteSeleccionado = 0;
+                    }
+                    else
+                    {
+                        var detalle = await response.Content.ReadAsStringAsync();
+                        MessageBox.Show($"Error al eliminar el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show(
+                    "No se pudo conectar con el servidor. Verificá que la API esté funcionando.",
+                    "Error de conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Ocurrió un error inesperado al eliminar el paciente.\n\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

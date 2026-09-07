@@ -31,7 +31,7 @@ namespace WindowsForms
             }
             else
             {
-                lblError.Text = "Email o contraseña incorrectos.";
+                lblError.Text = "Email o contrasenia incorrectos.";
             }
         }
 

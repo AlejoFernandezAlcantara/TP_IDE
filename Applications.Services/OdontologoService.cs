@@ -35,8 +35,25 @@ namespace Applications.Services
 
         public async Task ActualizarAsync(OdontologoDTO odontologo)
         {
-            var domain = ToDomain(odontologo, hashearPassword: true);
-            await _repository.UpdateAsync(domain); 
+            var existente = await _repository.GetByMatriculaAsync(odontologo.Matricula);
+            if (existente is null)
+                throw new Exception("Odontólogo no encontrado.");
+
+            string? passwordHasheado = null;
+            if (!string.IsNullOrEmpty(odontologo.Password))
+                passwordHasheado = BCrypt.Net.BCrypt.HashPassword(odontologo.Password);
+
+            existente.Actualizar(
+                odontologo.Nombre,
+                odontologo.Apellido,
+                odontologo.NroDocumento,
+                odontologo.TipoDocumento,
+                odontologo.Especialidad,
+                odontologo.Email,
+                passwordHasheado
+            );
+
+            await _repository.UpdateAsync(existente);
         }
 
         public async Task EliminarAsync(string matricula) => await _repository.DeleteAsync(matricula);

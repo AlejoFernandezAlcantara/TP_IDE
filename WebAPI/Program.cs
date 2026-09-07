@@ -78,7 +78,6 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.EnsureCreated();
 
-    
     if (!context.Administradores.Any())
     {
         var admin = new Administrador(
@@ -97,9 +96,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection();
-
-app.UseAuthentication(); // antes de UseAuthorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapOdontologoEndpoints();

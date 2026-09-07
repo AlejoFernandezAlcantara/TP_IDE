@@ -1,7 +1,5 @@
 
 using Domain.Model;
-
-
 using WindowsForms.Auth;
 
 namespace WindowsForms
@@ -13,9 +11,21 @@ namespace WindowsForms
         {
             ApplicationConfiguration.Initialize();
 
+            Application.ThreadException += Application_ThreadException;
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+
             AuthServiceProvider.Register(new AuthService());
 
             Task.Run(async () => await MainAsync()).GetAwaiter().GetResult();
+        }
+
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            MessageBox.Show(
+                $"Ocurrió un error inesperado:\n\n{e.Exception.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
 
         static async Task MainAsync()

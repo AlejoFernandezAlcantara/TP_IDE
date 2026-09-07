@@ -71,5 +71,22 @@ namespace Domain.Model
                 throw new ArgumentException("La especialidad no puede ser nulo o vacío.", nameof(especialidad));
             Especialidad = especialidad;
         }
+
+        public void Actualizar(string nombre, string apellido, int nroDocumento,
+               tiposEnumerados tipoDocumento, string especialidad,
+               string? email = null, string? passwordHash = null)
+        {
+            SetNombre(nombre);
+            SetApellido(apellido);
+            SetNroDoc(nroDocumento);
+            SetTipoDoc(tipoDocumento);
+            SetEspecialidad(especialidad);
+
+            if (!string.IsNullOrEmpty(email))
+                Email = email;
+
+            if (!string.IsNullOrEmpty(passwordHash))
+                PasswordHash = passwordHash; 
+        }
     }
 }
