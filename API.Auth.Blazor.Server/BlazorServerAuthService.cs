@@ -2,9 +2,9 @@
 using System.Net.Http.Json;
 using DTO;
 
-namespace BlazorApp1.Auth
+namespace API.Auth.Blazor.Server
 {
-	public class AuthService : IAuthService
+	public class BlazorServerAuthService : IAuthService
 	{
 		private const string BaseUrl = "http://localhost:5232/api/";
 
