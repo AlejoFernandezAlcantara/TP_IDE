@@ -1,15 +1,27 @@
-namespace BlazorApp1.Auth
-{
-    public interface IAuthService
-    {
-        event Action<bool>? AuthenticationStateChanged;
+using Blazor.Server.Auth;
+using Blazor.Server.Components;
 
-        Task<bool> IsAuthenticatedAsync();
-        Task<string?> GetTokenAsync();
-        Task<string?> GetNombreAsync();
-        Task<string?> GetRolAsync();
-        Task<bool> LoginAsync(string email, string password);
-        Task LogoutAsync();
-        Task CheckTokenExpirationAsync();
-    }
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+// Registrás tu AuthService cuando lo tengas implementado
+// builder.Services.AddScoped<IAuthService, AuthService>();
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();
