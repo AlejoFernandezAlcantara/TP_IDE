@@ -19,7 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.Server", "BlazorApp1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Auth.Blazor.Server", "API.Auth.Blazor.Server\API.Auth.Blazor.Server.csproj", "{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Auth.WindowsForms", "API.Auth.WindowsForms\API.Auth.WindowsForms.csproj", "{91BBD87F-8496-4D51-80FD-EE323CA3599A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Auth.WindowsForms", "API.Auth.WindowsForms\API.Auth.WindowsForms.csproj", "{C244E59B-F92C-491C-BC72-008D2241975D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Clients", "ClassLibrary1\API.Clients.csproj", "{8EF93C80-F230-4ADD-A6C5-736C171623DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,10 +61,14 @@ Global
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91BBD87F-8496-4D51-80FD-EE323CA3599A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91BBD87F-8496-4D51-80FD-EE323CA3599A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91BBD87F-8496-4D51-80FD-EE323CA3599A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91BBD87F-8496-4D51-80FD-EE323CA3599A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C244E59B-F92C-491C-BC72-008D2241975D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C244E59B-F92C-491C-BC72-008D2241975D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C244E59B-F92C-491C-BC72-008D2241975D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C244E59B-F92C-491C-BC72-008D2241975D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EF93C80-F230-4ADD-A6C5-736C171623DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EF93C80-F230-4ADD-A6C5-736C171623DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EF93C80-F230-4ADD-A6C5-736C171623DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EF93C80-F230-4ADD-A6C5-736C171623DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

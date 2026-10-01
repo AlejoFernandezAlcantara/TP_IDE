@@ -1,18 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>API.Auth.Blazor.Server</RootNamespace>
+		<AssemblyName>API.Auth.Blazor.Server</AssemblyName>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="BlazorServerAuthService.CS" />
-    <Compile Remove="Class1.cs" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <None Include="BlazorServerAuthService.cs" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DTO\DTO.csproj" />
+		<ProjectReference Include="..\Applications.Services\Applications.Services.csproj" />
+	</ItemGroup>
 
 </Project>

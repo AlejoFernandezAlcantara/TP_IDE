@@ -1,11 +1,13 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Json;
+﻿using Applications.Services;
+using Domain.Model;
 using DTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Json;
 
 namespace API.Auth.Blazor.Server
 {
-	public class BlazorServerAuthService : IAuthService
-	{
+	public class BlazorServerAuthService : IBlazorAuthService
+    {
 		private const string BaseUrl = "http://localhost:5232/api/";
 
 		// OJO: a propósito NO son "static". Este servicio se registra como "Scoped"
@@ -82,5 +84,12 @@ namespace API.Auth.Blazor.Server
 			if (!await IsAuthenticatedAsync())
 				await LogoutAsync();
 		}
-	}
+        public async Task<Usuario?> ValidarCredencialesAsync(string email, string password)
+        {
+            // Este método es más para compatibilidad con IAuthService
+            // La validación real se hace en LoginAsync()
+            return null;
+        }
+
+    }
 }

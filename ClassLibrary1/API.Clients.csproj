@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\API.Auth.Blazor.Server\API.Auth.Blazor.Server.csproj" />
+    <ProjectReference Include="..\API.Auth.WindowsForms\API.Auth.WindowsForms.csproj" />
+    <ProjectReference Include="..\Applications.Services\Applications.Services.csproj" />
+    <ProjectReference Include="..\BlazorApp1\Blazor.Server.csproj" />
+    <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
+    <ProjectReference Include="..\DTO\DTO.csproj" />
+    <ProjectReference Include="..\WebAPI\WebAPI.csproj" />
+    <ProjectReference Include="..\WindowsForms\WindowsForms.csproj" />
+  </ItemGroup>
+
+</Project>

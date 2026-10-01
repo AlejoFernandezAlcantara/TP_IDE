@@ -1,13 +1,28 @@
-using Blazor.Server.Auth;
-using Blazor.Server.Components;
+using API.Auth.Blazor.Server;
+using API.Clients;
+using Applications.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
 
-// Registrás tu AuthService cuando lo tengas implementado
-// builder.Services.AddScoped<IAuthService, AuthService>();
+// Autenticación
+builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
+builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<IBlazorAuthService>());
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+
+builder.Services.AddAuthorizationCore();
+
+// API Clients
+builder.Services.AddHttpClient<AuthApiClient>();
+builder.Services.AddHttpClient<OdontologoApiClient>();
+builder.Services.AddHttpClient<PacienteApiClient>();
+builder.Services.AddHttpClient<ReservaApiClient>();
+builder.Services.AddHttpClient<TurnoApiClient>();
 
 var app = builder.Build();
 
@@ -19,9 +34,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseAntiforgery();
+app.UseRouting();
 
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
 
 app.Run();

@@ -4,6 +4,29 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  <RootNamespace>API.Auth.WindowsForms</RootNamespace>
+	  <AssemblyName>API.Auth.WindowsForms</AssemblyName>
+	  <ProjectGuid>{8D2E9010-0A8F-4126-8D99-E6E485AE8047}</ProjectGuid>
+	  <OutputType>Library</OutputType>
+	  <FileAlignment>512</FileAlignment>
+	  <Deterministic>true</Deterministic>
   </PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
+	</ItemGroup>
+
+	
+	<ItemGroup>
+		<ProjectReference Include="..\API.Auth.Blazor.Server\API.Auth.Blazor.Server.csproj" />
+		<ProjectReference Include="..\Applications.Services\Applications.Services.csproj" />
+		<ProjectReference Include="..\BlazorApp1\Blazor.Server.csproj" />
+		<ProjectReference Include="..\Data\Data.csproj" />
+		<ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
+		<ProjectReference Include="..\DTO\DTO.csproj" />
+		<ProjectReference Include="..\WebAPI\WebAPI.csproj" />
+		<ProjectReference Include="..\WindowsForms\WindowsForms.csproj" />
+	</ItemGroup>
 
 </Project>
