@@ -35,5 +35,5 @@ Al menos uno debe incluir un gráfico.
 Puede utilizarse cualquier motor de reportes.
 Implementación de seguridad completa:
 Autenticación basada en tokens
-Autorización por roles/perfiles de usuario
+Autorización por roles/perfiles de usuario	
 Inclusión de datos de prueba representativos, suficientes para validar toda la funcionalidad del sistema.
