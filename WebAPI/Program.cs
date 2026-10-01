@@ -1,4 +1,4 @@
-using Applications.Services;
+    using Applications.Services;
 using Data;
 using Domain.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +33,18 @@ builder.Services.AddSwaggerGen(options =>
             },
             Array.Empty<string>()
         }
+    });
+});
+
+// CORS: permite que BlazorApp1 (que corre en otro puerto) consuma esta API
+const string BlazorCorsPolicy = "BlazorCorsPolicy";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(BlazorCorsPolicy, policy =>
+    {
+        policy.WithOrigins("https://localhost:7282", "http://localhost:5114")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
@@ -96,6 +108,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(BlazorCorsPolicy);
 app.UseAuthentication(); 
 app.UseAuthorization();
 

@@ -1,27 +1,46 @@
-using BlazorApp1.Components;
+using API.Auth.Blazor.Server;
+using API.Clients;
+using Applications.Services;
+using Blazor.Server;
+using Blazor.Server.Components;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+.AddInteractiveServerComponents();
+
+// Autenticación
+builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
+builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<IBlazorAuthService>());
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+
+builder.Services.AddAuthorizationCore();
+
+// API Clients
+builder.Services.AddHttpClient<AuthApiClient>();
+builder.Services.AddHttpClient<OdontologoApiClient>();
+builder.Services.AddHttpClient<PacienteApiClient>();
+builder.Services.AddHttpClient<ReservaApiClient>();
+builder.Services.AddHttpClient<TurnoApiClient>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-app.UseAntiforgery();
+app.UseRouting();
 
+builder.Services.AddRazorComponents()
+.AddInteractiveServerComponents();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+.AddInteractiveServerRenderMode();
 
 app.Run();
