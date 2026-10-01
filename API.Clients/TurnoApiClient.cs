@@ -47,5 +47,28 @@ namespace API.Clients
 
         public async Task<bool> EliminarAsync(int codigo)
             => (await _client.DeleteAsync($"turnos/{codigo}")).IsSuccessStatusCode;
+        public async Task<ReservaDTO?> ReservarAsync(int codigo, int pacienteId)
+        {
+            // Si quien reserva es un paciente, el WebAPI ignora pacienteId y usa el del token
+            var r = await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId });
+            return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<ReservaDTO>() : null;
+        }
+
+        public async Task<(bool Ok, string? Error)> CancelarReservaAsync(int codigo)
+        {
+            var r = await _client.PostAsync($"turnos/{codigo}/cancelar-reserva", null);
+            if (r.IsSuccessStatusCode)
+                return (true, null);
+
+            try
+            {
+                var body = await r.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                return (false, body != null && body.TryGetValue("error", out var msg) ? msg : null);
+            }
+            catch
+            {
+                return (false, null);
+            }
+        }
     }
 }   

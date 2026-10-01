@@ -12,5 +12,8 @@ namespace Applications.Services
         Task CrearAsync(TurnoDTO dto);
         Task ActualizarAsync(TurnoDTO dto);
         Task EliminarAsync(int codigo);
+        Task<ReservaDTO> ReservarAsync(int codigo, int pacienteId);
+        Task CancelarReservaAsync(int codigo);
     }
 }
+    

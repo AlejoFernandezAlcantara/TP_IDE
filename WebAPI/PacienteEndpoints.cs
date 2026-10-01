@@ -1,6 +1,7 @@
 ﻿using Applications.Services;
 using Domain.Model;
 using DTO;
+using System.Security.Claims;
 
 namespace WebAPI
 {
@@ -16,15 +17,16 @@ namespace WebAPI
                 .RequireAuthorization();
 
             // Obtener por número de paciente
-            group.MapGet("/{nroPaciente}", async (int nroPaciente, IPacienteService service) =>
+            group.MapGet("/{nroPaciente}", async Task<IResult> (int nroPaciente, ClaimsPrincipal user, IPacienteService service) =>
             {
-                var paciente = await service.GetByNroPacienteAsync(nroPaciente);
+                if (user.IsInRole("Paciente") && user.NroPaciente() != nroPaciente)
+                    return Results.Forbid();
 
-                return paciente is null
-                    ? Results.NotFound()
-                    : Results.Ok(paciente);
+                var paciente = await service.GetByNroPacienteAsync(nroPaciente);
+                return paciente is null ? Results.NotFound() : Results.Ok(paciente);
             })
             .RequireAuthorization();
+
 
             // Crear paciente
             group.MapPost("/", async (PacienteDTO dto, IPacienteService service) =>
@@ -37,10 +39,12 @@ namespace WebAPI
             });
 
             // Actualizar paciente
-            group.MapPut("/", async (PacienteDTO dto, IPacienteService service) =>
+            group.MapPut("/", async Task<IResult> (PacienteDTO dto, ClaimsPrincipal user, IPacienteService service) =>
             {
-                await service.ActualizarAsync(dto);
+                if (!user.EsAdmin() && user.NroPaciente() != dto.NroPaciente)
+                    return Results.Forbid();
 
+                await service.ActualizarAsync(dto);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Paciente"));

@@ -1,6 +1,7 @@
 ﻿using Applications.Services;
 using Domain.Model;
 using DTO;
+using System.Security.Claims;
 
 namespace WebAPI
 {
@@ -28,12 +29,16 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
 
-            group.MapPut("/", async (OdontologoDTO dto, IOdontologoService service) =>
+            group.MapPut("/", async Task<IResult> (OdontologoDTO dto, ClaimsPrincipal user, IOdontologoService service) =>
             {
+                // El odontólogo solo puede editar su propio registro (la matrícula identifica al registro)
+                if (!user.EsAdmin() && user.Matricula() != dto.Matricula)
+                    return Results.Forbid();
+
                 await service.ActualizarAsync(dto);
                 return Results.NoContent();
             })
-            .RequireAuthorization(policy => policy.RequireRole("Administrador"));
+            .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
             group.MapDelete("/{matricula}", async (string matricula, IOdontologoService service) =>
             {

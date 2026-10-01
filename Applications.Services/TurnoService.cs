@@ -75,5 +75,21 @@ namespace Applications.Services
             _reservaOdontologoMatricula = t.ReservaOdontologoMatricula,
             _reservaFechaCreacion = t.ReservaFechaCreacion,
         };
+        public async Task<ReservaDTO> ReservarAsync(int codigo, int pacienteId)
+        {
+            var r = await _repository.ReservarAsync(codigo, pacienteId);
+            return new ReservaDTO
+            {
+                FechaCreacion = r.FechaCreacion,
+                Estado = r.Estado,
+                Observaciones = r.Observaciones,
+                Importe = r.Importe,
+                Coseguro = r.Coseguro,
+                _pacienteId = r.PacienteId,
+                _odontologoMatricula = r.OdontologoMatricula
+            };
+        }
+
+        public async Task CancelarReservaAsync(int codigo) => await _repository.CancelarReservaAsync(codigo);
     }
 }
