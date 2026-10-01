@@ -21,7 +21,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\API.Auth.Blazor.Server\API.Auth.Blazor.Server.csproj" />
 		<ProjectReference Include="..\Applications.Services\Applications.Services.csproj" />
-		<ProjectReference Include="..\BlazorApp1\Blazor.Server.csproj" />
 		<ProjectReference Include="..\Data\Data.csproj" />
 		<ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
 		<ProjectReference Include="..\DTO\DTO.csproj" />

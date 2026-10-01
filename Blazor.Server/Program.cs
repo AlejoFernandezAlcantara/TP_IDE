@@ -11,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
 .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents()
+.AddInteractiveServerComponents();
+
+
 
 // Autenticación
 builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
@@ -33,14 +37,15 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+app.MapRazorComponents<App>()
+.AddInteractiveServerRenderMode();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
 
-builder.Services.AddRazorComponents()
-.AddInteractiveServerComponents();
-app.MapRazorComponents<App>()
-.AddInteractiveServerRenderMode();
+app.UseRouting();
+app.UseAntiforgery();
+
+
 
 app.Run();

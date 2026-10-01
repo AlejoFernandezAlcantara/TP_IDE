@@ -15,13 +15,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAPI", "WebAPI\WebAPI.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsForms", "WindowsForms\WindowsForms.csproj", "{2A73DA47-2664-4516-9DA1-C1B174C580B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.Server", "BlazorApp1\Blazor.Server.csproj", "{E11BD713-AA46-4DBF-B257-74267B3892A4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Auth.Blazor.Server", "API.Auth.Blazor.Server\API.Auth.Blazor.Server.csproj", "{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Auth.WindowsForms", "API.Auth.WindowsForms\API.Auth.WindowsForms.csproj", "{C244E59B-F92C-491C-BC72-008D2241975D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API.Clients", "API.Clients\API.Clients.csproj", "{C98D8B93-8F79-8FE1-2BCF-053EB00E0A74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.Server", "Blazor.Server\Blazor.Server.csproj", "{C2C7976C-9727-5E92-C4FA-07931EBA9884}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,10 +53,6 @@ Global
 		{2A73DA47-2664-4516-9DA1-C1B174C580B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A73DA47-2664-4516-9DA1-C1B174C580B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A73DA47-2664-4516-9DA1-C1B174C580B3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E11BD713-AA46-4DBF-B257-74267B3892A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E11BD713-AA46-4DBF-B257-74267B3892A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E11BD713-AA46-4DBF-B257-74267B3892A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E11BD713-AA46-4DBF-B257-74267B3892A4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CAA2A1F-6F0D-4490-AC08-B8800A5F71E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -69,6 +65,10 @@ Global
 		{C98D8B93-8F79-8FE1-2BCF-053EB00E0A74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C98D8B93-8F79-8FE1-2BCF-053EB00E0A74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C98D8B93-8F79-8FE1-2BCF-053EB00E0A74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2C7976C-9727-5E92-C4FA-07931EBA9884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2C7976C-9727-5E92-C4FA-07931EBA9884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2C7976C-9727-5E92-C4FA-07931EBA9884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2C7976C-9727-5E92-C4FA-07931EBA9884}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
