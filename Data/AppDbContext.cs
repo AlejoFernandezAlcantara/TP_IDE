@@ -72,7 +72,7 @@ namespace Data
             modelBuilder.Entity<Cara>().HasKey(c => c.IdCara);
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
-            modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedNever();
+            modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
 
             // ===================== RESERVA (clave compuesta) =====================
             modelBuilder.Entity<Reserva>()

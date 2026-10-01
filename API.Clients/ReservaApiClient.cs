@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DTO;
 
@@ -13,44 +14,36 @@ namespace API.Clients
             _client.BaseAddress = new Uri("http://localhost:5232/api/");
         }
 
+        public void SetToken(string? token)
+        {
+            _client.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
+                ? null
+                : new AuthenticationHeaderValue("Bearer", token);
+        }
+
         public async Task<List<ReservaDTO>?> GetAllAsync()
         {
-            var response = await _client.GetAsync("reservas");
-            
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            return await response.Content.ReadFromJsonAsync<List<ReservaDTO>>();
+            var r = await _client.GetAsync("reservas");
+            return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<ReservaDTO>>() : null;
         }
 
         public async Task<List<ReservaDTO>?> GetByPacienteAsync(int pacienteId)
         {
-            var response = await _client.GetAsync($"reservas/paciente/{pacienteId}");
-            
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            return await response.Content.ReadFromJsonAsync<List<ReservaDTO>>();
+            var r = await _client.GetAsync($"reservas/paciente/{pacienteId}");
+            return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<ReservaDTO>>() : null;
         }
 
         public async Task<bool> CrearAsync(ReservaDTO dto)
-        {
-            var response = await _client.PostAsJsonAsync("reservas", dto);
-            return response.IsSuccessStatusCode;
-        }
+            => (await _client.PostAsJsonAsync("reservas", dto)).IsSuccessStatusCode;
 
         public async Task<bool> ActualizarAsync(ReservaDTO dto)
-        {
-            var response = await _client.PutAsJsonAsync("reservas", dto);
-            return response.IsSuccessStatusCode;
-        }
+            => (await _client.PutAsJsonAsync("reservas", dto)).IsSuccessStatusCode;
 
         public async Task<bool> EliminarAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion)
         {
-            // Convertir la fecha a formato ISO para la URL
-            var fechaFormato = fechaCreacion.ToString("yyyy-MM-dd");
-            var response = await _client.DeleteAsync($"reservas/{pacienteId}/{odontologoMatricula}/{fechaFormato}");
-            return response.IsSuccessStatusCode;
+            var fecha = Uri.EscapeDataString(fechaCreacion.ToString("O"));
+            var r = await _client.DeleteAsync($"reservas/{pacienteId}/{odontologoMatricula}?fechaCreacion={fecha}");
+            return r.IsSuccessStatusCode;
         }
     }
 }
