@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DTO;
 
@@ -13,23 +14,26 @@ namespace API.Clients
             _client.BaseAddress = new Uri("http://localhost:5232/api/");
         }
 
+        public void SetToken(string? token)
+        {
+            _client.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
+                ? null
+                : new AuthenticationHeaderValue("Bearer", token);
+        }
+
         public async Task<List<PacienteDTO>?> GetAllAsync()
         {
             var response = await _client.GetAsync("pacientes");
-            
             if (!response.IsSuccessStatusCode)
                 return null;
-
             return await response.Content.ReadFromJsonAsync<List<PacienteDTO>>();
         }
 
         public async Task<PacienteDTO?> GetByNroPacienteAsync(int nroPaciente)
         {
             var response = await _client.GetAsync($"pacientes/{nroPaciente}");
-            
             if (!response.IsSuccessStatusCode)
                 return null;
-
             return await response.Content.ReadFromJsonAsync<PacienteDTO>();
         }
 
@@ -41,7 +45,8 @@ namespace API.Clients
 
         public async Task<bool> ActualizarAsync(PacienteDTO paciente)
         {
-            var response = await _client.PutAsJsonAsync($"pacientes/{paciente.NroPaciente}", paciente);
+            // El PUT del WebAPI es /api/pacientes (sin id en la URL)
+            var response = await _client.PutAsJsonAsync("pacientes", paciente);
             return response.IsSuccessStatusCode;
         }
 

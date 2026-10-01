@@ -1,0 +1,285 @@
+﻿@using Domain.Model
+@using API.Clients
+@using System.Text.RegularExpressions
+@inject PacienteApiClient PacienteApiClient
+@inject IBlazorAuthService AuthService
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(mode == FormMode.Add ? "Agregar paciente" : "Editar paciente")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="currentPaciente" OnValidSubmit="HandleValidSubmit">
+
+                        @if (mode == FormMode.Update)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Nº de paciente</label>
+                                <input type="text" class="form-control" value="@currentPaciente.NroPaciente" readonly />
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <InputText @bind-Value="currentPaciente.Nombre" class="form-control" />
+                                @if (validationErrors.ContainsKey("Nombre"))
+                                {
+                                    <div class="text-danger small">@validationErrors["Nombre"]</div>
+                                }
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido *</label>
+                                <InputText @bind-Value="currentPaciente.Apellido" class="form-control" />
+                                @if (validationErrors.ContainsKey("Apellido"))
+                                {
+                                    <div class="text-danger small">@validationErrors["Apellido"]</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label">Tipo de documento *</label>
+                                <InputSelect @bind-Value="currentPaciente.TipoDni" class="form-select">
+                                    @foreach (var tipo in Enum.GetValues<tiposEnumerados>())
+                                    {
+                                        <option value="@tipo">@tipo</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-7 mb-3">
+                                <label class="form-label">Nº de documento *</label>
+                                <InputNumber @bind-Value="currentPaciente.NroDni" class="form-control" />
+                                @if (validationErrors.ContainsKey("NroDni"))
+                                {
+                                    <div class="text-danger small">@validationErrors["NroDni"]</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dirección *</label>
+                            <InputText @bind-Value="currentPaciente.Direccion" class="form-control" />
+                            @if (validationErrors.ContainsKey("Direccion"))
+                            {
+                                <div class="text-danger small">@validationErrors["Direccion"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono *</label>
+                            <InputText @bind-Value="currentPaciente.Telefono" class="form-control" />
+                            @if (validationErrors.ContainsKey("Telefono"))
+                            {
+                                <div class="text-danger small">@validationErrors["Telefono"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <InputText @bind-Value="currentPaciente.Email" class="form-control" />
+                            @if (validationErrors.ContainsKey("Email"))
+                            {
+                                <div class="text-danger small">@validationErrors["Email"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                @(mode == FormMode.Add ? "Contraseña *" : "Nueva contraseña")
+                            </label>
+                            <InputText type="password" @bind-Value="currentPaciente.Password" class="form-control" autocomplete="new-password" />
+                            @if (mode == FormMode.Update)
+                            {
+                                <div class="form-text">Dejala vacía para mantener la actual.</div>
+                            }
+                            @if (validationErrors.ContainsKey("Password"))
+                            {
+                                <div class="text-danger small">@validationErrors["Password"]</div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@saving">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                @(mode == FormMode.Add ? "Agregar" : "Guardar cambios")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnPacienteChanged { get; set; }
+
+    private bool showModal = false;
+    private FormMode mode = FormMode.Add;
+    private PacienteDTO currentPaciente = new PacienteDTO();
+    private bool saving = false;
+    private string errorMessage = string.Empty;
+    private Dictionary<string, string> validationErrors = new Dictionary<string, string>();
+
+    public enum FormMode
+    {
+        Add,
+        Update
+    }
+
+    public Task ShowAddModal()
+    {
+        mode = FormMode.Add;
+        currentPaciente = new PacienteDTO();
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public Task ShowEditModal(PacienteDTO paciente)
+    {
+        mode = FormMode.Update;
+        currentPaciente = new PacienteDTO
+        {
+            NroPaciente = paciente.NroPaciente,
+            Nombre = paciente.Nombre,
+            Apellido = paciente.Apellido,
+            NroDni = paciente.NroDni,
+            TipoDni = paciente.TipoDni,
+            Direccion = paciente.Direccion,
+            Telefono = paciente.Telefono,
+            Email = paciente.Email,
+            Password = string.Empty
+        };
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!ValidatePaciente())
+            return;
+
+        try
+        {
+            saving = true;
+            errorMessage = string.Empty;
+
+            PacienteApiClient.SetToken(await AuthService.GetTokenAsync());
+
+            bool ok = mode == FormMode.Add
+                ? await PacienteApiClient.CrearAsync(currentPaciente)
+                : await PacienteApiClient.ActualizarAsync(currentPaciente);
+
+            if (!ok)
+            {
+                errorMessage = "No se pudo guardar el paciente. Revisá los datos o volvé a iniciar sesión.";
+                return;
+            }
+
+            await OnPacienteChanged.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private bool ValidatePaciente()
+    {
+        ClearValidationErrors();
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(currentPaciente.Nombre))
+        {
+            validationErrors["Nombre"] = "El nombre es obligatorio";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPaciente.Apellido))
+        {
+            validationErrors["Apellido"] = "El apellido es obligatorio";
+            isValid = false;
+        }
+
+        if (currentPaciente.NroDni <= 0)
+        {
+            validationErrors["NroDni"] = "Ingresá un número de documento válido";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPaciente.Direccion))
+        {
+            validationErrors["Direccion"] = "La dirección es obligatoria";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPaciente.Telefono))
+        {
+            validationErrors["Telefono"] = "El teléfono es obligatorio";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPaciente.Email))
+        {
+            validationErrors["Email"] = "El email es obligatorio";
+            isValid = false;
+        }
+        else if (!IsValidEmail(currentPaciente.Email))
+        {
+            validationErrors["Email"] = "El formato del email no es válido";
+            isValid = false;
+        }
+
+        if (mode == FormMode.Add && string.IsNullOrWhiteSpace(currentPaciente.Password))
+        {
+            validationErrors["Password"] = "La contraseña es obligatoria";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    private static bool IsValidEmail(string email)
+        => Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+    private void ClearValidationErrors()
+    {
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        ClearValidationErrors();
+        StateHasChanged();
+    }
+}
