@@ -1,14 +1,16 @@
 using API.Auth.Blazor.Server;
 using API.Clients;
 using Applications.Services;
+using Blazor.Server;
+using Blazor.Server.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddRazorComponents()
+.AddInteractiveServerComponents();
 
 // Autenticación
 builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
@@ -36,7 +38,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+builder.Services.AddRazorComponents()
+.AddInteractiveServerComponents();
+app.MapRazorComponents<App>()
+.AddInteractiveServerRenderMode();
 
 app.Run();
