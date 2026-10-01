@@ -14,7 +14,7 @@ namespace WebAPI
             // Obtener todos
             group.MapGet("/", async (IPacienteService service) =>
                 Results.Ok(await service.GetAllAsync()))
-                .RequireAuthorization();
+             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
             // Obtener por número de paciente
             group.MapGet("/{nroPaciente}", async Task<IResult> (int nroPaciente, ClaimsPrincipal user, IPacienteService service) =>

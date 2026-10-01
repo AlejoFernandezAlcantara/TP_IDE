@@ -41,7 +41,9 @@ namespace Applications.Services
                 PacienteId = dto._pacienteId,
                 OdontologoMatricula = dto._odontologoMatricula,
                 FechaCreacion = dto.FechaCreacion,
-                Estado = dto.Estado
+                Estado = dto.Estado,
+                FechaRealizacion = dto.FechaRealizacion,
+                Resultado = dto.Resultado
             };
 
             await _repository.UpdateAsync(reserva);

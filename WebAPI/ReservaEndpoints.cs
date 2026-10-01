@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Security.Claims;
 using Applications.Services;
 using DTO;
 
@@ -10,23 +10,47 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/reservas").WithTags("Reservas");
 
-            group.MapGet("/", async (IReservaService service) =>
-                Results.Ok(await service.GetAllAsync()))
-                .RequireAuthorization();
+            // Admin: todas. Odontólogo: solo las suyas.
+            group.MapGet("/", async (ClaimsPrincipal user, IReservaService service) =>
+            {
+                var reservas = await service.GetAllAsync();
 
-            group.MapGet("/paciente/{pacienteId}", async (int pacienteId, IReservaService service) =>
-                Results.Ok(await service.GetByPacienteAsync(pacienteId)))
-                .RequireAuthorization();
+                if (user.IsInRole("Odontologo"))
+                    reservas = reservas.Where(r => r._odontologoMatricula == user.Matricula()).ToList();
 
+                return Results.Ok(reservas);
+            })
+            .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
+
+            // Paciente: solo las propias. Odontólogo: solo las de sus turnos. Admin: cualquiera.
+            group.MapGet("/paciente/{pacienteId}", async Task<IResult> (int pacienteId, ClaimsPrincipal user, IReservaService service) =>
+            {
+                if (user.IsInRole("Paciente") && user.NroPaciente() != pacienteId)
+                    return Results.Forbid();
+
+                var reservas = await service.GetByPacienteAsync(pacienteId);
+
+                if (user.IsInRole("Odontologo"))
+                    reservas = reservas.Where(r => r._odontologoMatricula == user.Matricula()).ToList();
+
+                return Results.Ok(reservas);
+            })
+            .RequireAuthorization();
+
+            // Las reservas nuevas se crean desde /api/turnos/{codigo}/reservar
             group.MapPost("/", async (ReservaDTO dto, IReservaService service) =>
             {
                 await service.CrearAsync(dto);
                 return Results.Created("/api/reservas", dto);
             })
-            .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
+            .RequireAuthorization(policy => policy.RequireRole("Administrador"));
 
-            group.MapPut("/", async (ReservaDTO dto, IReservaService service) =>
+            // Confirmar, completar, cargar resultado. Odontólogo: solo reservas propias.
+            group.MapPut("/", async Task<IResult> (ReservaDTO dto, ClaimsPrincipal user, IReservaService service) =>
             {
+                if (!user.PuedeGestionarTurnosDe(dto._odontologoMatricula))
+                    return Results.Forbid();
+
                 await service.ActualizarAsync(dto);
                 return Results.NoContent();
             })
