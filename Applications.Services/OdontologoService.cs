@@ -68,7 +68,7 @@ namespace Applications.Services
                 Nombre = o.Nombre,
                 Apellido = o.Apellido,
                 Email = o.Email,
-                Password = string.Empty 
+                Password = string.Empty,
             };
 
         private static Odontologo ToDomain(OdontologoDTO dto, bool hashearPassword)

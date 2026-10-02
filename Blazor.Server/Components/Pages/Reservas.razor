@@ -1,0 +1,259 @@
+﻿@page "/reservas"
+@using Domain.Model
+@inject ReservaApiClient ReservaApiClient
+@inject TurnoApiClient TurnoApiClient
+@inject PacienteApiClient PacienteApiClient
+@inject OdontologoApiClient OdontologoApiClient
+@inject IBlazorAuthService AuthService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Reservas</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">@(rol == "Odontologo" ? "Mis reservas" : "Reservas")</h1>
+    @if (mostrar)
+    {
+        <a class="btn btn-primary" href="reservar">Nueva reserva</a>
+    }
+</div>
+
+@if (loading)
+{
+    <p><em>Cargando reservas...</em></p>
+}
+
+@if (!loading && !autorizado)
+{
+    <div class="alert alert-warning">
+        Esta sección es solo para administradores y odontólogos. Iniciá sesión con una cuenta habilitada.
+    </div>
+}
+
+@if (mostrar)
+{
+    <div class="mb-3" style="max-width: 260px;">
+        <label class="form-label">Filtrar por estado</label>
+        <select class="form-select" @bind="filtroEstado">
+            <option value="">Todos</option>
+            <option value="@EstadoReserva.Pendiente">Pendiente</option>
+            <option value="@EstadoReserva.Confirmada">Confirmada</option>
+            <option value="@EstadoReserva.Completada">Completada</option>
+            <option value="@EstadoReserva.Cancelada">Cancelada</option>
+        </select>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success">@mensaje</div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (Filtradas.Count == 0)
+    {
+        <p>No hay reservas para mostrar.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Creada</th>
+                        <th>Paciente</th>
+                        @if (rol == "Administrador")
+                        {
+                            <th>Odontólogo</th>
+                        }
+                        <th>Estado</th>
+                        <th>Importe</th>
+                        <th>Coseguro</th>
+                        <th>Realización</th>
+                        <th>Resultado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Filtradas)
+                    {
+                        <tr @key="r.Id">
+                            <td>@r.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@NombrePaciente(r._pacienteId)</td>
+                            @if (rol == "Administrador")
+                            {
+                                <td>@NombreOdontologo(r._odontologoMatricula)</td>
+                            }
+                            <td><span class="badge @ClaseEstado(r.Estado)">@r.Estado</span></td>
+                            <td>@(r.Importe?.ToString("N2") ?? "—")</td>
+                            <td>@(r.Coseguro?.ToString("N2") ?? "—")</td>
+                            <td>@(r.FechaRealizacion?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Resultado) ? "—" : r.Resultado)</td>
+                            <td class="text-end text-nowrap">
+                                @if (r.Estado != EstadoReserva.Cancelada)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary me-1"
+                                            @onclick="() => modal.ShowEditModal(r, NombrePaciente(r._pacienteId), NombreOdontologo(r._odontologoMatricula))">Editar</button>
+                                }
+                                @if (r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada)
+                                {
+                                    <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => CancelarAsync(r)">Cancelar reserva</button>
+                                }
+                                @if (rol == "Administrador" && (r.Estado == EstadoReserva.Cancelada || r.Estado == EstadoReserva.Completada))
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(r)">Eliminar</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<ReservaModal @ref="modal" OnReservaChanged="CargarAsync" />
+
+@code {
+    private ReservaModal modal = default!;
+    private string rol = string.Empty;
+    private bool loading = true;
+    private bool autorizado = false;
+    private string filtroEstado = string.Empty;
+    private List<ReservaDTO> reservas = new();
+    private Dictionary<int, PacienteDTO> pacientes = new();
+    private Dictionary<string, OdontologoDTO> odontologos = new();
+    private string mensaje = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private bool mostrar => !loading && autorizado;
+
+    private List<ReservaDTO> Filtradas =>
+        string.IsNullOrEmpty(filtroEstado)
+            ? reservas
+            : reservas.Where(r => r.Estado.ToString() == filtroEstado).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        rol = await AuthService.GetRolAsync() ?? string.Empty;
+        autorizado = rol == "Administrador" || rol == "Odontologo";
+
+        if (autorizado)
+            await CargarAsync();
+
+        loading = false;
+    }
+
+    private async Task CargarAsync()
+    {
+        errorMessage = string.Empty;
+
+        var token = await AuthService.GetTokenAsync();
+        ReservaApiClient.SetToken(token);
+        PacienteApiClient.SetToken(token);
+        OdontologoApiClient.SetToken(token);
+
+        // El WebAPI ya filtra: el odontólogo solo recibe sus reservas
+        var resultado = await ReservaApiClient.GetAllAsync();
+        if (resultado is null)
+        {
+            errorMessage = "No se pudieron cargar las reservas. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            return;
+        }
+
+        reservas = resultado.OrderByDescending(r => r.FechaCreacion).ToList();
+
+        var listaPacientes = await PacienteApiClient.GetAllAsync() ?? new List<PacienteDTO>();
+        pacientes = listaPacientes.ToDictionary(p => p.NroPaciente);
+
+        var listaOdontologos = await OdontologoApiClient.GetAllAsync() ?? new List<OdontologoDTO>();
+        odontologos = listaOdontologos.ToDictionary(o => o.Matricula);
+    }
+
+    private async Task CancelarAsync(ReservaDTO r)
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Cancelar la reserva de {NombrePaciente(r._pacienteId)}? El turno volverá a quedar disponible.");
+
+        if (!confirmar)
+            return;
+
+        var token = await AuthService.GetTokenAsync();
+        TurnoApiClient.SetToken(token);
+        ReservaApiClient.SetToken(token);
+
+        // Se busca el turno asociado para liberarlo junto con la reserva
+        var turnos = await TurnoApiClient.GetAllAsync();
+        var turno = turnos?.FirstOrDefault(t =>
+            t.Estado == EstadoTurno.Reservado &&
+            t._reservaPacienteId == r._pacienteId &&
+            t._reservaOdontologoMatricula == r._odontologoMatricula &&
+            t._reservaFechaCreacion == r.FechaCreacion);
+
+        if (turno is not null)
+        {
+            var (ok, error) = await TurnoApiClient.CancelarReservaAsync(turno.Codigo);
+            if (!ok)
+            {
+                errorMessage = error ?? "No se pudo cancelar la reserva.";
+                return;
+            }
+        }
+        else
+        {
+            // Sin turno asociado: solo se marca la reserva como cancelada
+            r.Estado = EstadoReserva.Cancelada;
+            if (!await ReservaApiClient.ActualizarAsync(r))
+            {
+                errorMessage = "No se pudo cancelar la reserva.";
+                return;
+            }
+        }
+
+        mensaje = "Reserva cancelada.";
+        await CargarAsync();
+    }
+
+    private async Task EliminarAsync(ReservaDTO r)
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Eliminar definitivamente la reserva de {NombrePaciente(r._pacienteId)}? Esta acción no se puede deshacer.");
+
+        if (!confirmar)
+            return;
+
+        ReservaApiClient.SetToken(await AuthService.GetTokenAsync());
+
+        if (await ReservaApiClient.EliminarAsync(r.Id))
+        {
+            mensaje = "Reserva eliminada.";
+            await CargarAsync();
+        }
+        else
+        {
+            errorMessage = "No se pudo eliminar la reserva.";
+        }
+    }
+
+    private string NombrePaciente(int nro)
+        => pacientes.TryGetValue(nro, out var p) ? $"{p.Apellido}, {p.Nombre}" : $"Paciente Nº {nro}";
+
+    private string NombreOdontologo(string matricula)
+        => odontologos.TryGetValue(matricula, out var o) ? $"{o.Apellido}, {o.Nombre}" : matricula;
+
+    private static string ClaseEstado(EstadoReserva estado) => estado switch
+    {
+        EstadoReserva.Pendiente => "bg-warning text-dark",
+        EstadoReserva.Confirmada => "bg-primary",
+        EstadoReserva.Completada => "bg-success",
+        _ => "bg-secondary"
+    };
+}

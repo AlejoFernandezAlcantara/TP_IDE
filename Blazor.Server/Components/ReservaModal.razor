@@ -1,0 +1,214 @@
+﻿@using Domain.Model
+@inject ReservaApiClient ReservaApiClient
+@inject IBlazorAuthService AuthService
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar reserva</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="currentReserva" OnValidSubmit="HandleValidSubmit">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Paciente</label>
+                                <input type="text" class="form-control" value="@pacienteNombre" readonly />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Odontólogo</label>
+                                <input type="text" class="form-control" value="@odontologoNombre" readonly />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de creación</label>
+                            <input type="text" class="form-control" value="@currentReserva.FechaCreacion.ToString("dd/MM/yyyy HH:mm")" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado *</label>
+                            <InputSelect @bind-Value="currentReserva.Estado" class="form-select">
+                                <option value="@EstadoReserva.Pendiente">Pendiente</option>
+                                <option value="@EstadoReserva.Confirmada">Confirmada</option>
+                                <option value="@EstadoReserva.Completada">Completada</option>
+                            </InputSelect>
+                            <div class="form-text">Para cancelar una reserva usá el botón "Cancelar reserva" de la lista, así el turno vuelve a quedar disponible.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Importe</label>
+                                <InputNumber @bind-Value="currentReserva.Importe" class="form-control" />
+                                @if (validationErrors.ContainsKey("Importe"))
+                                {
+                                    <div class="text-danger small">@validationErrors["Importe"]</div>
+                                }
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Coseguro</label>
+                                <InputNumber @bind-Value="currentReserva.Coseguro" class="form-control" />
+                                @if (validationErrors.ContainsKey("Coseguro"))
+                                {
+                                    <div class="text-danger small">@validationErrors["Coseguro"]</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <InputTextArea @bind-Value="currentReserva.Observaciones" class="form-control" rows="2" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de realización @(currentReserva.Estado == EstadoReserva.Completada ? "*" : "")</label>
+                            <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentReserva.FechaRealizacion" class="form-control" />
+                            @if (validationErrors.ContainsKey("FechaRealizacion"))
+                            {
+                                <div class="text-danger small">@validationErrors["FechaRealizacion"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Resultado</label>
+                            <InputTextArea @bind-Value="currentReserva.Resultado" class="form-control" rows="2" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@saving">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnReservaChanged { get; set; }
+
+    private bool showModal = false;
+    private ReservaDTO currentReserva = new ReservaDTO();
+    private string pacienteNombre = string.Empty;
+    private string odontologoNombre = string.Empty;
+    private bool saving = false;
+    private string errorMessage = string.Empty;
+    private Dictionary<string, string> validationErrors = new Dictionary<string, string>();
+
+    public Task ShowEditModal(ReservaDTO reserva, string paciente, string odontologo)
+    {
+        // Se copia el DTO para no modificar la fila de la grilla si el usuario cancela
+        currentReserva = new ReservaDTO
+        {
+            Id = reserva.Id,
+            FechaCreacion = reserva.FechaCreacion,
+            Estado = reserva.Estado,
+            Observaciones = reserva.Observaciones,
+            Importe = reserva.Importe,
+            Coseguro = reserva.Coseguro,
+            FechaRealizacion = reserva.FechaRealizacion,
+            Resultado = reserva.Resultado,
+            _pacienteId = reserva._pacienteId,
+            _odontologoMatricula = reserva._odontologoMatricula
+        };
+        pacienteNombre = paciente;
+        odontologoNombre = odontologo;
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!ValidateReserva())
+            return;
+
+        try
+        {
+            saving = true;
+            errorMessage = string.Empty;
+
+            ReservaApiClient.SetToken(await AuthService.GetTokenAsync());
+
+            if (!await ReservaApiClient.ActualizarAsync(currentReserva))
+            {
+                errorMessage = "No se pudo guardar la reserva. Revisá los datos o volvé a iniciar sesión.";
+                return;
+            }
+
+            await OnReservaChanged.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private bool ValidateReserva()
+    {
+        ClearValidationErrors();
+        bool isValid = true;
+
+        if (currentReserva.Importe is < 0)
+        {
+            validationErrors["Importe"] = "El importe no puede ser negativo";
+            isValid = false;
+        }
+
+        if (currentReserva.Coseguro is < 0)
+        {
+            validationErrors["Coseguro"] = "El coseguro no puede ser negativo";
+            isValid = false;
+        }
+        else if (currentReserva.Coseguro is not null && currentReserva.Importe is not null
+                 && currentReserva.Coseguro > currentReserva.Importe)
+        {
+            validationErrors["Coseguro"] = "El coseguro no puede ser mayor al importe";
+            isValid = false;
+        }
+
+        if (currentReserva.Estado == EstadoReserva.Completada && currentReserva.FechaRealizacion is null)
+        {
+            validationErrors["FechaRealizacion"] = "Indicá cuándo se realizó la atención";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    private void ClearValidationErrors()
+    {
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        ClearValidationErrors();
+        StateHasChanged();
+    }
+}

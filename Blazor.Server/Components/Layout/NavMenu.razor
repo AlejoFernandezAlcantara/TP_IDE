@@ -18,23 +18,28 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        @if (rol == "Administrador")
+        {
+            <div class="nav-item px-3"><NavLink class="nav-link" href="pacientes">Pacientes</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="odontologos">Odontólogos</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="turnos">Turnos</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="reservas">Reservas</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="reservar">Reservar</NavLink></div>
+        }
+        else if (rol == "Odontologo")
+        {
+            <div class="nav-item px-3"><NavLink class="nav-link" href="turnos">Mis turnos</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="reservas">Mis reservas</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="reservar">Reservar</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="mis-datos">Mis datos</NavLink></div>
+        }
+        else if (rol == "Paciente")
+        {
+            <div class="nav-item px-3"><NavLink class="nav-link" href="reservar">Reservar turno</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="mis-reservas">Mis reservas</NavLink></div>
+            <div class="nav-item px-3"><NavLink class="nav-link" href="mis-datos">Mis datos</NavLink></div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="pacientes">Pacientes</NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="odontologos">Odontólogos</NavLink>
-        </div>
         <div class="nav-item px-3">
             @if (nombre is null)
             {
@@ -42,24 +47,32 @@
             }
             else
             {
-                <span class="nav-link">@nombre</span>
+                <span class="nav-link">@nombre (@rol)</span>
                 <a class="nav-link" href="" @onclick="LogoutAsync" @onclick:preventDefault>Cerrar sesión</a>
             }
         </div>
     </nav>
 </div>
+
 @code {
     private string? nombre;
+    private string? rol;
 
     protected override async Task OnInitializedAsync()
     {
         AuthService.AuthenticationStateChanged += OnAuthChanged;
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
         nombre = await AuthService.GetNombreAsync();
+        rol = await AuthService.GetRolAsync();
     }
 
     private async void OnAuthChanged(bool autenticado)
     {
-        nombre = await AuthService.GetNombreAsync();
+        await CargarAsync();
         await InvokeAsync(StateHasChanged);
     }
 

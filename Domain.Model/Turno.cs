@@ -6,91 +6,58 @@ using System.Threading.Tasks;
 
 namespace Domain.Model
 {
-    public class Turno
-    {
-        public int Codigo { get; set; }
-        public DateTime FechaHoraInicio { get; set; }
-        public int Duracion { get; set; }
-        public EstadoTurno Estado { get; set; }
 
-        // FK DE ODONTOLOGO
-        private string _odontologoMatricula = string.Empty;
-        private Odontologo? _odontologo;
-
-        // FK DE RESERVA
-        private int _reservaPacienteId;
-        private string _reservaOdontologoMatricula = string.Empty;
-        private DateTime _reservaFechaCreacion;
-        private Reserva? _reserva;
-
-        //GET Y SET DE LAS 2FK
-        public string OdontologoMatricula
+        public class Turno
         {
-            get => _odontologo?.Matricula ?? _odontologoMatricula;
-            set => _odontologoMatricula = value;
-        }
+            public int Codigo { get; set; }
+            public DateTime FechaHoraInicio { get; set; }
+            public int Duracion { get; set; }
+            public EstadoTurno Estado { get; set; }
 
-        public Odontologo? Odontologo
-        {
-            get => _odontologo;
-            set
+            // FK Odontologo
+            public string OdontologoMatricula { get; set; } = string.Empty;
+            public Odontologo? Odontologo { get; set; }
+
+            // FK Reserva (la que usa EF)
+            public int? ReservaId { get; set; }
+            public Reserva? Reserva { get; set; }
+
+            // ---- Compatibilidad con código existente (EF las ignora) ----
+            private int _reservaPacienteId;
+            private string _reservaOdontologoMatricula = string.Empty;
+            private DateTime _reservaFechaCreacion;
+
+            public int ReservaPacienteId
             {
-                _odontologo = value;
-                if (value != null && _odontologoMatricula != value.Matricula)
-                {
-                    _odontologoMatricula = value.Matricula; // Sincronizar automáticamente
-                }
+                get => Reserva?.PacienteId ?? _reservaPacienteId;
+                set => _reservaPacienteId = value;
             }
-        }
-        public int ReservaPacienteId
-        {
-            get => _reserva?.PacienteId ?? _reservaPacienteId;
-            set => _reservaPacienteId = value;
-        }
-        public string ReservaOdontologoMatricula
-        {
-            get => _reserva?.OdontologoMatricula ?? _reservaOdontologoMatricula;
-            set => _reservaOdontologoMatricula = value;
-        }
-        public DateTime ReservaFechaCreacion
-        {
-            get => _reserva?.FechaCreacion ?? _reservaFechaCreacion;
-            set => _reservaFechaCreacion = value;
-        }
-        public Reserva? Reserva
-        {
-            get => _reserva;
-            set
-            {
-                _reserva = value;
-                if (value != null)
-                {
-                    _reservaPacienteId = value.PacienteId;
-                    _reservaOdontologoMatricula = value.OdontologoMatricula;
-                    _reservaFechaCreacion = value.FechaCreacion;
-                }
-            }
-        }
 
-        // CONSTRUCTOR
-        public Turno(DateTime fechaHoraInicio)
-        {
-            SetFechaIni(fechaHoraInicio);
-            SetDuracion();
-            SetEstado();
+            public string ReservaOdontologoMatricula
+            {
+                get => Reserva?.OdontologoMatricula ?? _reservaOdontologoMatricula;
+                set => _reservaOdontologoMatricula = value;
+            }
+
+            public DateTime ReservaFechaCreacion
+            {
+                get => Reserva?.FechaCreacion ?? _reservaFechaCreacion;
+                set => _reservaFechaCreacion = value;
+            }
+
+            // Para EF
+            protected Turno() { }
+
+            public Turno(DateTime fechaHoraInicio)
+            {
+                SetFechaIni(fechaHoraInicio);
+                SetDuracion();
+                SetEstado();
+            }
+
+            public void SetFechaIni(DateTime fecha) { FechaHoraInicio = fecha; }
+            public void SetDuracion() { Duracion = 30; }
+            public void SetEstado() { Estado = EstadoTurno.Disponible; }
         }
-        
-        public void SetFechaIni(DateTime fecha)
-        {
-            FechaHoraInicio = fecha;
-        }
-        public void SetDuracion()
-        {
-            Duracion = 30;
-        }
-        public void SetEstado()
-        {
-            Estado = EstadoTurno.Disponible;
-        }
-    }
+    
 }
