@@ -15,14 +15,13 @@ namespace Domain.Model
         public string Especialidad { get; private set; }
         public string Nombre { get; private set; }
         public string Apellido { get; private set; }
-        public string? Telefono { get; private set; }
 
         public override string Rol => "Odontologo";
 
 
         public Odontologo(string matricula, int nroDocumento, tiposEnumerados tipoDocumento,
                            string especialidad, string nombre, string apellido,
-                           string email, string passwordHash, string telefono)
+                           string email, string passwordHash)
             : base(email, passwordHash)
         {
             SetMatricula(matricula);
@@ -31,7 +30,6 @@ namespace Domain.Model
             SetEspecialidad(especialidad);
             SetNombre(nombre);
             SetApellido(apellido);
-            SetTelefono(telefono);
         }
 
         public void SetNombre(string nombre)
@@ -74,14 +72,9 @@ namespace Domain.Model
             Especialidad = especialidad;
         }
 
-        public void SetTelefono(string? telefono)
-        {
-            Telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono;
-        }
-
         public void Actualizar(string nombre, string apellido, int nroDocumento,
                tiposEnumerados tipoDocumento, string especialidad,
-               string? email = null, string? passwordHash = null, string? telefono = null)
+               string? email = null, string? passwordHash = null)
         {
             SetNombre(nombre);
             SetApellido(apellido);
@@ -95,8 +88,6 @@ namespace Domain.Model
             if (!string.IsNullOrEmpty(passwordHash))
                 PasswordHash = passwordHash;
 
-            if (!string.IsNullOrWhiteSpace(telefono))
-                SetTelefono(telefono);
         }
     }
 }

@@ -39,11 +39,13 @@ namespace API.Clients
         public async Task<bool> ActualizarAsync(ReservaDTO dto)
             => (await _client.PutAsJsonAsync("reservas", dto)).IsSuccessStatusCode;
 
-        public async Task<bool> EliminarAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion)
+        /*public async Task<bool> EliminarAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion)
         {
             var fecha = Uri.EscapeDataString(fechaCreacion.ToString("O"));
             var r = await _client.DeleteAsync($"reservas/{pacienteId}/{odontologoMatricula}?fechaCreacion={fecha}");
             return r.IsSuccessStatusCode;
-        }
+        }*/
+        public async Task<bool> EliminarAsync(int id)
+         => (await _client.DeleteAsync($"reservas/{id}")).IsSuccessStatusCode;
     }
 }

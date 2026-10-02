@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Domain.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Model;
-using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
@@ -74,46 +74,40 @@ namespace Data
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
             modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
 
+
             // ===================== RESERVA =====================
+            modelBuilder.Entity<Reserva>().HasKey(r => r.Id);
+            modelBuilder.Entity<Reserva>().Property(r => r.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Reserva>().Property(r => r.Importe).HasPrecision(18, 2);
+            modelBuilder.Entity<Reserva>().Property(r => r.Coseguro).HasPrecision(18, 2);
+
+            // Opcional: evita duplicados de paciente + odontólogo + fecha
             modelBuilder.Entity<Reserva>()
-                .HasKey(r => r.Id);
-            modelBuilder.Entity<Reserva>()
-                .Property(r => r.Id)
-                .ValueGeneratedOnAdd();
+                .HasIndex(r => new { r.PacienteId, r.OdontologoMatricula, r.FechaCreacion })
+                .IsUnique();
 
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Paciente)
                 .WithMany()
                 .HasForeignKey(r => r.PacienteId)
-                .HasPrincipalKey(p => p.NroPaciente)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Odontologo)
                 .WithMany()
                 .HasForeignKey(r => r.OdontologoMatricula)
-                .HasPrincipalKey(o => o.Matricula)
                 .OnDelete(DeleteBehavior.Restrict);
-            // ===================== RESERVA =====================
-            modelBuilder.Entity<Reserva>()
-                .HasKey(r => r.Id);
-            modelBuilder.Entity<Reserva>()
-                .Property(r => r.Id)
-                .ValueGeneratedOnAdd();
-
-            // ===================== TURNO =====================
+            // ===================== TURNO -> RESERVA (opcional) =====================
+            // Borrá el Ignore(t => t.Reserva) y su comentario
             modelBuilder.Entity<Turno>()
-                .HasOne(t => t.Odontologo)
+                .HasOne(t => t.Reserva)
                 .WithMany()
-                .HasForeignKey(t => t.OdontologoMatricula)
-                .HasPrincipalKey(o => o.Matricula)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Nota: el vínculo Turno -> Reserva se deja como columnas simples (sin FK
-            // estricta en la base) porque la clave de Reserva es compuesta y sus
-            // propiedades no son nullable, lo que impide modelarlo como relación
-            // realmente opcional en EF. Se puede revisar más adelante si hace falta.
-            modelBuilder.Entity<Turno>().Ignore(t => t.Reserva);
+                .HasForeignKey(t => t.ReservaId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaPacienteId);
+                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaOdontologoMatricula);
+                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaFechaCreacion);
 
             // ===================== ODONTOGRAMA (1:1 con Paciente) =====================
             modelBuilder.Entity<Odontograma>()
