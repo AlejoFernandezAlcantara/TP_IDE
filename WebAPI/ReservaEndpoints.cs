@@ -32,13 +32,13 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // fechaCreacion va por query string, ej: ?fechaCreacion=2026-09-05T10:00:00
-            group.MapDelete("/{pacienteId}/{odontologoMatricula}", async (int pacienteId, string odontologoMatricula, DateTime fechaCreacion, IReservaService service) =>
+            group.MapDelete("/{id}", async (int id, IReservaService service) =>
             {
-                await service.EliminarAsync(pacienteId, odontologoMatricula, fechaCreacion);
+                await service.EliminarAsync(id);
                 return Results.NoContent();
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
+
         }
     }
 }

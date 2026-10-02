@@ -11,7 +11,7 @@ Entrega 3: Servicios +  Entity Framework + Escritorio + Web (Blazor)------------
 
 Replicar en una interfaz Web (Blazor) las funcionalidades implementadas previamente.
 Ampliar la solución incorporando (sólo en la aplicación de escritorio) un CRUD que aplique el patrón relacional Maestro/Detalle (ejemplo: Factura / Detalle de Factura).
-Implementar solo en Escritorio, CRUD adicional de entidades que apliquen patrón relacional Maestro/Detalle (Ej.: Factura/Detalle).
+Implementar solo en Escritorio, CRUD adicional de entidades que apliquen		patrón relacional Maestro/Detalle (Ej.: Factura/Detalle).
 Incorporar seguridad mediante el uso de tokens. (esto creo que ya esta)
 Mantener la arquitectura propuesta. (esto esta)
 

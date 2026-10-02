@@ -31,4 +31,10 @@ namespace Domain.Model
         Premolar,
         Molar
     }
+
+    public enum EstadoOdontograma
+    {
+        Activo,
+        Inactivo
+    }
 }

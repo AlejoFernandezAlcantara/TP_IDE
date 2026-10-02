@@ -24,15 +24,12 @@ namespace Data
                 .ToListAsync();
         }
 
-        public async Task<Reserva?> GetByIdAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion)
+        public async Task<Reserva?> GetByIdAsync(int id)
         {
             return await _context.Reservas
                 .Include(r => r.Paciente)
                 .Include(r => r.Odontologo)
-                .FirstOrDefaultAsync(r =>
-                    r.PacienteId == pacienteId &&
-                    r.OdontologoMatricula == odontologoMatricula &&
-                    r.FechaCreacion == fechaCreacion);
+                .FirstOrDefaultAsync(r =>r.Id == id);
         }
 
         public async Task<List<Reserva>> GetByPacienteAsync(int pacienteId)
@@ -51,10 +48,7 @@ namespace Data
 
         public async Task UpdateAsync(Reserva reserva)
         {
-            var existente = await _context.Reservas.FirstOrDefaultAsync(r =>
-                r.PacienteId == reserva.PacienteId &&
-                r.OdontologoMatricula == reserva.OdontologoMatricula &&
-                r.FechaCreacion == reserva.FechaCreacion);
+            var existente = await _context.Reservas.FirstOrDefaultAsync(r => r.Id == reserva.Id);
 
             if (existente == null)
                 throw new InvalidOperationException("Reserva no encontrada.");
@@ -73,12 +67,9 @@ namespace Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion)
+        public async Task DeleteAsync(int id)
         {
-            var existente = await _context.Reservas.FirstOrDefaultAsync(r =>
-                r.PacienteId == pacienteId &&
-                r.OdontologoMatricula == odontologoMatricula &&
-                r.FechaCreacion == fechaCreacion);
+            var existente = await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id);
 
             if (existente == null)
                 throw new InvalidOperationException("Reserva no encontrada.");

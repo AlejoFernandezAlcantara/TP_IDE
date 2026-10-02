@@ -38,6 +38,7 @@ namespace Applications.Services
         {
             var reserva = new Reserva(dto.Observaciones ?? string.Empty, dto.Importe ?? 0, dto.Coseguro ?? 0)
             {
+                Id = dto.Id,
                 PacienteId = dto._pacienteId,
                 OdontologoMatricula = dto._odontologoMatricula,
                 FechaCreacion = dto.FechaCreacion,
@@ -47,11 +48,11 @@ namespace Applications.Services
             await _repository.UpdateAsync(reserva);
         }
 
-        public async Task EliminarAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion) =>
-            await _repository.DeleteAsync(pacienteId, odontologoMatricula, fechaCreacion);
+        public async Task EliminarAsync(int id) => await _repository.DeleteAsync(id);
 
         private static ReservaDTO ToDto(Reserva r) => new ReservaDTO
         {
+            Id = r.Id,
             FechaCreacion = r.FechaCreacion,
             Estado = r.Estado,
             Observaciones = r.Observaciones,

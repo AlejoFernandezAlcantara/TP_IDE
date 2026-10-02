@@ -11,6 +11,6 @@ namespace Applications.Services
         Task<List<ReservaDTO>> GetByPacienteAsync(int pacienteId);
         Task CrearAsync(ReservaDTO dto);
         Task ActualizarAsync(ReservaDTO dto);
-        Task EliminarAsync(int pacienteId, string odontologoMatricula, DateTime fechaCreacion);
+        Task EliminarAsync(int id);
     }
 }

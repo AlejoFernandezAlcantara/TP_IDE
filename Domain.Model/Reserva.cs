@@ -9,6 +9,7 @@ namespace Domain.Model
 {
     public class Reserva
     {
+        public int Id { get; set; }
         public DateTime FechaCreacion { get; set; }
         public EstadoReserva Estado { get; set; }
         public string? Observaciones { get; set; }
@@ -106,7 +107,7 @@ namespace Domain.Model
 
         public void SetC(float? coseguro)
         {
-            if (coseguro < 0)
+            if (coseguro < 0)   
             {
                 throw new ArgumentException("El coseguro no puede ser negativo.");
             }

@@ -9,6 +9,7 @@ namespace DTO
 {
     public class ReservaDTO
     {
+        public int Id { get; set; }
         public DateTime FechaCreacion { get; set; }
         public EstadoReserva Estado { get; set; }
         public string? Observaciones { get; set; }

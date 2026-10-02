@@ -16,9 +16,9 @@ namespace Data
 
         public DbSet<Turno> Turnos { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
-        public DbSet<ReservaPractica> ReservaPracticas { get; set; }
+        public DbSet<Odontograma> Odontogramas { get; set; }
+        public DbSet<Detalle> Detalles { get; set; }
         public DbSet<Practica> Practicas { get; set; }
-        public DbSet<PracticaDiente> PracticaDientes { get; set; }
         public DbSet<Diente> Dientes { get; set; }
         public DbSet<Cara> Caras { get; set; }
         public DbSet<DienteCara> DienteCaras { get; set; }
@@ -74,9 +74,12 @@ namespace Data
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
             modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedNever();
 
-            // ===================== RESERVA (clave compuesta) =====================
+            // ===================== RESERVA =====================
             modelBuilder.Entity<Reserva>()
-                .HasKey(r => new { r.PacienteId, r.OdontologoMatricula, r.FechaCreacion });
+                .HasKey(r => r.Id);
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.Id)
+                .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Paciente)
@@ -91,22 +94,12 @@ namespace Data
                 .HasForeignKey(r => r.OdontologoMatricula)
                 .HasPrincipalKey(o => o.Matricula)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // ===================== RESERVAPRACTICA (Reserva <-> Practica) =====================
-            modelBuilder.Entity<ReservaPractica>()
-                .HasKey(rp => new { rp.ReservaPacienteId, rp.ReservaOdontologoMatricula, rp.ReservaFechaCreacion, rp.PracticaCodigo });
-
-            modelBuilder.Entity<ReservaPractica>()
-                .HasOne(rp => rp.Reserva)
-                .WithMany()
-                .HasForeignKey(rp => new { rp.ReservaPacienteId, rp.ReservaOdontologoMatricula, rp.ReservaFechaCreacion })
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ReservaPractica>()
-                .HasOne(rp => rp.Practica)
-                .WithMany()
-                .HasForeignKey(rp => rp.PracticaCodigo)
-                .OnDelete(DeleteBehavior.Restrict);
+            // ===================== RESERVA =====================
+            modelBuilder.Entity<Reserva>()
+                .HasKey(r => r.Id);
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.Id)
+                .ValueGeneratedOnAdd();
 
             // ===================== TURNO =====================
             modelBuilder.Entity<Turno>()
@@ -122,21 +115,55 @@ namespace Data
             // realmente opcional en EF. Se puede revisar más adelante si hace falta.
             modelBuilder.Entity<Turno>().Ignore(t => t.Reserva);
 
-            // ===================== PRACTICADIENTE (Practica <-> Diente) =====================
-            modelBuilder.Entity<PracticaDiente>()
-                .HasKey(pd => new { pd.PracticaCodigo, pd.DienteNro });
+            // ===================== ODONTOGRAMA (1:1 con Paciente) =====================
+            modelBuilder.Entity<Odontograma>()
+                .HasKey(o => o.Id);
+            modelBuilder.Entity<Odontograma>()
+                .Property(o => o.Id)
+                .ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<PracticaDiente>()
-                .HasOne(pd => pd.Practica)
+            modelBuilder.Entity<Odontograma>()
+                .HasIndex(o => o.PacienteId)
+                .IsUnique();
+
+            modelBuilder.Entity<Odontograma>()
+                .HasOne(o => o.Paciente)
                 .WithMany()
-                .HasForeignKey(pd => pd.PracticaCodigo)
+                .HasForeignKey(o => o.PacienteId)
+                .HasPrincipalKey(p => p.NroPaciente)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<PracticaDiente>()
-                .HasOne(pd => pd.Diente)
+            // ===================== DETALLE (Odontograma <-> Practica <-> Diente, + Reserva opcional) =====================
+            modelBuilder.Entity<Detalle>()
+                .HasKey(d => d.Id);
+            modelBuilder.Entity<Detalle>()
+                .Property(d => d.Id)
+                .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<Detalle>()
+                .HasOne(d => d.Odontograma)
+                .WithMany(o => o.Detalles)
+                .HasForeignKey(d => d.OdontogramaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Detalle>()
+                .HasOne(d => d.Practica)
                 .WithMany()
-                .HasForeignKey(pd => pd.DienteNro)
+                .HasForeignKey(d => d.PracticaCodigo)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Detalle>()
+                .HasOne(d => d.Diente)
+                .WithMany()
+                .HasForeignKey(d => d.DienteNro)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Detalle>()
+                .HasOne(d => d.Reserva)
+                .WithMany()
+                .HasForeignKey(d => d.ReservaId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // ===================== DIENTECARA (Diente <-> Cara) =====================
             modelBuilder.Entity<DienteCara>()
