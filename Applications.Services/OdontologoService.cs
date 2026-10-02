@@ -85,6 +85,7 @@ namespace Applications.Services
                 dto.Nombre,
                 dto.Apellido,
                 dto.Email,
+                dto.Telefono,
                 passwordHash
             );
         }
