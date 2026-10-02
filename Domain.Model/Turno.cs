@@ -8,7 +8,6 @@ namespace Domain.Model
 {
     public class Turno
     {
-        private static int incCodigo = 0;
         public int Codigo { get; set; }
         public DateTime FechaHoraInicio { get; set; }
         public int Duracion { get; set; }
@@ -76,16 +75,11 @@ namespace Domain.Model
         // CONSTRUCTOR
         public Turno(DateTime fechaHoraInicio)
         {
-            SetCod();
             SetFechaIni(fechaHoraInicio);
             SetDuracion();
             SetEstado();
         }
-        public void SetCod()
-        {
-            incCodigo++;
-            Codigo = incCodigo;
-        }
+        
         public void SetFechaIni(DateTime fecha)
         {
             FechaHoraInicio = fecha;

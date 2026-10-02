@@ -21,12 +21,15 @@ namespace WebAPI
                     return Results.Unauthorized();
 
                 var jwtKey = config["Jwt:Key"]!;
-                var claims = new[]
-                {
+                var claims = new List<Claim>
+{
                     new Claim(ClaimTypes.Email, usuario.Email),
                     new Claim(ClaimTypes.Role, usuario.Rol)
-                };
-
+};
+                if (usuario is Paciente pac)
+                    claims.Add(new Claim("nroPaciente", pac.NroPaciente.ToString()));
+                if (usuario is Odontologo odo)
+                    claims.Add(new Claim("matricula", odo.Matricula));
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using DTO;
 
 namespace API.Clients
@@ -13,23 +14,26 @@ namespace API.Clients
             _client.BaseAddress = new Uri("http://localhost:5232/api/");
         }
 
+        public void SetToken(string? token)
+        {
+            _client.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
+                ? null
+                : new AuthenticationHeaderValue("Bearer", token);
+        }
+
         public async Task<List<OdontologoDTO>?> GetAllAsync()
         {
             var response = await _client.GetAsync("odontologos");
-
             if (!response.IsSuccessStatusCode)
                 return null;
-
             return await response.Content.ReadFromJsonAsync<List<OdontologoDTO>>();
         }
 
         public async Task<OdontologoDTO?> GetByMatriculaAsync(string matricula)
         {
             var response = await _client.GetAsync($"odontologos/{matricula}");
-
             if (!response.IsSuccessStatusCode)
                 return null;
-
             return await response.Content.ReadFromJsonAsync<OdontologoDTO>();
         }
 
@@ -41,7 +45,7 @@ namespace API.Clients
 
         public async Task<bool> ActualizarAsync(OdontologoDTO odontologo)
         {
-            var response = await _client.PutAsJsonAsync($"odontologos/{odontologo.Matricula}", odontologo);
+            var response = await _client.PutAsJsonAsync("odontologos", odontologo);
             return response.IsSuccessStatusCode;
         }
 

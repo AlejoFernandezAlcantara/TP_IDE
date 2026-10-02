@@ -32,7 +32,10 @@ namespace Applications.Services
         {
             var turno = new Turno(dto.FechaHoraInicio)
             {
-                OdontologoMatricula = dto._odontologoMatricula
+                OdontologoMatricula = dto._odontologoMatricula,
+                ReservaPacienteId = dto._reservaPacienteId,
+                ReservaOdontologoMatricula = dto._reservaOdontologoMatricula,
+                ReservaFechaCreacion = dto._reservaFechaCreacion,
             };
 
             if (dto.Duracion > 0)
@@ -50,7 +53,10 @@ namespace Applications.Services
                 Codigo = dto.Codigo,
                 Duracion = dto.Duracion,
                 Estado = dto.Estado,
-                OdontologoMatricula = dto._odontologoMatricula
+                OdontologoMatricula = dto._odontologoMatricula,
+                ReservaPacienteId = dto._reservaPacienteId,
+                ReservaOdontologoMatricula = dto._reservaOdontologoMatricula,
+                ReservaFechaCreacion = dto._reservaFechaCreacion,
             };
 
             await _repository.UpdateAsync(turno);
@@ -64,7 +70,26 @@ namespace Applications.Services
             FechaHoraInicio = t.FechaHoraInicio,
             Duracion = t.Duracion,
             Estado = t.Estado,
-            _odontologoMatricula = t.OdontologoMatricula
+            _odontologoMatricula = t.OdontologoMatricula,
+            _reservaPacienteId = t.ReservaPacienteId,
+            _reservaOdontologoMatricula = t.ReservaOdontologoMatricula,
+            _reservaFechaCreacion = t.ReservaFechaCreacion,
         };
+        public async Task<ReservaDTO> ReservarAsync(int codigo, int pacienteId)
+        {
+            var r = await _repository.ReservarAsync(codigo, pacienteId);
+            return new ReservaDTO
+            {
+                FechaCreacion = r.FechaCreacion,
+                Estado = r.Estado,
+                Observaciones = r.Observaciones,
+                Importe = r.Importe,
+                Coseguro = r.Coseguro,
+                _pacienteId = r.PacienteId,
+                _odontologoMatricula = r.OdontologoMatricula
+            };
+        }
+
+        public async Task CancelarReservaAsync(int codigo) => await _repository.CancelarReservaAsync(codigo);
     }
 }

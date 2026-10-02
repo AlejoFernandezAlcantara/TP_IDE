@@ -1,0 +1,75 @@
+﻿@page "/login"
+@inject IBlazorAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Iniciar sesión</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <h1>Iniciar sesión</h1>
+
+        <EditForm Model="model" OnValidSubmit="LoginAsync">
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <InputText @bind-Value="model.Email" class="form-control" autocomplete="username" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <InputText type="password" @bind-Value="model.Password" class="form-control" autocomplete="current-password" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <button type="submit" class="btn btn-primary" disabled="@loading">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Ingresar
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginRequestDTO model = new();
+    private bool loading = false;
+    private string errorMessage = string.Empty;
+
+    private async Task LoginAsync()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            errorMessage = "Ingresá tu email y contraseña.";
+            return;
+        }
+
+        try
+        {
+            loading = true;
+
+            if (!await AuthService.LoginAsync(model.Email, model.Password))
+            {
+                errorMessage = "Email o contraseña incorrectos, o el WebAPI no está corriendo.";
+                return;
+            }
+
+            var rol = await AuthService.GetRolAsync();
+            Navigation.NavigateTo(rol == "Administrador" ? "/pacientes" : "/");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
