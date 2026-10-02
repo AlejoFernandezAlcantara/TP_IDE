@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Domain.Model;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using DTO;
 using Applications.Services;
@@ -27,7 +28,23 @@ namespace API.Auth.WindowsForms
             return Task.FromResult(autenticado);
         }
 
-       
+        public async Task<string?> GetTokenAsync()
+        {
+            var autenticado = await IsAuthenticatedAsync();
+            return autenticado ? _token : null;
+        }
+
+        public async Task<string?> GetNombreAsync()
+        {
+            var autenticado = await IsAuthenticatedAsync();
+            return autenticado ? _nombre : null;
+        }
+
+        public async Task<string?> GetRolAsync()
+        {
+            var autenticado = await IsAuthenticatedAsync();
+            return autenticado ? _rol : null;
+        }
 
         public async Task<bool> LoginAsync(string email, string password)
         {
@@ -83,6 +100,12 @@ namespace API.Auth.WindowsForms
         {
             if (!await IsAuthenticatedAsync())
                 await LogoutAsync();
+        }
+        public Task<Usuario?> ValidarCredencialesAsync(string email, string password)
+        {
+            // Este método es más para compatibilidad con IAuthService.
+            // La validación real se hace en LoginAsync(), contra la WebAPI.
+            return Task.FromResult<Usuario?>(null);
         }
     }
 }
