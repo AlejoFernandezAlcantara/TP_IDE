@@ -76,44 +76,68 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var rol = await AuthService.GetRolAsync();
-        autorizado = rol == "Administrador";
+        try
+        {
+            var rol = await AuthService.GetRolAsync();
+            autorizado = rol == "Administrador";
 
-        if (autorizado)
-            await CargarOdontologosAsync();
-
-        loading = false;
+            if (autorizado)
+                await CargarOdontologosAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocurrió un error al cargar los odontólogos: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private async Task CargarOdontologosAsync()
     {
         errorMessage = string.Empty;
 
-        OdontologoApiClient.SetToken(await AuthService.GetTokenAsync());
-        var resultado = await OdontologoApiClient.GetAllAsync();
-
-        if (resultado is null)
+        try
         {
-            errorMessage = "No se pudieron cargar los odontólogos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
-            return;
-        }
+            OdontologoApiClient.SetToken(await AuthService.GetTokenAsync());
+            var resultado = await OdontologoApiClient.GetAllAsync();
 
-        odontologos = resultado.OrderBy(o => o.Apellido).ThenBy(o => o.Nombre).ToList();
+            if (resultado is null)
+            {
+                errorMessage = "No se pudieron cargar los odontólogos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+                return;
+            }
+
+            odontologos = resultado.OrderBy(o => o.Apellido).ThenBy(o => o.Nombre).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocurrió un error al cargar los odontólogos: {ex.Message}";
+        }
     }
 
     private async Task EliminarAsync(OdontologoDTO odontologo)
     {
-        bool confirmar = await JSRuntime.InvokeAsync<bool>(
-            "confirm", $"¿Eliminar a {odontologo.Apellido}, {odontologo.Nombre}? Esta acción no se puede deshacer.");
+        try
+        {
+            bool confirmar = await JSRuntime.InvokeAsync<bool>(
+                "confirm", $"¿Eliminar a {odontologo.Apellido}, {odontologo.Nombre}? Esta acción no se puede deshacer.");
 
-        if (!confirmar)
-            return;
+            if (!confirmar)
+                return;
 
-        OdontologoApiClient.SetToken(await AuthService.GetTokenAsync());
+            OdontologoApiClient.SetToken(await AuthService.GetTokenAsync());
 
-        if (await OdontologoApiClient.EliminarAsync(odontologo.Matricula))
-            await CargarOdontologosAsync();
-        else
-            errorMessage = "No se pudo eliminar el odontólogo. Puede tener turnos o reservas asociadas.";
+            if (await OdontologoApiClient.EliminarAsync(odontologo.Matricula))
+                await CargarOdontologosAsync();
+            else
+                errorMessage = "No se pudo eliminar el odontólogo. Puede tener turnos o reservas asociadas.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocurrió un error al eliminar: {ex.Message}";
+        }
     }
+
 }
