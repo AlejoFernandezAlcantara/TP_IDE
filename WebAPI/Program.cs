@@ -36,7 +36,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// CORS: permite que BlazorApp1 (que corre en otro puerto) consuma esta API
+
 const string BlazorCorsPolicy = "BlazorCorsPolicy";
 builder.Services.AddCors(options =>
 {
@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
 });
 
 // Repositorios
-// Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core -> Scoped (siguen el ciclo de vida del DbContext)
+// Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core 
 builder.Services.AddScoped<AppDbContext>(sp =>
     new AppDbContext(builder.Configuration.GetConnectionString("Default")!));
 

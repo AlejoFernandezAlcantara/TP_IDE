@@ -18,7 +18,7 @@ namespace DTO
         //FK DE ODONTOLOGO
         public string _odontologoMatricula { get; set; }
 
-        //FK DE RESERVA (id de la reserva vigente; null si el turno está libre)
+        //FK DE RESERVA (podria ser null)
         public int? ReservaId { get; set; }
 
         public int _reservaPacienteId { get; set; }

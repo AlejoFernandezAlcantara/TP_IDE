@@ -2,8 +2,6 @@ using System;
 
 namespace Domain.Model
 {
-    // Registro de una práctica realizada sobre un diente dentro de un odontograma.
-    // Reemplaza a ReservaPractica y PracticaDiente.
     public class Detalle
     {
         public int Id { get; private set; }

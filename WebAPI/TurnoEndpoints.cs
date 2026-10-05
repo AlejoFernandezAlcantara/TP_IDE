@@ -82,7 +82,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // Paciente: siempre reserva para sí mismo (se ignora el body).
+            // Paciente: siempre reserva para sí mismo
             // Admin y odontólogo: indican el paciente en el body.
             group.MapPost("/{codigo}/reservar", async Task<IResult> (int codigo, ReservarTurnoRequest? req, ClaimsPrincipal user, ITurnoService service) =>
             {

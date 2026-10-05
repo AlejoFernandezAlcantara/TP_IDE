@@ -11,12 +11,12 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/pacientes").WithTags("Pacientes");
 
-            // Obtener todos
+           
             group.MapGet("/", async (IPacienteService service) =>
                 Results.Ok(await service.GetAllAsync()))
              .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // Obtener por número de paciente
+           
             group.MapGet("/{nroPaciente}", async Task<IResult> (int nroPaciente, ClaimsPrincipal user, IPacienteService service) =>
             {
                 if (user.IsInRole("Paciente") && user.NroPaciente() != nroPaciente)
@@ -28,7 +28,7 @@ namespace WebAPI
             .RequireAuthorization();
 
 
-            // Crear paciente
+          
             group.MapPost("/", async (PacienteDTO dto, IPacienteService service) =>
             {
                 dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? string.Empty);
@@ -38,7 +38,7 @@ namespace WebAPI
                 return Results.Created($"/api/pacientes/{dto.NroPaciente}", dto);
             });
 
-            // Actualizar paciente
+           
             group.MapPut("/", async Task<IResult> (PacienteDTO dto, ClaimsPrincipal user, IPacienteService service) =>
             {
                 if (!user.EsAdmin() && user.NroPaciente() != dto.NroPaciente)
@@ -49,7 +49,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Paciente"));
 
-            // Eliminar paciente
+         
             group.MapDelete("/{nroPaciente}", async (int nroPaciente, IPacienteService service) =>
             {
                 await service.EliminarAsync(nroPaciente);

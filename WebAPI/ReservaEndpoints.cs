@@ -37,7 +37,6 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            // Las reservas nuevas se crean desde /api/turnos/{codigo}/reservar
             group.MapPost("/", async (ReservaDTO dto, IReservaService service) =>
             {
                 await service.CrearAsync(dto);

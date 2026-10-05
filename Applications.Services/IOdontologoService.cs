@@ -7,7 +7,6 @@ using Domain.Model;
 using Data;
 using DTO;
 
-//hacer asincrono
 namespace Applications.Services
 {
     public interface IOdontologoService

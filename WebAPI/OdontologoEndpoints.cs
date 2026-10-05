@@ -31,7 +31,6 @@ namespace WebAPI
 
             group.MapPut("/", async Task<IResult> (OdontologoDTO dto, ClaimsPrincipal user, IOdontologoService service) =>
             {
-                // El odontólogo solo puede editar su propio registro (la matrícula identifica al registro)
                 if (!user.EsAdmin() && user.Matricula() != dto.Matricula)
                     return Results.Forbid();
 

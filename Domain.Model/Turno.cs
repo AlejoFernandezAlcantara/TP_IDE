@@ -22,7 +22,6 @@ namespace Domain.Model
             public int? ReservaId { get; set; }
             public Reserva? Reserva { get; set; }
 
-            // ---- Compatibilidad con código existente (EF las ignora) ----
             private int _reservaPacienteId;
             private string _reservaOdontologoMatricula = string.Empty;
             private DateTime _reservaFechaCreacion;

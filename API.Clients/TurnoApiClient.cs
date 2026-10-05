@@ -77,7 +77,6 @@ namespace API.Clients
             }
             catch
             {
-                // el cuerpo no tenía el formato esperado
             }
 
             return (false, mensajePorDefecto);

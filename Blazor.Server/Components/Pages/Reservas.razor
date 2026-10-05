@@ -157,7 +157,7 @@
         PacienteApiClient.SetToken(token);
         OdontologoApiClient.SetToken(token);
 
-        // El WebAPI ya filtra: el odontólogo solo recibe sus reservas
+        //  el odontólogo solo recibe sus reservas
         var resultado = await ReservaApiClient.GetAllAsync();
         if (resultado is null)
         {
@@ -206,7 +206,7 @@
         }
         else
         {
-            // Sin turno asociado: solo se marca la reserva como cancelada
+            // Sin turno asociado -----------> se marca la reserva como cancelada
             r.Estado = EstadoReserva.Cancelada;
             if (!await ReservaApiClient.ActualizarAsync(r))
             {

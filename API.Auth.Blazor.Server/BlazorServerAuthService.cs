@@ -10,9 +10,6 @@ namespace API.Auth.Blazor.Server
     {
 		private const string BaseUrl = "http://localhost:5232/api/";
 
-		// OJO: a propósito NO son "static". Este servicio se registra como "Scoped"
-		// en Program.cs, así que Blazor crea una instancia nueva por cada usuario
-		// conectado (por cada "circuito"). Sin static, cada uno tiene su propia sesión.
 		private string? _token;
 		private DateTime _tokenExpiration;
 		private string? _nombre;
@@ -86,8 +83,6 @@ namespace API.Auth.Blazor.Server
 		}
         public async Task<Usuario?> ValidarCredencialesAsync(string email, string password)
         {
-            // Este método es más para compatibilidad con IAuthService
-            // La validación real se hace en LoginAsync()
             return null;
         }
 

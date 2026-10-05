@@ -96,7 +96,7 @@ namespace Data
             };
             _context.Reservas.Add(reserva);
 
-            // Vincula el turno con la reserva (EF completa Turno.ReservaId al guardar)
+            // Vincula el turno con la reserva
             turno.Reserva = reserva;
             turno.Estado = EstadoTurno.Reservado;
 
@@ -106,7 +106,6 @@ namespace Data
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Otra persona reservó el mismo turno en el mismo momento
                 throw new InvalidOperationException("El turno ya fue reservado por otra persona.");
             }
 

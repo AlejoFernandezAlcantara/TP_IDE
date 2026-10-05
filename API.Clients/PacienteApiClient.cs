@@ -45,7 +45,6 @@ namespace API.Clients
 
         public async Task<bool> ActualizarAsync(PacienteDTO paciente)
         {
-            // El PUT del WebAPI es /api/pacientes (sin id en la URL)
             var response = await _client.PutAsJsonAsync("pacientes", paciente);
             return response.IsSuccessStatusCode;
         }

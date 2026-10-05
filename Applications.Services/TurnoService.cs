@@ -41,8 +41,8 @@ namespace Applications.Services
             if (dto.FechaHoraInicio < DateTime.Now)
                 throw new InvalidOperationException("No se puede cargar un turno en el pasado.");
 
-            // No se puede superponer con otro turno (no cancelado) del mismo odontólogo
-            var fin = dto.FechaHoraInicio.AddMinutes(duracion);
+            
+            var fin = dto.FechaHoraInicio.AddMinutes(duracion); // No se puede superponer con otro turno (no cancelado) del mismo odontólogo(((()))))
             var existentes = await _repository.GetByOdontologoAsync(dto._odontologoMatricula);
             var solapado = existentes.Any(t =>
                 t.Estado != EstadoTurno.Cancelado &&

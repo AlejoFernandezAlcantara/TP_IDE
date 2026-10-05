@@ -238,7 +238,7 @@ else
 
         turnos = resultado;
 
-        // Saca de la selección los turnos que ya no están disponibles
+		// Saca de la selección los turnos ya agarrados por otros usuarios
         seleccion.IntersectWith(turnos.Where(t => t.Estado == EstadoTurno.Disponible).Select(t => t.Codigo));
     }
 
@@ -266,7 +266,7 @@ else
         int pacienteId;
         if (rol == "Paciente")
         {
-            // El WebAPI usa siempre el paciente del token; este valor es solo informativo
+         
             pacienteId = nroPacienteToken ?? 0;
         }
         else
