@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Data
 {
     public class AppDbContext : DbContext
-    {      
+    {
         public DbSet<Paciente> Pacientes { get; set; }
         public DbSet<Odontologo> Odontologos { get; set; }
         public DbSet<Administrador> Administradores { get; set; }
@@ -73,6 +73,8 @@ namespace Data
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
             modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
+            // Evita que dos personas reserven el mismo turno a la vez (no cambia el esquema de la BD)
+            modelBuilder.Entity<Turno>().Property(t => t.Estado).IsConcurrencyToken();
 
 
             // ===================== RESERVA =====================
@@ -105,9 +107,9 @@ namespace Data
                 .HasForeignKey(t => t.ReservaId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
-                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaPacienteId);
-                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaOdontologoMatricula);
-                 modelBuilder.Entity<Turno>().Ignore(t => t.ReservaFechaCreacion);
+            modelBuilder.Entity<Turno>().Ignore(t => t.ReservaPacienteId);
+            modelBuilder.Entity<Turno>().Ignore(t => t.ReservaOdontologoMatricula);
+            modelBuilder.Entity<Turno>().Ignore(t => t.ReservaFechaCreacion);
 
             // ===================== ODONTOGRAMA (1:1 con Paciente) =====================
             modelBuilder.Entity<Odontograma>()
@@ -209,7 +211,5 @@ namespace Data
                 .HasForeignKey(om => om.MutualCuit)
                 .OnDelete(DeleteBehavior.Restrict);
         }
-
-
     }
 }

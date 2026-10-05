@@ -1,0 +1,520 @@
+﻿@page "/turnos"
+@using Domain.Model
+@inject TurnoApiClient TurnoApiClient
+@inject OdontologoApiClient OdontologoApiClient
+@inject PacienteApiClient PacienteApiClient
+@inject IBlazorAuthService AuthService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(rol == "Odontologo" ? "Mis turnos" : "Turnos")</PageTitle>
+
+<h1 class="mb-3">@(rol == "Odontologo" ? "Mis turnos" : "Turnos")</h1>
+
+@if (loading)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!autorizado)
+{
+    <div class="alert alert-warning">
+        Esta sección es solo para administradores y odontólogos. Iniciá sesión con una cuenta habilitada.
+    </div>
+}
+else
+{
+    @if (rol == "Administrador")
+    {
+        <div class="mb-3" style="max-width: 420px;">
+            <label class="form-label">Odontólogo</label>
+            <select class="form-select" @bind="matriculaSel" @bind:after="CargarTurnosAsync">
+                <option value="">— Elegí un odontólogo —</option>
+                @foreach (var o in odontologos)
+                {
+                    <option value="@o.Matricula">@o.Apellido, @o.Nombre (@o.Matricula)</option>
+                }
+            </select>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success">@mensaje</div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (string.IsNullOrEmpty(matriculaSel))
+    {
+        <p>Elegí un odontólogo para ver y cargar sus turnos.</p>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <button type="button" class="nav-link @(modo == "individual" ? "active" : "")" @onclick='() => modo = "individual"'>Turno individual</button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link @(modo == "masivo" ? "active" : "")" @onclick='() => modo = "masivo"'>Carga masiva</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                @if (modo == "individual")
+                {
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" class="form-control" @bind="indFecha" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hora de inicio</label>
+                            <input type="time" class="form-control" @bind="indHora" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Duración (min)</label>
+                            <input type="number" class="form-control" min="5" max="240" step="5" @bind="indDuracion" />
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" disabled="@procesando" @onclick="CrearIndividualAsync">Agregar turno</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Desde el día</label>
+                            <input type="date" class="form-control" @bind="masDesde" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hasta el día</label>
+                            <input type="date" class="form-control" @bind="masHasta" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Desde las</label>
+                            <input type="time" class="form-control" @bind="horaDesde" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Hasta las</label>
+                            <input type="time" class="form-control" @bind="horaHasta" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Duración (min)</label>
+                            <input type="number" class="form-control" min="5" max="240" step="5" @bind="masDuracion" />
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label d-block">Días de la semana</label>
+                        @foreach (var d in DiasOrden)
+                        {
+                            var dia = d;
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dia-@((int)dia)"
+                                       checked="@dias.Contains(dia)"
+                                       @onchange="e => ToggleDia(dia, (bool)(e.Value ?? false))" />
+                                <label class="form-check-label" for="dia-@((int)dia)">@NombreDia(dia)</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mt-3">
+                        <button class="btn btn-primary" disabled="@procesando" @onclick="CrearMasivoAsync">
+                            @if (procesando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Generar turnos
+                        </button>
+                        <span class="text-muted">Se van a generar @GenerarSlots().Count turnos.</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" @bind="filtroDesde" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" @bind="filtroHasta" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select class="form-select" @bind="filtroEstado">
+                    <option value="">Todos</option>
+                    <option value="@EstadoTurno.Disponible">Disponible</option>
+                    <option value="@EstadoTurno.Reservado">Reservado</option>
+                    <option value="@EstadoTurno.Cancelado">Cancelado</option>
+                </select>
+            </div>
+        </div>
+
+        @if (Visibles.Count == 0)
+        {
+            <p>No hay turnos para mostrar con esos filtros.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Horario</th>
+                            <th>Estado</th>
+                            <th>Paciente</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Visibles)
+                        {
+                            <tr @key="t.Codigo">
+                                <td>@NombreDia(t.FechaHoraInicio.DayOfWeek) @t.FechaHoraInicio.ToString("dd/MM/yyyy")</td>
+                                <td>@t.FechaHoraInicio.ToString("HH:mm") – @t.FechaHoraInicio.AddMinutes(t.Duracion).ToString("HH:mm")</td>
+                                <td><span class="badge @ClaseEstado(t.Estado)">@t.Estado</span></td>
+                                <td>@(t.Estado == EstadoTurno.Reservado ? NombrePaciente(t._reservaPacienteId) : "—")</td>
+                                <td class="text-end text-nowrap">
+                                    @if (t.Estado == EstadoTurno.Reservado)
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" @onclick="() => LiberarAsync(t)">Cancelar reserva</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(t)">Eliminar</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+}
+
+@code {
+    private static readonly DayOfWeek[] DiasOrden =
+    {
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday,
+        DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
+    };
+
+    private const int MaxTurnosPorCarga = 500;
+    private const int MaxDiasPorCarga = 120;
+
+    private string rol = string.Empty;
+    private bool loading = true;
+    private bool autorizado = false;
+    private bool procesando = false;
+    private string mensaje = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private List<OdontologoDTO> odontologos = new();
+    private Dictionary<int, PacienteDTO> pacientes = new();
+    private List<TurnoDTO> turnos = new();
+    private string matriculaSel = string.Empty;
+
+    // Alta individual
+    private string modo = "individual";
+    private DateTime indFecha = DateTime.Today.AddDays(1);
+    private TimeOnly indHora = new TimeOnly(9, 0);
+    private int indDuracion = 30;
+
+    // Alta masiva
+    private DateTime masDesde = DateTime.Today.AddDays(1);
+    private DateTime masHasta = DateTime.Today.AddDays(7);
+    private TimeOnly horaDesde = new TimeOnly(9, 0);
+    private TimeOnly horaHasta = new TimeOnly(13, 0);
+    private int masDuracion = 30;
+    private HashSet<DayOfWeek> dias = new()
+    {
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday
+    };
+
+    // Filtros del listado
+    private DateTime? filtroDesde = DateTime.Today;
+    private DateTime? filtroHasta = null;
+    private string filtroEstado = string.Empty;
+
+    private List<TurnoDTO> Visibles => turnos
+        .Where(t => filtroDesde is null || t.FechaHoraInicio.Date >= filtroDesde.Value.Date)
+        .Where(t => filtroHasta is null || t.FechaHoraInicio.Date <= filtroHasta.Value.Date)
+        .Where(t => string.IsNullOrEmpty(filtroEstado) || t.Estado.ToString() == filtroEstado)
+        .OrderBy(t => t.FechaHoraInicio)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        rol = await AuthService.GetRolAsync() ?? string.Empty;
+        autorizado = rol == "Administrador" || rol == "Odontologo";
+
+        if (autorizado)
+        {
+            var token = await AuthService.GetTokenAsync();
+            OdontologoApiClient.SetToken(token);
+            PacienteApiClient.SetToken(token);
+
+            if (rol == "Administrador")
+            {
+                var lista = await OdontologoApiClient.GetAllAsync();
+                if (lista is null)
+                    errorMessage = "No se pudieron cargar los odontólogos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+                else
+                    odontologos = lista.OrderBy(o => o.Apellido).ThenBy(o => o.Nombre).ToList();
+            }
+            else
+            {
+                // El odontólogo solo gestiona sus propios turnos
+                matriculaSel = TokenClaims.Matricula(token) ?? string.Empty;
+                if (string.IsNullOrEmpty(matriculaSel))
+                    errorMessage = "No se pudo identificar tu matrícula. Cerrá sesión y volvé a ingresar.";
+            }
+
+            var listaPacientes = await PacienteApiClient.GetAllAsync();
+            pacientes = (listaPacientes ?? new List<PacienteDTO>()).ToDictionary(p => p.NroPaciente);
+
+            await CargarTurnosAsync();
+        }
+
+        loading = false;
+    }
+
+    private async Task CargarTurnosAsync()
+    {
+        if (string.IsNullOrEmpty(matriculaSel))
+        {
+            turnos = new List<TurnoDTO>();
+            return;
+        }
+
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var resultado = await TurnoApiClient.GetByOdontologoAsync(matriculaSel);
+
+        if (resultado is null)
+        {
+            errorMessage = "No se pudieron cargar los turnos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            return;
+        }
+
+        turnos = resultado;
+    }
+
+    private TurnoDTO NuevoTurno(DateTime inicio, int duracion) => new TurnoDTO
+    {
+        FechaHoraInicio = inicio,
+        Duracion = duracion,
+        Estado = EstadoTurno.Disponible,
+        _odontologoMatricula = matriculaSel,
+        _reservaOdontologoMatricula = string.Empty
+    };
+
+    private async Task CrearIndividualAsync()
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        var hora = indHora.ToTimeSpan();
+
+        if (indDuracion < 5 || indDuracion > 240)
+        {
+            errorMessage = "La duración debe estar entre 5 y 240 minutos.";
+            return;
+        }
+
+        var inicio = indFecha.Date + hora;
+        if (inicio < DateTime.Now)
+        {
+            errorMessage = "No se puede cargar un turno en el pasado.";
+            return;
+        }
+
+        procesando = true;
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var (ok, error) = await TurnoApiClient.CrearAsync(NuevoTurno(inicio, indDuracion));
+        procesando = false;
+
+        if (ok)
+        {
+            mensaje = $"Turno cargado para el {inicio:dd/MM/yyyy} a las {inicio:HH:mm}.";
+            await CargarTurnosAsync();
+        }
+        else
+        {
+            errorMessage = error ?? "No se pudo crear el turno.";
+        }
+    }
+
+    private List<DateTime> GenerarSlots()
+    {
+        var resultado = new List<DateTime>();
+
+        var desde = horaDesde.ToTimeSpan();
+        var hasta = horaHasta.ToTimeSpan();
+
+        if (masDuracion < 5 || masDuracion > 240 || hasta <= desde || masHasta.Date < masDesde.Date)
+            return resultado;
+
+        if ((masHasta.Date - masDesde.Date).TotalDays > MaxDiasPorCarga)
+            return resultado;
+
+        var paso = TimeSpan.FromMinutes(masDuracion);
+
+        for (var dia = masDesde.Date; dia <= masHasta.Date; dia = dia.AddDays(1))
+        {
+            if (!dias.Contains(dia.DayOfWeek))
+                continue;
+
+            for (var h = desde; h + paso <= hasta; h += paso)
+                resultado.Add(dia + h);
+        }
+
+        return resultado;
+    }
+
+    private async Task CrearMasivoAsync()
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        if ((masHasta.Date - masDesde.Date).TotalDays > MaxDiasPorCarga)
+        {
+            errorMessage = $"El rango no puede superar los {MaxDiasPorCarga} días.";
+            return;
+        }
+
+        var slots = GenerarSlots();
+
+        if (slots.Count == 0)
+        {
+            errorMessage = "Revisá los datos: no se generaría ningún turno (fechas, horario, duración o días elegidos).";
+            return;
+        }
+
+        if (slots.Count > MaxTurnosPorCarga)
+        {
+            errorMessage = $"Se generarían {slots.Count} turnos y el máximo por carga es {MaxTurnosPorCarga}. Achicá el rango.";
+            return;
+        }
+
+        procesando = true;
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+
+        int creados = 0, omitidos = 0;
+        string? primerError = null;
+
+        foreach (var inicio in slots)
+        {
+            if (inicio < DateTime.Now)
+            {
+                omitidos++;
+                primerError ??= "algunos horarios ya pasaron";
+                continue;
+            }
+
+            var (ok, error) = await TurnoApiClient.CrearAsync(NuevoTurno(inicio, masDuracion));
+
+            if (ok)
+            {
+                creados++;
+            }
+            else
+            {
+                omitidos++;
+                primerError ??= error;
+            }
+        }
+
+        procesando = false;
+
+        if (creados > 0)
+            mensaje = $"Se cargaron {creados} turnos.";
+
+        if (omitidos > 0)
+            errorMessage = $"Se omitieron {omitidos} turnos ({primerError}).";
+
+        await CargarTurnosAsync();
+    }
+
+    private async Task EliminarAsync(TurnoDTO t)
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Eliminar el turno del {t.FechaHoraInicio:dd/MM/yyyy} a las {t.FechaHoraInicio:HH:mm}?");
+        if (!confirmar)
+            return;
+
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var (ok, error) = await TurnoApiClient.EliminarAsync(t.Codigo);
+
+        if (ok)
+        {
+            mensaje = "Turno eliminado.";
+            await CargarTurnosAsync();
+        }
+        else
+        {
+            errorMessage = error ?? "No se pudo eliminar el turno.";
+        }
+    }
+
+    private async Task LiberarAsync(TurnoDTO t)
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Cancelar la reserva de {NombrePaciente(t._reservaPacienteId)}? El turno volverá a quedar disponible.");
+        if (!confirmar)
+            return;
+
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var (ok, error) = await TurnoApiClient.CancelarReservaAsync(t.Codigo);
+
+        if (ok)
+        {
+            mensaje = "Reserva cancelada. El turno quedó disponible.";
+            await CargarTurnosAsync();
+        }
+        else
+        {
+            errorMessage = error ?? "No se pudo cancelar la reserva.";
+        }
+    }
+
+    private void ToggleDia(DayOfWeek dia, bool marcado)
+    {
+        if (marcado)
+            dias.Add(dia);
+        else
+            dias.Remove(dia);
+    }
+
+    private string NombrePaciente(int nro)
+        => pacientes.TryGetValue(nro, out var p) ? $"{p.Apellido}, {p.Nombre}" : $"Paciente Nº {nro}";
+
+    private static string NombreDia(DayOfWeek d) => d switch
+    {
+        DayOfWeek.Monday => "Lun",
+        DayOfWeek.Tuesday => "Mar",
+        DayOfWeek.Wednesday => "Mié",
+        DayOfWeek.Thursday => "Jue",
+        DayOfWeek.Friday => "Vie",
+        DayOfWeek.Saturday => "Sáb",
+        _ => "Dom"
+    };
+
+    private static string ClaseEstado(EstadoTurno estado) => estado switch
+    {
+        EstadoTurno.Disponible => "bg-success",
+        EstadoTurno.Reservado => "bg-primary",
+        _ => "bg-secondary"
+    };
+}

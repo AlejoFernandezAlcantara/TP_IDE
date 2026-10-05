@@ -30,18 +30,35 @@ namespace Applications.Services
 
         public async Task CrearAsync(TurnoDTO dto)
         {
+            if (string.IsNullOrWhiteSpace(dto._odontologoMatricula))
+                throw new InvalidOperationException("Indicá el odontólogo del turno.");
+
+            var duracion = dto.Duracion > 0 ? dto.Duracion : 30;
+
+            if (duracion > 240)
+                throw new InvalidOperationException("La duración del turno no puede superar las 4 horas.");
+
+            if (dto.FechaHoraInicio < DateTime.Now)
+                throw new InvalidOperationException("No se puede cargar un turno en el pasado.");
+
+            // No se puede superponer con otro turno (no cancelado) del mismo odontólogo
+            var fin = dto.FechaHoraInicio.AddMinutes(duracion);
+            var existentes = await _repository.GetByOdontologoAsync(dto._odontologoMatricula);
+            var solapado = existentes.Any(t =>
+                t.Estado != EstadoTurno.Cancelado &&
+                t.FechaHoraInicio < fin &&
+                dto.FechaHoraInicio < t.FechaHoraInicio.AddMinutes(t.Duracion));
+
+            if (solapado)
+                throw new InvalidOperationException(
+                    $"Ya existe un turno que se superpone con {dto.FechaHoraInicio:dd/MM/yyyy HH:mm}.");
+
             var turno = new Turno(dto.FechaHoraInicio)
             {
                 OdontologoMatricula = dto._odontologoMatricula,
-                ReservaPacienteId = dto._reservaPacienteId,
-                ReservaOdontologoMatricula = dto._reservaOdontologoMatricula,
-                ReservaFechaCreacion = dto._reservaFechaCreacion,
+                Duracion = duracion,
+                Estado = EstadoTurno.Disponible
             };
-
-            if (dto.Duracion > 0)
-                turno.Duracion = dto.Duracion;
-
-            turno.Estado = dto.Estado;
 
             await _repository.AddAsync(turno);
         }
@@ -70,6 +87,7 @@ namespace Applications.Services
             FechaHoraInicio = t.FechaHoraInicio,
             Duracion = t.Duracion,
             Estado = t.Estado,
+            ReservaId = t.ReservaId,
             _odontologoMatricula = t.OdontologoMatricula,
             _reservaPacienteId = t.ReservaPacienteId,
             _reservaOdontologoMatricula = t.ReservaOdontologoMatricula,
@@ -80,6 +98,7 @@ namespace Applications.Services
             var r = await _repository.ReservarAsync(codigo, pacienteId);
             return new ReservaDTO
             {
+                Id = r.Id,
                 FechaCreacion = r.FechaCreacion,
                 Estado = r.Estado,
                 Observaciones = r.Observaciones,

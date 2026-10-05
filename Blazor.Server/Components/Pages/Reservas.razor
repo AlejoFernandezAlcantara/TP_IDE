@@ -95,7 +95,9 @@
                                 @if (r.Estado != EstadoReserva.Cancelada)
                                 {
                                     <button class="btn btn-sm btn-outline-primary me-1"
-                                            @onclick="() => modal.ShowEditModal(r, NombrePaciente(r._pacienteId), NombreOdontologo(r._odontologoMatricula))">Editar</button>
+                                            @onclick="() => modal.ShowEditModal(r, NombrePaciente(r._pacienteId), NombreOdontologo(r._odontologoMatricula))">
+                                        Editar
+                                    </button>
                                 }
                                 @if (r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada)
                                 {
@@ -191,9 +193,7 @@
         var turnos = await TurnoApiClient.GetAllAsync();
         var turno = turnos?.FirstOrDefault(t =>
             t.Estado == EstadoTurno.Reservado &&
-            t._reservaPacienteId == r._pacienteId &&
-            t._reservaOdontologoMatricula == r._odontologoMatricula &&
-            t._reservaFechaCreacion == r.FechaCreacion);
+            t.ReservaId == r.Id);
 
         if (turno is not null)
         {

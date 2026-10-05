@@ -33,8 +33,15 @@ namespace WebAPI
                 if (!user.PuedeGestionarTurnosDe(dto._odontologoMatricula))
                     return Results.Forbid();
 
-                await service.CrearAsync(dto);
-                return Results.Created("/api/turnos", dto);
+                try
+                {
+                    await service.CrearAsync(dto);
+                    return Results.Created("/api/turnos", dto);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
@@ -63,8 +70,15 @@ namespace WebAPI
                 if (!user.PuedeGestionarTurnosDe(existente._odontologoMatricula))
                     return Results.Forbid();
 
-                await service.EliminarAsync(codigo);
-                return Results.NoContent();
+                try
+                {
+                    await service.EliminarAsync(codigo);
+                    return Results.NoContent();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 

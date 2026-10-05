@@ -1,0 +1,216 @@
+﻿@page "/mis-reservas"
+@using Domain.Model
+@inject ReservaApiClient ReservaApiClient
+@inject TurnoApiClient TurnoApiClient
+@inject OdontologoApiClient OdontologoApiClient
+@inject IBlazorAuthService AuthService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Mis reservas</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Mis reservas</h1>
+    @if (autorizado)
+    {
+        <a class="btn btn-primary" href="reservar">Reservar turno</a>
+    }
+</div>
+
+@if (loading)
+{
+    <p><em>Cargando tus reservas...</em></p>
+}
+else if (!autorizado)
+{
+    <div class="alert alert-warning">
+        Esta sección es para pacientes. Administradores y odontólogos pueden ver las reservas desde "Reservas".
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success">@mensaje</div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="canceladas" @bind="mostrarCanceladas" />
+        <label class="form-check-label" for="canceladas">Mostrar reservas canceladas</label>
+    </div>
+
+    <p class="text-muted">Podés cancelar una reserva hasta @HorasLimiteCancelacion horas antes del turno.</p>
+
+    @if (Filas.Count == 0)
+    {
+        <p>No tenés reservas para mostrar.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Odontólogo</th>
+                        <th>Estado</th>
+                        <th>Resultado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Filas)
+                    {
+                        <tr @key="f.Reserva.Id">
+                            <td>
+                                @if (f.Turno is null)
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+                                    @f.Turno.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")
+                                }
+                            </td>
+                            <td>@NombreOdontologo(f.Reserva._odontologoMatricula)</td>
+                            <td><span class="badge @ClaseEstado(f.Reserva.Estado)">@f.Reserva.Estado</span></td>
+                            <td>@(string.IsNullOrWhiteSpace(f.Reserva.Resultado) ? "—" : f.Reserva.Resultado)</td>
+                            <td class="text-end text-nowrap">
+                                @if (PuedeCancelar(f))
+                                {
+                                    <button class="btn btn-sm btn-outline-warning" @onclick="() => CancelarAsync(f)">Cancelar reserva</button>
+                                }
+                                else if (EsCancelable(f))
+                                {
+                                    <span class="text-muted small">Ya no se puede cancelar</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private const int HorasLimiteCancelacion = 12;
+
+    private record Fila(ReservaDTO Reserva, TurnoDTO? Turno);
+
+    private bool loading = true;
+    private bool autorizado = false;
+    private bool mostrarCanceladas = false;
+    private string mensaje = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private int? nroPaciente;
+    private List<ReservaDTO> reservas = new();
+    private Dictionary<int, TurnoDTO> turnosPorReserva = new();
+    private Dictionary<string, OdontologoDTO> odontologos = new();
+
+    private List<Fila> Filas => reservas
+        .Where(r => mostrarCanceladas || r.Estado != EstadoReserva.Cancelada)
+        .Select(r => new Fila(r, turnosPorReserva.TryGetValue(r.Id, out var t) ? t : null))
+        .OrderByDescending(f => f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rol = await AuthService.GetRolAsync();
+        autorizado = rol == "Paciente";
+
+        if (autorizado)
+        {
+            var token = await AuthService.GetTokenAsync();
+            nroPaciente = TokenClaims.NroPaciente(token);
+
+            if (nroPaciente is null)
+                errorMessage = "No se pudo identificar tu número de paciente. Cerrá sesión y volvé a ingresar.";
+            else
+                await CargarAsync();
+        }
+
+        loading = false;
+    }
+
+    private async Task CargarAsync()
+    {
+        errorMessage = string.Empty;
+
+        var token = await AuthService.GetTokenAsync();
+        ReservaApiClient.SetToken(token);
+        TurnoApiClient.SetToken(token);
+        OdontologoApiClient.SetToken(token);
+
+        var resultado = await ReservaApiClient.GetByPacienteAsync(nroPaciente!.Value);
+
+        if (resultado is null)
+        {
+            errorMessage = "No se pudieron cargar tus reservas. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            return;
+        }
+
+        reservas = resultado;
+
+        // Cada reserva activa apunta a su turno mediante Turno.ReservaId
+        var ids = reservas.Select(r => r.Id).ToHashSet();
+        var todosLosTurnos = await TurnoApiClient.GetAllAsync() ?? new List<TurnoDTO>();
+        turnosPorReserva = todosLosTurnos
+            .Where(t => t.ReservaId.HasValue && ids.Contains(t.ReservaId.Value))
+            .ToDictionary(t => t.ReservaId!.Value);
+
+        var listaOdontologos = await OdontologoApiClient.GetAllAsync() ?? new List<OdontologoDTO>();
+        odontologos = listaOdontologos.ToDictionary(o => o.Matricula);
+    }
+
+    private static bool EsCancelable(Fila f)
+        => f.Turno is not null
+           && f.Turno.Estado == EstadoTurno.Reservado
+           && (f.Reserva.Estado == EstadoReserva.Pendiente || f.Reserva.Estado == EstadoReserva.Confirmada);
+
+    private static bool PuedeCancelar(Fila f)
+        => EsCancelable(f)
+           && f.Turno!.FechaHoraInicio - DateTime.Now >= TimeSpan.FromHours(HorasLimiteCancelacion);
+
+    private async Task CancelarAsync(Fila f)
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        if (f.Turno is null)
+            return;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Cancelar tu turno del {f.Turno.FechaHoraInicio:dd/MM/yyyy} a las {f.Turno.FechaHoraInicio:HH:mm}?");
+        if (!confirmar)
+            return;
+
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var (ok, error) = await TurnoApiClient.CancelarReservaAsync(f.Turno.Codigo);
+
+        if (ok)
+        {
+            mensaje = "Reserva cancelada.";
+            await CargarAsync();
+        }
+        else
+        {
+            errorMessage = error ?? "No se pudo cancelar la reserva.";
+        }
+    }
+
+    private string NombreOdontologo(string matricula)
+        => odontologos.TryGetValue(matricula, out var o) ? $"{o.Apellido}, {o.Nombre}" : matricula;
+
+    private static string ClaseEstado(EstadoReserva estado) => estado switch
+    {
+        EstadoReserva.Pendiente => "bg-warning text-dark",
+        EstadoReserva.Confirmada => "bg-primary",
+        EstadoReserva.Completada => "bg-success",
+        _ => "bg-secondary"
+    };
+}

@@ -39,36 +39,48 @@ namespace API.Clients
             return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<TurnoDTO>>() : null;
         }
 
-        public async Task<bool> CrearAsync(TurnoDTO dto)
-            => (await _client.PostAsJsonAsync("turnos", dto)).IsSuccessStatusCode;
+        public async Task<(bool Ok, string? Error)> CrearAsync(TurnoDTO dto)
+            => await ResultadoAsync(await _client.PostAsJsonAsync("turnos", dto), "No se pudo crear el turno.");
 
         public async Task<bool> ActualizarAsync(TurnoDTO dto)
             => (await _client.PutAsJsonAsync("turnos", dto)).IsSuccessStatusCode;
 
-        public async Task<bool> EliminarAsync(int codigo)
-            => (await _client.DeleteAsync($"turnos/{codigo}")).IsSuccessStatusCode;
-        public async Task<ReservaDTO?> ReservarAsync(int codigo, int pacienteId)
-        {
-            // Si quien reserva es un paciente, el WebAPI ignora pacienteId y usa el del token
-            var r = await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId });
-            return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<ReservaDTO>() : null;
-        }
+        public async Task<(bool Ok, string? Error)> EliminarAsync(int codigo)
+            => await ResultadoAsync(await _client.DeleteAsync($"turnos/{codigo}"), "No se pudo eliminar el turno.");
+
+        // Si quien reserva es un paciente, el WebAPI ignora pacienteId y usa el del token
+        public async Task<(bool Ok, string? Error)> ReservarAsync(int codigo, int pacienteId)
+            => await ResultadoAsync(
+                await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId }),
+                "No se pudo reservar el turno.");
 
         public async Task<(bool Ok, string? Error)> CancelarReservaAsync(int codigo)
+            => await ResultadoAsync(
+                await _client.PostAsync($"turnos/{codigo}/cancelar-reserva", null),
+                "No se pudo cancelar la reserva.");
+        private static async Task<(bool Ok, string? Error)> ResultadoAsync(HttpResponseMessage r, string mensajePorDefecto)
         {
-            var r = await _client.PostAsync($"turnos/{codigo}/cancelar-reserva", null);
             if (r.IsSuccessStatusCode)
                 return (true, null);
+
+            if (r.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                return (false, "No tenés permiso para realizar esta acción.");
+
+            if (r.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return (false, "Tu sesión expiró. Volvé a iniciar sesión.");
 
             try
             {
                 var body = await r.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                return (false, body != null && body.TryGetValue("error", out var msg) ? msg : null);
+                if (body != null && body.TryGetValue("error", out var msg) && !string.IsNullOrWhiteSpace(msg))
+                    return (false, msg);
             }
             catch
             {
-                return (false, null);
+                // el cuerpo no tenía el formato esperado
             }
+
+            return (false, mensajePorDefecto);
         }
     }
 }   

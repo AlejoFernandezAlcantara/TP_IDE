@@ -1,0 +1,329 @@
+﻿@page "/reservar"
+@using Domain.Model
+@inject TurnoApiClient TurnoApiClient
+@inject OdontologoApiClient OdontologoApiClient
+@inject PacienteApiClient PacienteApiClient
+@inject IBlazorAuthService AuthService
+
+<PageTitle>Reservar turnos</PageTitle>
+
+<h1 class="mb-3">@(rol == "Paciente" ? "Reservar turno" : "Nueva reserva")</h1>
+
+@if (loading)
+{
+    <p><em>Cargando turnos disponibles...</em></p>
+}
+else if (!autorizado)
+{
+    <div class="alert alert-warning">
+        Iniciá sesión para reservar turnos.
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success">
+            @mensaje
+            <a class="alert-link ms-2" href="@(rol == "Paciente" ? "mis-reservas" : "reservas")">Ver reservas</a>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" style="white-space: pre-line;">@errorMessage</div>
+    }
+
+    <div class="row g-3 mb-4">
+        @if (rol != "Paciente")
+        {
+            <div class="col-md-4">
+                <label class="form-label">Buscar paciente</label>
+                <input type="text" class="form-control" placeholder="Apellido, nombre o DNI"
+                       @bind="busquedaPaciente" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Paciente *</label>
+                <select class="form-select" @bind="pacienteSel">
+                    <option value="0">— Elegí un paciente —</option>
+                    @foreach (var p in PacientesFiltrados)
+                    {
+                        <option value="@p.NroPaciente">@p.Apellido, @p.Nombre (DNI @p.NroDni)</option>
+                    }
+                </select>
+            </div>
+            <div class="w-100"></div>
+        }
+        <div class="col-md-4">
+            <label class="form-label">Odontólogo</label>
+            <select class="form-select" @bind="matriculaFiltro">
+                <option value="">Todos</option>
+                @foreach (var o in odontologos)
+                {
+                    <option value="@o.Matricula">@o.Apellido, @o.Nombre — @o.Especialidad</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Desde</label>
+            <input type="date" class="form-control" @bind="filtroDesde" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Hasta</label>
+            <input type="date" class="form-control" @bind="filtroHasta" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <h5>Turnos disponibles</h5>
+            <p class="text-muted">Tocá uno o más horarios para seleccionarlos.</p>
+
+            @if (PorDia.Count == 0)
+            {
+                <p>No hay turnos disponibles con esos filtros.</p>
+            }
+            else
+            {
+                @foreach (var grupo in PorDia)
+                {
+                    <div class="mb-3">
+                        <h6 class="mb-2">@NombreDia(grupo.Key.DayOfWeek) @grupo.Key.ToString("dd/MM/yyyy")</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var t in grupo)
+                            {
+                                var turno = t;
+                                <button type="button"
+                                        class="btn btn-sm @(seleccion.Contains(turno.Codigo) ? "btn-primary" : "btn-outline-primary")"
+                                        @onclick="() => Toggle(turno.Codigo)">
+                                    @turno.FechaHoraInicio.ToString("HH:mm") · @NombreOdontologo(turno._odontologoMatricula)
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Tu selección</h5>
+
+                    @if (TurnosSeleccionados.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Todavía no elegiste ningún turno.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled">
+                            @foreach (var t in TurnosSeleccionados)
+                            {
+                                <li class="mb-1">
+                                    <strong>@t.FechaHoraInicio.ToString("dd/MM HH:mm")</strong>
+                                    — @NombreOdontologo(t._odontologoMatricula)
+                                </li>
+                            }
+                        </ul>
+                        <button type="button" class="btn btn-link btn-sm p-0 mb-3" @onclick="() => seleccion.Clear()">Quitar todos</button>
+                    }
+
+                    <button type="button" class="btn btn-primary w-100"
+                            disabled="@(procesando || TurnosSeleccionados.Count == 0)"
+                            @onclick="ConfirmarAsync">
+                        @if (procesando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        @TextoConfirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string rol = string.Empty;
+    private bool loading = true;
+    private bool autorizado = false;
+    private bool procesando = false;
+    private string mensaje = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private int? nroPacienteToken;
+    private int pacienteSel = 0;
+    private string busquedaPaciente = string.Empty;
+
+    private List<OdontologoDTO> odontologos = new();
+    private List<PacienteDTO> pacientes = new();
+    private Dictionary<string, OdontologoDTO> odontologosPorMatricula = new();
+    private List<TurnoDTO> turnos = new();
+    private HashSet<int> seleccion = new();
+
+    private string matriculaFiltro = string.Empty;
+    private DateTime? filtroDesde = DateTime.Today;
+    private DateTime? filtroHasta = DateTime.Today.AddDays(14);
+
+    private List<TurnoDTO> Disponibles => turnos
+        .Where(t => t.Estado == EstadoTurno.Disponible && t.FechaHoraInicio >= DateTime.Now)
+        .Where(t => string.IsNullOrEmpty(matriculaFiltro) || t._odontologoMatricula == matriculaFiltro)
+        .Where(t => filtroDesde is null || t.FechaHoraInicio.Date >= filtroDesde.Value.Date)
+        .Where(t => filtroHasta is null || t.FechaHoraInicio.Date <= filtroHasta.Value.Date)
+        .OrderBy(t => t.FechaHoraInicio)
+        .ToList();
+
+    private List<IGrouping<DateTime, TurnoDTO>> PorDia => Disponibles
+        .GroupBy(t => t.FechaHoraInicio.Date)
+        .OrderBy(g => g.Key)
+        .ToList();
+
+    private List<TurnoDTO> TurnosSeleccionados => turnos
+        .Where(t => seleccion.Contains(t.Codigo))
+        .OrderBy(t => t.FechaHoraInicio)
+        .ToList();
+
+    private IEnumerable<PacienteDTO> PacientesFiltrados => pacientes
+        .Where(p => p.NroPaciente == pacienteSel
+                    || string.IsNullOrWhiteSpace(busquedaPaciente)
+                    || $"{p.Apellido} {p.Nombre} {p.NroDni}".Contains(busquedaPaciente.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        rol = await AuthService.GetRolAsync() ?? string.Empty;
+        autorizado = rol == "Administrador" || rol == "Odontologo" || rol == "Paciente";
+
+        if (autorizado)
+        {
+            var token = await AuthService.GetTokenAsync();
+            OdontologoApiClient.SetToken(token);
+            PacienteApiClient.SetToken(token);
+
+            if (rol == "Paciente")
+            {
+                nroPacienteToken = TokenClaims.NroPaciente(token);
+            }
+            else
+            {
+                var listaPacientes = await PacienteApiClient.GetAllAsync();
+                if (listaPacientes is null)
+                    errorMessage = "No se pudieron cargar los pacientes.";
+                else
+                    pacientes = listaPacientes.OrderBy(p => p.Apellido).ThenBy(p => p.Nombre).ToList();
+            }
+
+            var listaOdontologos = await OdontologoApiClient.GetAllAsync();
+            if (listaOdontologos is null)
+                errorMessage = "No se pudieron cargar los odontólogos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            else
+                odontologos = listaOdontologos.OrderBy(o => o.Apellido).ThenBy(o => o.Nombre).ToList();
+
+            odontologosPorMatricula = odontologos.ToDictionary(o => o.Matricula);
+
+            await CargarTurnosAsync();
+        }
+
+        loading = false;
+    }
+
+    private async Task CargarTurnosAsync()
+    {
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+        var resultado = await TurnoApiClient.GetAllAsync();
+
+        if (resultado is null)
+        {
+            errorMessage = "No se pudieron cargar los turnos. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            return;
+        }
+
+        turnos = resultado;
+
+        // Saca de la selección los turnos que ya no están disponibles
+        seleccion.IntersectWith(turnos.Where(t => t.Estado == EstadoTurno.Disponible).Select(t => t.Codigo));
+    }
+
+    private string TextoConfirmar => seleccion.Count > 1
+        ? $"Confirmar reserva ({seleccion.Count} turnos)"
+        : "Confirmar reserva";
+
+    private void Toggle(int codigo)
+    {
+        if (!seleccion.Add(codigo))
+            seleccion.Remove(codigo);
+    }
+
+    private async Task ConfirmarAsync()
+    {
+        mensaje = string.Empty;
+        errorMessage = string.Empty;
+
+        if (seleccion.Count == 0)
+        {
+            errorMessage = "Elegí al menos un turno.";
+            return;
+        }
+
+        int pacienteId;
+        if (rol == "Paciente")
+        {
+            // El WebAPI usa siempre el paciente del token; este valor es solo informativo
+            pacienteId = nroPacienteToken ?? 0;
+        }
+        else
+        {
+            if (pacienteSel <= 0)
+            {
+                errorMessage = "Elegí el paciente para el que se reserva.";
+                return;
+            }
+            pacienteId = pacienteSel;
+        }
+
+        var aReservar = TurnosSeleccionados;
+
+        procesando = true;
+        TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
+
+        int reservados = 0;
+        var fallos = new List<string>();
+
+        foreach (var t in aReservar)
+        {
+            var (ok, error) = await TurnoApiClient.ReservarAsync(t.Codigo, pacienteId);
+
+            if (ok)
+            {
+                reservados++;
+                seleccion.Remove(t.Codigo);
+            }
+            else
+            {
+                fallos.Add($"{t.FechaHoraInicio:dd/MM HH:mm}: {error ?? "no se pudo reservar"}");
+            }
+        }
+
+        procesando = false;
+
+        if (reservados > 0)
+            mensaje = reservados == 1 ? "Reservaste 1 turno." : $"Reservaste {reservados} turnos.";
+
+        if (fallos.Count > 0)
+            errorMessage = "No se pudieron reservar:\n" + string.Join("\n", fallos);
+
+        await CargarTurnosAsync();
+    }
+
+    private string NombreOdontologo(string matricula)
+        => odontologosPorMatricula.TryGetValue(matricula, out var o) ? $"{o.Apellido}, {o.Nombre}" : matricula;
+
+    private static string NombreDia(DayOfWeek d) => d switch
+    {
+        DayOfWeek.Monday => "Lun",
+        DayOfWeek.Tuesday => "Mar",
+        DayOfWeek.Wednesday => "Mié",
+        DayOfWeek.Thursday => "Jue",
+        DayOfWeek.Friday => "Vie",
+        DayOfWeek.Saturday => "Sáb",
+        _ => "Dom"
+    };
+}
