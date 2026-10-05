@@ -80,8 +80,8 @@ namespace Data
             // ===================== RESERVA =====================
             modelBuilder.Entity<Reserva>().HasKey(r => r.Id);
             modelBuilder.Entity<Reserva>().Property(r => r.Id).ValueGeneratedOnAdd();
-            modelBuilder.Entity<Reserva>().Property(r => r.Importe).HasPrecision(18, 2);
-            modelBuilder.Entity<Reserva>().Property(r => r.Coseguro).HasPrecision(18, 2);
+            // Importe y Coseguro son float (columna real en SQL Server): real no admite precision/escala,
+            // por eso no se usa HasPrecision(18, 2) aca.
 
             // Opcional: evita duplicados de paciente + odontólogo + fecha
             modelBuilder.Entity<Reserva>()
@@ -211,5 +211,7 @@ namespace Data
                 .HasForeignKey(om => om.MutualCuit)
                 .OnDelete(DeleteBehavior.Restrict);
         }
+
+
     }
 }
