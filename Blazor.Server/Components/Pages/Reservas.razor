@@ -13,7 +13,9 @@
     <h1 class="mb-0">@(rol == "Odontologo" ? "Mis reservas" : "Reservas")</h1>
     @if (mostrar)
     {
-        <a class="btn btn-primary" href="reservar">Nueva reserva</a>
+        <a class="btn btn-primary" href="reservar">
+            <i class="bi bi-plus-circle me-1"></i> Nueva reserva
+        </a>
     }
 </div>
 
@@ -31,30 +33,38 @@
 
 @if (mostrar)
 {
-    <div class="mb-3" style="max-width: 260px;">
-        <label class="form-label">Filtrar por estado</label>
-        <select class="form-select" @bind="filtroEstado">
-            <option value="">Todos</option>
+    <div class="card p-3 mb-3 border-0 shadow-sm" style="max-width: 320px;">
+        <label class="form-label small fw-semibold">Filtrar por estado</label>
+        <select class="form-select form-select-sm" @bind="filtroEstado">
+            <option value="">Todos los estados</option>
             <option value="@EstadoReserva.Pendiente">Pendiente</option>
             <option value="@EstadoReserva.Confirmada">Confirmada</option>
-            <option value="@EstadoReserva.Completada">Completada</option>
+            <option value="@EstadoReserva.Completada">Completada (Terminada)</option>
             <option value="@EstadoReserva.Cancelada">Cancelada</option>
         </select>
     </div>
 
     @if (!string.IsNullOrEmpty(mensaje))
     {
-        <div class="alert alert-success">@mensaje</div>
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>@mensaje</div>
+        </div>
     }
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>@errorMessage</div>
+        </div>
     }
 
     @if (Filtradas.Count == 0)
     {
-        <p>No hay reservas para mostrar.</p>
+        <div class="card p-4 text-center text-muted border-0 shadow-sm">
+            No hay reservas para mostrar con el filtro actual.
+        </div>
     }
     else
     {
@@ -62,17 +72,16 @@
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th>Creada</th>
+                        <th>Fecha</th>
                         <th>Paciente</th>
                         @if (rol == "Administrador")
                         {
                             <th>Odontólogo</th>
                         }
+                        <th>Cobertura</th>
                         <th>Estado</th>
                         <th>Importe</th>
-                        <th>Coseguro</th>
-                        <th>Realización</th>
-                        <th>Resultado</th>
+                        <th>Historial / Prácticas Realizadas</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
@@ -80,32 +89,74 @@
                     @foreach (var r in Filtradas)
                     {
                         <tr @key="r.Id">
-                            <td>@r.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@NombrePaciente(r._pacienteId)</td>
+                            <td>
+                                <div class="fw-semibold small">@r.FechaCreacion.ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted small">@r.FechaCreacion.ToString("HH:mm") hs</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@NombrePaciente(r._pacienteId)</div>
+                                <small class="text-muted">ID: #@r._pacienteId</small>
+                            </td>
                             @if (rol == "Administrador")
                             {
                                 <td>@NombreOdontologo(r._odontologoMatricula)</td>
                             }
-                            <td><span class="badge @ClaseEstado(r.Estado)">@r.Estado</span></td>
-                            <td>@(r.Importe?.ToString("N2") ?? "—")</td>
-                            <td>@(r.Coseguro?.ToString("N2") ?? "—")</td>
-                            <td>@(r.FechaRealizacion?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
-                            <td>@(string.IsNullOrWhiteSpace(r.Resultado) ? "—" : r.Resultado)</td>
-                            <td class="text-end text-nowrap">
-                                @if (r.Estado != EstadoReserva.Cancelada)
+                            <td>
+                                <span class="badge @(r.ObraSocial == "Particular" ? "bg-secondary" : "bg-primary")">
+                                    @r.ObraSocial
+                                </span>
+                                @if (!string.IsNullOrEmpty(r.NroAfiliado))
                                 {
-                                    <button class="btn btn-sm btn-outline-primary me-1"
-                                            @onclick="() => modal.ShowEditModal(r, NombrePaciente(r._pacienteId), NombreOdontologo(r._odontologoMatricula))">
-                                        Editar
-                                    </button>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">Af: @r.NroAfiliado</div>
                                 }
-                                @if (r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada)
+                            </td>
+                            <td><span class="badge @ClaseEstado(r.Estado)">@r.Estado</span></td>
+                            <td>
+                                <strong>@(r.Importe.HasValue ? $"" : "-")</strong>
+                            </td>
+                            <td>
+                                @if (r.Estado == EstadoReserva.Completada)
                                 {
-                                    <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => CancelarAsync(r)">Cancelar reserva</button>
+                                    @if (r.PracticasRealizadas != null && r.PracticasRealizadas.Count > 0)
+                                    {
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach (var p in r.PracticasRealizadas)
+                                            {
+                                                <div class="small bg-white p-1 px-2 border rounded shadow-xs">
+                                                    <strong class="text-dark">@(p.PracticaDetalle ?? $"Práctica #{p.PracticaCodigo}")</strong> 
+                                                    - Piezas: <span class="badge bg-danger-subtle text-danger fw-bold">@p.DientesCaras</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="small text-muted"><em>@r.Resultado</em></span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="small text-muted">@(r.Observaciones ?? "En espera de atención")</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (r.Estado == EstadoReserva.Confirmada || r.Estado == EstadoReserva.Pendiente)
+                                {
+                                    <a class="btn btn-sm btn-success me-1 shadow-sm" href="atender/@r.Id" title="Abrir Odontograma y Atender">
+                                        <i class="bi bi-heart-pulse me-1"></i> Atender
+                                    </a>
+                                }
+                                @if (r.Estado != EstadoReserva.Cancelada && r.Estado != EstadoReserva.Completada)
+                                {
+                                    <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => CancelarAsync(r)">
+                                        Cancelar
+                                    </button>
                                 }
                                 @if (rol == "Administrador" && (r.Estado == EstadoReserva.Cancelada || r.Estado == EstadoReserva.Completada))
                                 {
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(r)">Eliminar</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(r)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 }
                             </td>
                         </tr>
@@ -116,10 +167,7 @@
     }
 }
 
-<ReservaModal @ref="modal" OnReservaChanged="CargarAsync" />
-
 @code {
-    private ReservaModal modal = default!;
     private string rol = string.Empty;
     private bool loading = true;
     private bool autorizado = false;
@@ -143,13 +191,18 @@
         autorizado = rol == "Administrador" || rol == "Odontologo";
 
         if (autorizado)
+        {
             await CargarAsync();
-
-        loading = false;
+        }
+        else
+        {
+            loading = false;
+        }
     }
 
     private async Task CargarAsync()
     {
+        loading = true;
         errorMessage = string.Empty;
 
         var token = await AuthService.GetTokenAsync();
@@ -157,82 +210,61 @@
         PacienteApiClient.SetToken(token);
         OdontologoApiClient.SetToken(token);
 
-        //  el odontólogo solo recibe sus reservas
-        var resultado = await ReservaApiClient.GetAllAsync();
-        if (resultado is null)
+        try
         {
-            errorMessage = "No se pudieron cargar las reservas. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
-            return;
+            var rTask = ReservaApiClient.GetAllAsync();
+            var pTask = PacienteApiClient.GetAllAsync();
+            var oTask = OdontologoApiClient.GetAllAsync();
+
+            await Task.WhenAll(rTask, pTask, oTask);
+
+            reservas = (rTask.Result ?? new()).OrderByDescending(r => r.FechaCreacion).ToList();
+
+            var pList = pTask.Result ?? new();
+            pacientes = pList.ToDictionary(p => p.NroPaciente);
+
+            var oList = oTask.Result ?? new();
+            odontologos = oList.ToDictionary(o => o.Matricula, StringComparer.OrdinalIgnoreCase);
         }
-
-        reservas = resultado.OrderByDescending(r => r.FechaCreacion).ToList();
-
-        var listaPacientes = await PacienteApiClient.GetAllAsync() ?? new List<PacienteDTO>();
-        pacientes = listaPacientes.ToDictionary(p => p.NroPaciente);
-
-        var listaOdontologos = await OdontologoApiClient.GetAllAsync() ?? new List<OdontologoDTO>();
-        odontologos = listaOdontologos.ToDictionary(o => o.Matricula);
+        catch (Exception ex)
+        {
+            errorMessage = "No se pudieron cargar las reservas: " + ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private async Task CancelarAsync(ReservaDTO r)
     {
-        mensaje = string.Empty;
-        errorMessage = string.Empty;
-
         bool confirmar = await JSRuntime.InvokeAsync<bool>(
-            "confirm", $"¿Cancelar la reserva de {NombrePaciente(r._pacienteId)}? El turno volverá a quedar disponible.");
-
+            "confirm", $"¿Cancelar la reserva de {NombrePaciente(r._pacienteId)}?");
         if (!confirmar)
             return;
 
-        var token = await AuthService.GetTokenAsync();
-        TurnoApiClient.SetToken(token);
-        ReservaApiClient.SetToken(token);
-
-        // Se busca el turno asociado para liberarlo junto con la reserva
-        var turnos = await TurnoApiClient.GetAllAsync();
-        var turno = turnos?.FirstOrDefault(t =>
-            t.Estado == EstadoTurno.Reservado &&
-            t.ReservaId == r.Id);
-
-        if (turno is not null)
+        r.Estado = EstadoReserva.Cancelada;
+        bool ok = await ReservaApiClient.ActualizarAsync(r);
+        if (ok)
         {
-            var (ok, error) = await TurnoApiClient.CancelarReservaAsync(turno.Codigo);
-            if (!ok)
-            {
-                errorMessage = error ?? "No se pudo cancelar la reserva.";
-                return;
-            }
+            mensaje = "Reserva cancelada.";
+            await CargarAsync();
         }
         else
         {
-            // Sin turno asociado -----------> se marca la reserva como cancelada
-            r.Estado = EstadoReserva.Cancelada;
-            if (!await ReservaApiClient.ActualizarAsync(r))
-            {
-                errorMessage = "No se pudo cancelar la reserva.";
-                return;
-            }
+            errorMessage = "No se pudo cancelar la reserva.";
         }
-
-        mensaje = "Reserva cancelada.";
-        await CargarAsync();
     }
 
     private async Task EliminarAsync(ReservaDTO r)
     {
-        mensaje = string.Empty;
-        errorMessage = string.Empty;
-
         bool confirmar = await JSRuntime.InvokeAsync<bool>(
-            "confirm", $"¿Eliminar definitivamente la reserva de {NombrePaciente(r._pacienteId)}? Esta acción no se puede deshacer.");
-
+            "confirm", $"¿Eliminar definitivamente la reserva #{r.Id}?");
         if (!confirmar)
             return;
 
-        ReservaApiClient.SetToken(await AuthService.GetTokenAsync());
-
-        if (await ReservaApiClient.EliminarAsync(r.Id))
+        bool ok = await ReservaApiClient.EliminarAsync(r.Id);
+        if (ok)
         {
             mensaje = "Reserva eliminada.";
             await CargarAsync();
@@ -244,7 +276,7 @@
     }
 
     private string NombrePaciente(int nro)
-        => pacientes.TryGetValue(nro, out var p) ? $"{p.Apellido}, {p.Nombre}" : $"Paciente Nº {nro}";
+        => pacientes.TryGetValue(nro, out var p) ? $"{p.Apellido}, {p.Nombre}" : $"Paciente #{nro}";
 
     private string NombreOdontologo(string matricula)
         => odontologos.TryGetValue(matricula, out var o) ? $"{o.Apellido}, {o.Nombre}" : matricula;
@@ -254,6 +286,7 @@
         EstadoReserva.Pendiente => "bg-warning text-dark",
         EstadoReserva.Confirmada => "bg-primary",
         EstadoReserva.Completada => "bg-success",
-        _ => "bg-secondary"
+        EstadoReserva.Cancelada => "bg-secondary",
+        _ => "bg-light text-dark"
     };
 }

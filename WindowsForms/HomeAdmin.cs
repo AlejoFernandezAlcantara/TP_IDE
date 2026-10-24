@@ -5,6 +5,11 @@ namespace WindowsForms
 {
     public partial class HomeAdmin : Form
     {
+        private void btnReservas_Click(object sender, EventArgs e)
+        {
+            var form = new FormReservas();
+            form.ShowDialog();
+        }
         public HomeAdmin()
         {
             InitializeComponent();
@@ -70,5 +75,7 @@ namespace WindowsForms
             login.Show();
             this.Close();
         }
+
+        
     }
 }

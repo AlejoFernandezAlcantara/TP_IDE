@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace Domain.Model
 {
@@ -18,190 +14,55 @@ namespace Domain.Model
         public DateTime? FechaRealizacion { get; set; }
         public string? Resultado { get; set; }
 
-        //FK PACIENTE
-        private int _pacienteId;
-        private Paciente? _paciente;
+        // Cobertura específica de esta reserva
+        public string ObraSocial { get; set; } = "Particular";
+        public string? NroAfiliado { get; set; }
 
-        //FK ODONTOLOGO
-        private string _odontologoMatricula = string.Empty;
-        private Odontologo? _odontologo;
+        // FK PACIENTE
+        public int PacienteId { get; set; }
+        public Paciente? Paciente { get; set; }
 
-        
-        //GET Y SET DE LAS 2FK
-        public int PacienteId
-        {
-            get => _paciente?.NroPaciente ?? _pacienteId;
-            set => _pacienteId = value;
-        }
+        // FK ODONTOLOGO
+        public string OdontologoMatricula { get; set; } = string.Empty;
+        public Odontologo? Odontologo { get; set; }
 
-        public Paciente? Paciente
-        {
-            get => _paciente;
-            set
-            {
-                _paciente = value;
-                if (value != null && _pacienteId != value.NroPaciente)
-                {
-                    _pacienteId = value.NroPaciente; // Sincronizar automáticamente
-                }
-            }
-        }
-        public string OdontologoMatricula
-        {
-            get => _odontologo?.Matricula ?? _odontologoMatricula;
-            set => _odontologoMatricula = value;
-        }
+        // Prácticas realizadas en la atención con detalle de piezas ("14-M, 15-O")
+        public ICollection<ReservaPractica> PracticasRealizadas { get; set; } = new List<ReservaPractica>();
 
-        public Odontologo? Odontologo
-        {
-            get => _odontologo;
-            set
-            {
-                _odontologo = value;
-                if (value != null && _odontologoMatricula != value.Matricula)
-                {
-                    _odontologoMatricula = value.Matricula; // Sincronizar automáticamente
-                }
-            }
-        }
-        //constructor
-        public Reserva(string observaciones, float? importe, float? coseguro)
-        {
-            SetFecha();
-            SetEst();
-            SetObs(observaciones);
-            SetImp(importe);
-            SetC(coseguro);
-        }
-
-        public void SetFecha()
+        // Constructor para EF
+        public Reserva()
         {
             FechaCreacion = DateTime.Now;
-        }
-        public void SetEst()
-        {
             Estado = EstadoReserva.Pendiente;
         }
-        public void SetObs(string obs)
+
+        public Reserva(string observaciones, float? importe, float? coseguro)
         {
-            if (string.IsNullOrWhiteSpace(obs))
-            {
-                Observaciones = null;
-            }
-            else 
-            { 
-                Observaciones = obs; 
-            }
-        }
-        public void SetImp(float? importe)
-        {
-            if (importe < 0)
-            {
-                throw new ArgumentException("El importe no puede ser negativo.");
-            }
-            else
-            {
-                Importe = importe;
-            }
+            FechaCreacion = DateTime.Now;
+            Estado = EstadoReserva.Pendiente;
+            Observaciones = string.IsNullOrWhiteSpace(observaciones) ? null : observaciones;
+            Importe = importe >= 0 ? importe : 0;
+            Coseguro = coseguro >= 0 ? coseguro : 0;
         }
 
-        public void SetC(float? coseguro)
+        public void CompletarAtencion(string? resultado, IEnumerable<ReservaPractica> practicas)
         {
-            if (coseguro < 0)   
-            {
-                throw new ArgumentException("El coseguro no puede ser negativo.");
-            }
-            else
-            {
-                Coseguro = coseguro;
-            }
-        }
-        public void SetFechaRealizacion()
-        {
+            Estado = EstadoReserva.Completada;
             FechaRealizacion = DateTime.Now;
-
-        }
-        public void SetResultado(string resultado)
-        {
-            if (string.IsNullOrWhiteSpace(resultado))
+            Resultado = resultado;
+            
+            float total = 0;
+            foreach (var p in practicas)
             {
-                Resultado = null;
+                p.ReservaId = this.Id;
+                PracticasRealizadas.Add(p);
+                total += p.Precio;
             }
-            else
+
+            if (Importe == null || Importe == 0)
             {
-                Resultado = resultado;
+                Importe = total;
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

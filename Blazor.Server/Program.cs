@@ -1,4 +1,4 @@
-using API.Auth.Blazor.Server;
+ï»¿using API.Auth.Blazor.Server;
 using API.Clients;
 using Applications.Services;
 using Blazor.Server;
@@ -16,7 +16,7 @@ builder.Services.AddRazorComponents()
 
 
 
-// Autenticación
+// Autenticaciï¿½n
 builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
 builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<IBlazorAuthService>());
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
@@ -28,6 +28,8 @@ builder.Services.AddHttpClient<AuthApiClient>();
 builder.Services.AddHttpClient<OdontologoApiClient>();
 builder.Services.AddHttpClient<PacienteApiClient>();
 builder.Services.AddHttpClient<ReservaApiClient>();
+builder.Services.AddHttpClient<PracticaApiClient>();
+builder.Services.AddHttpClient<MutualApiClient>();
 builder.Services.AddHttpClient<TurnoApiClient>();
 
 var app = builder.Build();

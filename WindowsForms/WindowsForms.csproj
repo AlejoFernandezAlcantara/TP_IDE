@@ -14,6 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DTO\DTO.csproj" />
+    <ProjectReference Include="..\API.Clients\API.Clients.csproj" />
+    <ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
   </ItemGroup>
 
 </Project>
