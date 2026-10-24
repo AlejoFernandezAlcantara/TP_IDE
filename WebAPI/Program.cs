@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Ingresá el token JWT (sin la palabra 'Bearer')"
+        Description = "Ingresï¿½ el token JWT (sin la palabra 'Bearer')"
     });
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -89,19 +89,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.EnsureCreated();
-
-
-    if (!context.Administradores.Any())
-    {
-        var admin = new Administrador(
-            nombre: "Super",
-            apellido: "Admin",
-            email: "admin@clinica.com",
-            passwordHash: BCrypt.Net.BCrypt.HashPassword("Admin123!")
-        );
-        context.Administradores.Add(admin);
-        context.SaveChanges();
-    }
+    DbSeeder.Seed(context);
 }
 if (app.Environment.IsDevelopment())
 {
