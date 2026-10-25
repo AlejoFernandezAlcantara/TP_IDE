@@ -25,10 +25,15 @@ namespace WindowsForms
         private Button btnNuevaReserva = null!;
         private Button btnAtender = null!;
         private Button btnRefrescar = null!;
+        private Button btnCancelar = null!;
+        private Button btnEliminar = null!;
+        private string _rol = string.Empty;
+        private readonly bool _modoAtencion;
         private ComboBox cmbFiltroEstado = null!;
 
-        public FormReservas()
+        public FormReservas(bool modoAtencion = false)
         {
+            _modoAtencion = modoAtencion;
             var http = new System.Net.Http.HttpClient();
             _reservaClient = new ReservaApiClient(http);
             _pacienteClient = new PacienteApiClient(http);
@@ -61,7 +66,16 @@ namespace WindowsForms
                 Size = new Size(160, 23),
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
-            cmbFiltroEstado.Items.AddRange(new object[] { "Todos", "Pendiente", "Confirmada", "Completada", "Cancelada" });
+            if (_modoAtencion)
+            {
+                this.Text = "Atender Reservas";
+                lblTitulo.Text = "Reservas pendientes de atención";
+                cmbFiltroEstado.Items.AddRange(new object[] { "Por atender", "Pendiente", "Confirmada" });
+            }
+            else
+            {
+                cmbFiltroEstado.Items.AddRange(new object[] { "Todos", "Pendiente", "Confirmada", "Completada", "Cancelada" });
+            }
             cmbFiltroEstado.SelectedIndex = 0;
             cmbFiltroEstado.SelectedIndexChanged += (s, e) => FiltrarReservas();
 
@@ -108,7 +122,34 @@ namespace WindowsForms
             };
             btnRefrescar.Click += async (s, e) => await CargarDatosAsync();
 
-            pnlTop.Controls.AddRange(new Control[] { lblTitulo, lblFiltro, cmbFiltroEstado, btnAtender, btnNuevaReserva, btnRefrescar });
+            btnCancelar = new Button
+            {
+                Text = "Cancelar Reserva",
+                Location = new Point(480, 25),
+                Size = new Size(130, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(245, 158, 11),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
+            };
+            btnCancelar.Click += async (s, e) => await CancelarSeleccionadaAsync();
+
+            btnEliminar = new Button
+            {
+                Text = "Eliminar",
+                Location = new Point(390, 25),
+                Size = new Size(80, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(220, 38, 38),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                Visible = false // solo administradores
+            };
+            btnEliminar.Click += async (s, e) => await EliminarSeleccionadaAsync();
+
+            pnlTop.Controls.AddRange(new Control[] { lblTitulo, lblFiltro, cmbFiltroEstado, btnEliminar, btnCancelar, btnAtender, btnNuevaReserva, btnRefrescar });
 
             dgvReservas = new DataGridView
             {
@@ -122,7 +163,7 @@ namespace WindowsForms
             };
 
             dgvReservas.Columns.Add("Id", "ID");
-            dgvReservas.Columns.Add("Fecha", "Fecha");
+            dgvReservas.Columns.Add("Fecha", "Fecha y hora del turno");
             dgvReservas.Columns.Add("Paciente", "Paciente");
             dgvReservas.Columns.Add("Odontologo", "Odontólogo");
             dgvReservas.Columns.Add("Cobertura", "Cobertura");
@@ -131,7 +172,7 @@ namespace WindowsForms
             dgvReservas.Columns.Add("Historial", "Prácticas Realizadas (Piezas)");
 
             dgvReservas.Columns["Id"].Width = 50;
-            dgvReservas.Columns["Fecha"].Width = 110;
+            dgvReservas.Columns["Fecha"].Width = 150;
             dgvReservas.Columns["Estado"].Width = 95;
             dgvReservas.Columns["Historial"].FillWeight = 220;
 
@@ -146,6 +187,8 @@ namespace WindowsForms
             try
             {
                 var token = await AuthServiceProvider.Instance.GetTokenAsync();
+                _rol = await AuthServiceProvider.Instance.GetRolAsync() ?? string.Empty;
+                btnEliminar.Visible = _rol == "Administrador";
                 _reservaClient.SetToken(token);
                 _pacienteClient.SetToken(token);
                 _odontologoClient.SetToken(token);
@@ -156,7 +199,7 @@ namespace WindowsForms
 
                 await Task.WhenAll(rTask, pTask, oTask);
 
-                _reservas = (rTask.Result ?? new()).OrderByDescending(r => r.FechaCreacion).ToList();
+                _reservas = (rTask.Result ?? new()).OrderByDescending(r => r.PrimerTurno ?? r.FechaCreacion).ToList();
                 _pacientes = (pTask.Result ?? new()).ToDictionary(p => p.NroPaciente, p => $"{p.Apellido}, {p.Nombre}");
                 _odontologos = (oTask.Result ?? new()).ToDictionary(o => o.Matricula, o => $"{o.Apellido}, {o.Nombre}");
 
@@ -174,7 +217,11 @@ namespace WindowsForms
             string filtro = cmbFiltroEstado.SelectedItem?.ToString() ?? "Todos";
 
             var filtradas = _reservas;
-            if (filtro != "Todos")
+            if (filtro == "Por atender")
+            {
+                filtradas = _reservas.Where(r => r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada).ToList();
+            }
+            else if (filtro != "Todos")
             {
                 filtradas = _reservas.Where(r => r.Estado.ToString() == filtro).ToList();
             }
@@ -184,7 +231,7 @@ namespace WindowsForms
                 string pac = _pacientes.TryGetValue(r._pacienteId, out var p) ? p : $"#{r._pacienteId}";
                 string odo = _odontologos.TryGetValue(r._odontologoMatricula, out var o) ? o : r._odontologoMatricula;
                 string cob = r.ObraSocial == "Particular" ? "Particular" : $"{r.ObraSocial} ({r.NroAfiliado})";
-                string imp = r.Importe.HasValue ? $"" : "-";
+                string imp = r.Importe.HasValue ? $"$ {r.Importe.Value:N2}" : "-";
 
                 string historial = "-";
                 if (r.Estado == EstadoReserva.Completada && r.PracticasRealizadas?.Count > 0)
@@ -197,8 +244,72 @@ namespace WindowsForms
                     historial = r.Resultado;
                 }
 
-                dgvReservas.Rows.Add(r.Id, r.FechaCreacion.ToString("dd/MM/yyyy HH:mm"), pac, odo, cob, r.Estado, imp, historial);
+                string turnos = r.Turnos.Count > 0 ? r.TurnosTexto : "Sin turno asignado";
+                dgvReservas.Rows.Add(r.Id, turnos, pac, odo, cob, r.Estado, imp, historial);
             }
+        }
+
+        private ReservaDTO? ReservaSeleccionada()
+        {
+            if (dgvReservas.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Seleccioná una reserva de la lista.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return null;
+            }
+
+            int id = Convert.ToInt32(dgvReservas.SelectedRows[0].Cells["Id"].Value);
+            return _reservas.FirstOrDefault(r => r.Id == id);
+        }
+
+        // Una reserva atendida (Completada) no se puede editar ni eliminar
+        private async Task CancelarSeleccionadaAsync()
+        {
+            var res = ReservaSeleccionada();
+            if (res == null) return;
+
+            if (res.Estado == EstadoReserva.Completada)
+            {
+                MessageBox.Show("Una reserva atendida no se puede editar ni eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (res.Estado == EstadoReserva.Cancelada)
+            {
+                MessageBox.Show("La reserva ya está cancelada.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show($"¿Cancelar la reserva #{res.Id}? Sus turnos quedarán disponibles.", "Confirmar",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            res.Estado = EstadoReserva.Cancelada;
+            var (ok, error) = await _reservaClient.ActualizarAsync(res);
+            if (!ok)
+                MessageBox.Show(error ?? "No se pudo cancelar la reserva.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            await CargarDatosAsync();
+        }
+
+        private async Task EliminarSeleccionadaAsync()
+        {
+            var res = ReservaSeleccionada();
+            if (res == null) return;
+
+            if (res.Estado == EstadoReserva.Completada)
+            {
+                MessageBox.Show("Una reserva atendida no se puede editar ni eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"¿Eliminar definitivamente la reserva #{res.Id}?", "Confirmar",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+
+            var (ok, error) = await _reservaClient.EliminarAsync(res.Id);
+            if (!ok)
+                MessageBox.Show(error ?? "No se pudo eliminar la reserva.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            await CargarDatosAsync();
         }
 
         private void AtenderSeleccionada()
@@ -216,6 +327,12 @@ namespace WindowsForms
             if (res.Estado == EstadoReserva.Cancelada)
             {
                 MessageBox.Show("No se puede atender una reserva que fue cancelada.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (res.Estado == EstadoReserva.Completada)
+            {
+                MessageBox.Show("Esta reserva ya fue atendida y no se puede modificar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 

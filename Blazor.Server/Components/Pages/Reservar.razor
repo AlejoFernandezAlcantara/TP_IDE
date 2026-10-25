@@ -89,16 +89,19 @@ else
                 }
             </div>
 
-            <div class="col-md-4 mt-3">
-                <label class="form-label">Filtrar Odontólogo</label>
-                <select class="form-select" @bind="matriculaFiltro">
-                    <option value="">Todos</option>
-                    @foreach (var o in odontologos)
-                    {
-                        <option value="@o.Matricula">@o.Apellido, @o.Nombre - @o.Especialidad</option>
-                    }
-                </select>
-            </div>
+            @if (!EsOdontologo)
+            {
+                <div class="col-md-4 mt-3">
+                    <label class="form-label">Filtrar Odontólogo</label>
+                    <select class="form-select" @bind="matriculaFiltro">
+                        <option value="">Todos</option>
+                        @foreach (var o in odontologos)
+                        {
+                            <option value="@o.Matricula">@o.Apellido, @o.Nombre - @o.Especialidad</option>
+                        }
+                    </select>
+                </div>
+            }
             <div class="col-md-4 mt-3">
                 <label class="form-label">Desde</label>
                 <input type="date" class="form-control" @bind="filtroDesde" />
@@ -214,6 +217,7 @@ else
     private HashSet<int> seleccion = new();
 
     private string? rol;
+    private string? matriculaPropia;
     private int? nroPacienteToken;
     private bool autorizado;
     private bool loading = true;
@@ -245,6 +249,7 @@ else
         var token = await AuthService.GetTokenAsync();
         rol = await AuthService.GetRolAsync();
         nroPacienteToken = await AuthService.GetNroPacienteAsync();
+        matriculaPropia = TokenClaims.Matricula(token) ?? await AuthService.GetMatriculaAsync();
         autorizado = !string.IsNullOrEmpty(rol);
 
         if (!autorizado)
@@ -294,8 +299,14 @@ else
                 (p.Nombre?.Contains(busquedaPaciente, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 p.NroDni.ToString().Contains(busquedaPaciente));
 
+    private bool EsOdontologo => rol == "Odontologo";
+
+    // Solo turnos DISPONIBLES y futuros. El odontólogo únicamente ve sus propios turnos.
     private List<TurnoDTO> TurnosFiltrados =>
         turnos
+            .Where(t => t.Estado == EstadoTurno.Disponible)
+            .Where(t => t.FechaHoraInicio > DateTime.Now)
+            .Where(t => !EsOdontologo || string.Equals(t._odontologoMatricula, matriculaPropia, StringComparison.OrdinalIgnoreCase))
             .Where(t => string.IsNullOrEmpty(matriculaFiltro) || t._odontologoMatricula == matriculaFiltro)
             .Where(t => !filtroDesde.HasValue || t.FechaHoraInicio.Date >= filtroDesde.Value.Date)
             .Where(t => !filtroHasta.HasValue || t.FechaHoraInicio.Date <= filtroHasta.Value.Date)
@@ -310,8 +321,21 @@ else
 
     private void Toggle(int codigo)
     {
-        if (!seleccion.Add(codigo))
-            seleccion.Remove(codigo);
+        errorMessage = string.Empty;
+
+        if (seleccion.Remove(codigo))
+            return;
+
+        // Todos los turnos de una misma reserva deben ser del mismo odontólogo
+        var nuevo = turnos.FirstOrDefault(t => t.Codigo == codigo);
+        var actual = TurnosSeleccionados.FirstOrDefault();
+        if (nuevo != null && actual != null && nuevo._odontologoMatricula != actual._odontologoMatricula)
+        {
+            errorMessage = "Una reserva solo puede incluir turnos de un mismo odontólogo. Confirmá la actual y creá otra reserva para el otro profesional.";
+            return;
+        }
+
+        seleccion.Add(codigo);
     }
 
     private async Task ReservarAsync()
@@ -348,38 +372,33 @@ else
         procesando = true;
         TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
 
-        int reservados = 0;
-        var fallos = new List<string>();
-
-        foreach (var t in aReservar)
+        var request = new ReservarTurnosDTO
         {
-            // Reservar turno
-            var (ok, error) = await TurnoApiClient.ReservarAsync(t.Codigo, pacienteId);
+            PacienteId = pacienteId,
+            TurnoCodigos = aReservar.Select(t => t.Codigo).ToList(),
+            ObraSocial = obraSocialSel,
+            NroAfiliado = obraSocialSel == "Particular" ? null : nroAfiliado
+        };
 
-            if (ok)
-            {
-                reservados++;
-                seleccion.Remove(t.Codigo);
-            }
-            else
-            {
-                fallos.Add($"{t.FechaHoraInicio:dd/MM HH:mm}: {error ?? "no se pudo reservar"}");
-            }
-        }
+        var (ok, error) = await TurnoApiClient.ReservarVariosAsync(request);
 
         procesando = false;
 
-        if (reservados > 0)
+        if (ok)
         {
-            mensaje = reservados == 1 ? "¡Turno reservado con éxito!" : $"¡Se reservaron {reservados} turnos con éxito!";
+            mensaje = aReservar.Count == 1
+                ? "¡Turno reservado con éxito!"
+                : $"¡Reserva creada con {aReservar.Count} turnos!";
+            seleccion.Clear();
             if (obraSocialSel == "Particular")
             {
                 nroAfiliado = null;
             }
         }
-
-        if (fallos.Count > 0)
-            errorMessage = "No se pudieron reservar:\n" + string.Join("\n", fallos);
+        else
+        {
+            errorMessage = error ?? "No se pudo reservar el turno.";
+        }
 
         await CargarAsync();
     }

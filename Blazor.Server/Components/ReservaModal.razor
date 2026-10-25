@@ -147,9 +147,10 @@
 
             ReservaApiClient.SetToken(await AuthService.GetTokenAsync());
 
-            if (!await ReservaApiClient.ActualizarAsync(currentReserva))
+            var (okGuardar, errorGuardar) = await ReservaApiClient.ActualizarAsync(currentReserva);
+            if (!okGuardar)
             {
-                errorMessage = "No se pudo guardar la reserva. Revisá los datos o volvé a iniciar sesión.";
+                errorMessage = errorGuardar ?? "No se pudo guardar la reserva. Revisá los datos o volvé a iniciar sesión.";
                 return;
             }
 

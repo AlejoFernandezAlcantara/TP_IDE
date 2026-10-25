@@ -92,7 +92,7 @@ namespace Data
 
             modelBuilder.Entity<Turno>()
                 .HasOne(t => t.Reserva)
-                .WithMany()
+                .WithMany(r => r.Turnos)
                 .HasForeignKey(t => t.ReservaId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);

@@ -29,6 +29,18 @@ namespace Domain.Model
         // Prácticas realizadas en la atención con detalle de piezas ("14-M, 15-O")
         public ICollection<ReservaPractica> PracticasRealizadas { get; set; } = new List<ReservaPractica>();
 
+        // Turnos asociados a esta reserva (una reserva puede abarcar varios turnos)
+        public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
+
+        public bool EstaAtendida => Estado == EstadoReserva.Completada;
+
+        // Una reserva atendida es historia clínica: no se edita ni se elimina.
+        public void ValidarModificable()
+        {
+            if (EstaAtendida)
+                throw new InvalidOperationException("Una reserva atendida no se puede editar ni eliminar.");
+        }
+
         // Constructor para EF
         public Reserva()
         {
@@ -47,6 +59,11 @@ namespace Domain.Model
 
         public void CompletarAtencion(string? resultado, IEnumerable<ReservaPractica> practicas)
         {
+            if (Estado == EstadoReserva.Completada)
+                throw new InvalidOperationException("La reserva ya fue atendida.");
+            if (Estado == EstadoReserva.Cancelada)
+                throw new InvalidOperationException("No se puede atender una reserva cancelada.");
+
             Estado = EstadoReserva.Completada;
             FechaRealizacion = DateTime.Now;
             Resultado = resultado;

@@ -265,7 +265,14 @@ namespace WindowsForms
 
                 if (_reserva != null)
                 {
-                    lblInfoReserva.Text = $"Paciente: #{_reserva._pacienteId} | Cobertura: {_reserva.ObraSocial} {(!string.IsNullOrEmpty(_reserva.NroAfiliado) ? $"(Af: {_reserva.NroAfiliado})" : "")} | Estado: {_reserva.Estado}";
+                    lblInfoReserva.Text = $"Paciente: #{_reserva._pacienteId} | Cobertura: {_reserva.ObraSocial} {(!string.IsNullOrEmpty(_reserva.NroAfiliado) ? $"(Af: {_reserva.NroAfiliado})" : "")} | Estado: {_reserva.Estado} | Turno(s): {_reserva.TurnosTexto}";
+
+                    if (_reserva.Estado == EstadoReserva.Completada || _reserva.Estado == EstadoReserva.Cancelada)
+                    {
+                        btnFinalizar.Enabled = false;
+                        MessageBox.Show($"Esta reserva está {_reserva.Estado} y no se puede volver a atender ni modificar.",
+                            "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
 
                 cmbPracticas.DataSource = _practicas;
@@ -276,6 +283,22 @@ namespace WindowsForms
             {
                 MessageBox.Show("Error al cargar datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        // El API responde {"error":"..."}: mostrar solo el texto
+        private static string? ExtraerMensaje(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("error", out var e))
+                    return e.GetString();
+            }
+            catch { }
+            return json;
         }
 
         private void OnPracticaSeleccionada()
@@ -379,7 +402,7 @@ namespace WindowsForms
                 }
                 else
                 {
-                    MessageBox.Show(error ?? "No se pudo finalizar la atención.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ExtraerMensaje(error) ?? "No se pudo finalizar la atención.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)

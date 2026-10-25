@@ -109,6 +109,25 @@ namespace Applications.Services
             };
         }
 
+        public async Task<ReservaDTO> ReservarVariosAsync(ReservarTurnosDTO request)
+        {
+            var r = await _repository.ReservarVariosAsync(request.TurnoCodigos, request.PacienteId, request.ObraSocial, request.NroAfiliado);
+            return new ReservaDTO
+            {
+                Id = r.Id,
+                FechaCreacion = r.FechaCreacion,
+                Estado = r.Estado,
+                ObraSocial = r.ObraSocial,
+                NroAfiliado = r.NroAfiliado,
+                _pacienteId = r.PacienteId,
+                _odontologoMatricula = r.OdontologoMatricula,
+                Turnos = r.Turnos?
+                    .OrderBy(x => x.FechaHoraInicio)
+                    .Select(x => new TurnoReservaDTO { Codigo = x.Codigo, FechaHoraInicio = x.FechaHoraInicio, Duracion = x.Duracion })
+                    .ToList() ?? new()
+            };
+        }
+
         public async Task CancelarReservaAsync(int codigo) => await _repository.CancelarReservaAsync(codigo);
     }
 }

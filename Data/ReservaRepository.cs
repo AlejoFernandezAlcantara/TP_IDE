@@ -21,6 +21,7 @@ namespace Data
             return await _context.Reservas
                 .Include(r => r.Paciente)
                 .Include(r => r.Odontologo)
+                .Include(r => r.Turnos)
                 .Include(r => r.PracticasRealizadas)
                     .ThenInclude(p => p.Practica)
                 .ToListAsync();
@@ -31,6 +32,7 @@ namespace Data
             return await _context.Reservas
                 .Include(r => r.Paciente)
                 .Include(r => r.Odontologo)
+                .Include(r => r.Turnos)
                 .Include(r => r.PracticasRealizadas)
                     .ThenInclude(p => p.Practica)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -40,6 +42,7 @@ namespace Data
         {
             return await _context.Reservas
                 .Include(r => r.Odontologo)
+                .Include(r => r.Turnos)
                 .Include(r => r.PracticasRealizadas)
                     .ThenInclude(p => p.Practica)
                 .Where(r => r.PacienteId == pacienteId)
@@ -56,10 +59,21 @@ namespace Data
         {
             var existente = await _context.Reservas
                 .Include(r => r.PracticasRealizadas)
+                .Include(r => r.Turnos)
                 .FirstOrDefaultAsync(r => r.Id == reserva.Id);
 
             if (existente == null)
                 throw new InvalidOperationException("Reserva no encontrada.");
+
+            // Al cancelar la reserva, sus turnos vuelven a quedar disponibles
+            if (reserva.Estado == EstadoReserva.Cancelada && existente.Estado != EstadoReserva.Cancelada)
+            {
+                foreach (var turno in existente.Turnos.ToList())
+                {
+                    turno.Estado = EstadoTurno.Disponible;
+                    turno.ReservaId = null;
+                }
+            }
 
             existente.Estado = reserva.Estado;
             existente.Observaciones = reserva.Observaciones;
@@ -79,6 +93,8 @@ namespace Data
 
             if (existente == null)
                 throw new InvalidOperationException("Reserva no encontrada.");
+
+            existente.ValidarModificable();
 
             _context.Reservas.Remove(existente);
             await _context.SaveChangesAsync();
