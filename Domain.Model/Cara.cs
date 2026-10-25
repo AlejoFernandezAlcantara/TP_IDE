@@ -13,15 +13,10 @@ namespace Domain.Model
         public string Nombre { get; set; }
         public string Detalle { get; set; }
 
-        public Cara(string nombre, string detalle) {
-            SetIdCara();
+        public Cara(string nombre, string detalle)
+        {
             SetNombre(nombre);
             SetDetalle(detalle);
-        }
-        public void SetIdCara()
-        {
-            incIdCara++;
-            IdCara = incIdCara;
         }
         public void SetNombre(string nombre)
         {

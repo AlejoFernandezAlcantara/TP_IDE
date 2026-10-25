@@ -68,9 +68,17 @@ namespace Data
 
             // ===================== ENTIDADES CON PK PROPIA =====================
             modelBuilder.Entity<Practica>().HasKey(p => p.CodigoPractica);
+            modelBuilder.Entity<Practica>().Property(p => p.CodigoPractica).ValueGeneratedOnAdd();
+
             modelBuilder.Entity<Diente>().HasKey(d => d.NroDiente);
+            modelBuilder.Entity<Diente>().Property(d => d.NroDiente).ValueGeneratedNever();
+
             modelBuilder.Entity<Cara>().HasKey(c => c.IdCara);
+            modelBuilder.Entity<Cara>().Property(c => c.IdCara).ValueGeneratedOnAdd();
+
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
+            modelBuilder.Entity<Mutual>().Property(m => m.Cuit).ValueGeneratedNever();
+
             modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
             modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
             // Evita que dos personas reserven el mismo turno a la vez (no cambia el esquema de la BD)

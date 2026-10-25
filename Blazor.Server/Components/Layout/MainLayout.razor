@@ -1,23 +1,101 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject IBlazorAuthService AuthService
+@inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="app @(open ? "is-open" : "")">
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a> 
-        </div>
+    <aside class="app-sidebar" aria-label="Menú de navegación">
+        <NavMenu Nombre="@nombre" Rol="@rol" OnClose="Close" OnLogout="LogoutAsync" />
+    </aside>
 
-        <article class="content px-4">
+    <div class="backdrop" @onclick="Close"></div>
+
+    <div class="app-main">
+        <header class="topbar">
+            <button class="icon-btn" @onclick="Toggle" aria-label="Abrir menú" title="Menú">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+            </button>
+
+            <a class="topbar-brand" href="">
+                <span class="brand-logo">
+                    <img src="logo.svg" alt="Logo" width="24" height="24" />
+                </span>
+                <span class="t">Consultorio Carestia</span>
+            </a>
+
+            <div class="topbar-actions">
+                @if (nombre is null)
+                {
+                    <a class="btn btn-primary btn-sm" href="login">Iniciar sesión</a>
+                }
+                else
+                {
+                    <span class="topbar-user"><strong>@nombre</strong> · @rol</span>
+                    <button class="btn btn-outline-primary btn-sm" @onclick="LogoutAsync">Cerrar sesión</button>
+                }
+            </div>
+        </header>
+
+        <article class="app-content">
             @Body
         </article>
-    </main>
+    </div>
 </div>
 
+@* Va después de @Body para que prevalezca sobre el PageTitle de cada página *@
+<PageTitle>Consultorio Carestia</PageTitle>
+
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
+    Ocurrió un error inesperado.
+    <a href="" class="reload">Recargar</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    private bool open;
+    private string? nombre;
+    private string? rol;
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
+        nombre = await AuthService.GetNombreAsync();
+        rol = await AuthService.GetRolAsync();
+    }
+
+    private async void OnAuthChanged(bool autenticado)
+    {
+        await CargarAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        open = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Toggle() => open = !open;
+    private void Close() => open = false;
+
+    private async Task LogoutAsync()
+    {
+        open = false;
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

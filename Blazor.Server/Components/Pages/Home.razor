@@ -1,7 +1,56 @@
-﻿@page "/"
+@page "/"
+@inject AuthenticationStateProvider AuthProvider
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Inicio</PageTitle>
 
-<h1>Bienvenido al ConsultoriodeOdontología</h1>
+<section class="hero">
+    <h1>@(string.IsNullOrEmpty(name) ? "Bienvenido" : $"Hola, {name}")</h1>
+    <p>Sistema de gestión de turnos odontológicos.</p>
+</section>
 
-/Pagina no terminada
+@if (!isAuthenticated)
+{
+    <div class="quick-grid">
+        <a class="quick-card" href="login">
+            <strong>Iniciar sesión</strong>
+            <span>Ingresá para gestionar tus turnos.</span>
+        </a>
+    </div>
+}
+else
+{
+    <div class="quick-grid">
+        @if (role == "Administrador")
+        {
+            <a class="quick-card" href="pacientes"><strong>Pacientes</strong><span>Alta, edición y baja.</span></a>
+            <a class="quick-card" href="odontologos"><strong>Odontólogos</strong><span>Gestión de profesionales.</span></a>
+            <a class="quick-card" href="turnos"><strong>Turnos</strong><span>Agenda disponible.</span></a>
+            <a class="quick-card" href="reservas"><strong>Reservas</strong><span>Reservas de pacientes.</span></a>
+        }
+        else if (role == "Odontologo")
+        {
+            <a class="quick-card" href="turnos"><strong>Mis turnos</strong><span>Tu agenda.</span></a>
+            <a class="quick-card" href="reservas"><strong>Reservas</strong><span>Pacientes que reservaron.</span></a>
+        }
+        else if (role == "Paciente")
+        {
+            <a class="quick-card" href="reservar"><strong>Reservar turno</strong><span>Elegí odontólogo y horario.</span></a>
+            <a class="quick-card" href="mis-reservas"><strong>Mis reservas</strong><span>Consultá o cancelá.</span></a>
+            <a class="quick-card" href="mis-datos"><strong>Mis datos</strong><span>Tu información personal.</span></a>
+        }
+    </div>
+}
+
+@code {
+    private bool isAuthenticated;
+    private string name = "";
+    private string role = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthProvider.GetAuthenticationStateAsync()).User;
+        isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+        name = user.Identity?.Name ?? "";
+        role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    }
+}

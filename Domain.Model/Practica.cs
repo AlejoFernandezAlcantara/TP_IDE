@@ -18,14 +18,8 @@ namespace Domain.Model
 
     public Practica( string detalle, float precio)
         {
-            SetCodigoPractica();
             SetDetalle(detalle);
             SetPrecio(precio);
-        }
-        public void SetCodigoPractica()
-        {
-            incCodigoPractica++;
-            CodigoPractica = incCodigoPractica;
         }
         public void SetDetalle(string detalle)
         {

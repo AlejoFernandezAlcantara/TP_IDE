@@ -61,13 +61,7 @@
             }
 
             var rol = await AuthService.GetRolAsync();
-            Navigation.NavigateTo(rol switch
-            {
-                "Administrador" => "/pacientes",
-                "Odontologo" => "/turnos",
-                "Paciente" => "/reservar",
-                _ => "/"
-            });
+            Navigation.NavigateTo("/");
         }
         catch (Exception ex)
         {
