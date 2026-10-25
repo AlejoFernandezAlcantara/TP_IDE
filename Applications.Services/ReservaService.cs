@@ -23,12 +23,20 @@ namespace Applications.Services
         public async Task<List<ReservaDTO>> GetByPacienteAsync(int pacienteId) =>
             (await _repository.GetByPacienteAsync(pacienteId)).Select(ToDto).ToList();
 
+        public async Task<ReservaDTO?> GetByIdAsync(int id)
+        {
+            var r = await _repository.GetByIdAsync(id);
+            return r != null ? ToDto(r) : null;
+        }
+
         public async Task CrearAsync(ReservaDTO dto)
         {
             var reserva = new Reserva(dto.Observaciones ?? string.Empty, dto.Importe ?? 0, dto.Coseguro ?? 0)
             {
                 PacienteId = dto._pacienteId,
-                OdontologoMatricula = dto._odontologoMatricula
+                OdontologoMatricula = dto._odontologoMatricula,
+                ObraSocial = string.IsNullOrWhiteSpace(dto.ObraSocial) ? "Particular" : dto.ObraSocial,
+                NroAfiliado = dto.ObraSocial == "Particular" ? null : dto.NroAfiliado
             };
 
             await _repository.AddAsync(reserva);
@@ -44,13 +52,39 @@ namespace Applications.Services
                 FechaCreacion = dto.FechaCreacion,
                 Estado = dto.Estado,
                 FechaRealizacion = dto.FechaRealizacion,
-                Resultado = dto.Resultado
+                Resultado = dto.Resultado,
+                ObraSocial = dto.ObraSocial,
+                NroAfiliado = dto.NroAfiliado
             };
 
             await _repository.UpdateAsync(reserva);
         }
 
         public async Task EliminarAsync(int id) => await _repository.DeleteAsync(id);
+
+        public async Task AtenderReservaAsync(AtenderReservaDTO dto)
+        {
+            var reserva = await _repository.GetByIdAsync(dto.ReservaId);
+            if (reserva == null)
+                throw new InvalidOperationException("Reserva no encontrada.");
+
+            var listaPracticas = dto.Practicas.Select(p => new ReservaPractica
+            {
+                ReservaId = dto.ReservaId,
+                PracticaCodigo = p.PracticaCodigo,
+                DientesCaras = p.DientesCaras,
+                Precio = p.Precio,
+                Observaciones = p.Observaciones
+            }).ToList();
+
+            reserva.CompletarAtencion(dto.Resultado, listaPracticas);
+            if (dto.ImporteTotal.HasValue && dto.ImporteTotal.Value > 0)
+            {
+                reserva.Importe = dto.ImporteTotal.Value;
+            }
+
+            await _repository.UpdateAsync(reserva);
+        }
 
         private static ReservaDTO ToDto(Reserva r) => new ReservaDTO
         {
@@ -62,8 +96,20 @@ namespace Applications.Services
             Coseguro = r.Coseguro,
             FechaRealizacion = r.FechaRealizacion,
             Resultado = r.Resultado,
+            ObraSocial = r.ObraSocial,
+            NroAfiliado = r.NroAfiliado,
             _pacienteId = r.PacienteId,
-            _odontologoMatricula = r.OdontologoMatricula
+            _odontologoMatricula = r.OdontologoMatricula,
+            PracticasRealizadas = r.PracticasRealizadas?.Select(p => new ReservaPracticaDTO
+            {
+                Id = p.Id,
+                ReservaId = p.ReservaId,
+                PracticaCodigo = p.PracticaCodigo,
+                PracticaDetalle = p.Practica?.Detalle,
+                DientesCaras = p.DientesCaras,
+                Precio = p.Precio,
+                Observaciones = p.Observaciones
+            }).ToList() ?? new()
         };
     }
 }

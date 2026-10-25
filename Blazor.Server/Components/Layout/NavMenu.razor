@@ -1,117 +1,164 @@
-<div class="drawer-head">
-    <span class="brand-logo">
-        <img src="logo.svg" alt="Logo" width="24" height="24" />
-    </span>
-    <span class="brand-text">Consultorio Carestia<small>Gestión Odontológica</small></span>
-    <button class="icon-btn" @onclick="OnClose" aria-label="Cerrar menú" title="Cerrar">
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+﻿@inject IBlazorAuthService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="sidebar-header p-3 d-flex align-items-center justify-content-between border-bottom border-secondary border-opacity-25">
+    <div class="d-flex align-items-center gap-2">
+        <img src="images/logo-icon.png" alt="DentalCare Logo" style="height: 38px; width: auto; object-fit: contain;" />
+        <div class="d-flex flex-column">
+            <span class="brand-title fw-bold text-white lh-1" style="font-size: 1.15rem; letter-spacing: -0.02em;">DentalCare</span>
+            <span class="brand-subtitle text-secondary small" style="font-size: 0.72rem;">Consultorio Odontológico</span>
+        </div>
+    </div>
+    <button class="btn btn-sm btn-link text-white-50 d-md-none p-1" @onclick="CerrarMenuEnMovil" title="Cerrar">
+        <i class="bi bi-x-lg fs-5"></i>
     </button>
 </div>
 
-<nav class="side-nav" @onclick="OnClose">
-    <div class="side-section">Navegación</div>
-
-    <NavLink class="side-link" href="" Match="NavLinkMatch.All">
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10" /></svg>
-        <span>Inicio</span>
-    </NavLink>
-
-    @if (Rol == "Administrador")
-    {
-        <NavLink class="side-link" href="pacientes">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M10 11a4 4 0 100-8 4 4 0 000 8zM21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
-            <span>Pacientes</span>
-        </NavLink>
-        <NavLink class="side-link" href="odontologos">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0" /></svg>
-            <span>Odontólogos</span>
-        </NavLink>
-        <NavLink class="side-link" href="turnos">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>
-            <span>Turnos</span>
-        </NavLink>
-        <NavLink class="side-link" href="reservas">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
-            <span>Reservas</span>
-        </NavLink>
-        <NavLink class="side-link" href="reservar">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-            <span>Reservar</span>
-        </NavLink>
-    }
-    else if (Rol == "Odontologo")
-    {
-        <NavLink class="side-link" href="turnos">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>
-            <span>Mis turnos</span>
-        </NavLink>
-        <NavLink class="side-link" href="reservas">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
-            <span>Mis reservas</span>
-        </NavLink>
-        <NavLink class="side-link" href="reservar">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-            <span>Reservar</span>
-        </NavLink>
-        <NavLink class="side-link" href="mis-datos">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0" /></svg>
-            <span>Mis datos</span>
-        </NavLink>
-    }
-    else if (Rol == "Paciente")
-    {
-        <NavLink class="side-link" href="reservar">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>
-            <span>Reservar turno</span>
-        </NavLink>
-        <NavLink class="side-link" href="mis-reservas">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
-            <span>Mis reservas</span>
-        </NavLink>
-        <NavLink class="side-link" href="mis-datos">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0" /></svg>
-            <span>Mis datos</span>
-        </NavLink>
-    }
-    else
-    {
-        @* Visitante sin sesión: Reservar Turno lleva al login si no hay sesión *@
-        <NavLink class="side-link" href="reservar">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>
-            <span>Reservar Turno</span>
-        </NavLink>
-    }
-</nav>
-
-<div class="side-footer">
-    @if (Nombre is null)
-    {
-        <a class="footer-btn primary" href="login" @onclick="OnClose">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" /></svg>
-            Iniciar sesión
-        </a>
-    }
-    else
-    {
-        <div class="user-card">
-            <span class="user-avatar">@Inicial</span>
-            <div class="user-info">
-                <strong>@Nombre</strong>
-                <span>@Rol</span>
-            </div>
+<div class="nav-container p-2 flex-grow-1 overflow-y-auto">
+    <nav class="nav flex-column gap-1">
+        <div class="nav-item">
+            <NavLink class="nav-link custom-nav-link" href="" Match="NavLinkMatch.All" @onclick="CerrarMenuEnMovil">
+                <i class="bi bi-grid-1x2-fill me-2"></i> Inicio
+            </NavLink>
         </div>
-        <button class="footer-btn primary" @onclick="OnLogout">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-            Cerrar sesión
-        </button>
+
+        @if (rol == "Administrador")
+        {
+            <div class="nav-section-title px-3 pt-3 pb-1 text-uppercase text-secondary" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">
+                Administración
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="pacientes" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-people-fill me-2"></i> Pacientes
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="odontologos" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-person-badge-fill me-2"></i> Odontólogos
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="turnos" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-calendar-week me-2"></i> Turnos
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="atender" @onclick="CerrarMenuEnMovil"><i class="bi bi-heart-pulse-fill me-2"></i> Atender Reserva</NavLink></div><div class="nav-item"><NavLink class="nav-link custom-nav-link" href="reservas" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-journal-check me-2"></i> Reservas
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="reservar" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-plus-circle me-2"></i> Nueva Reserva
+                </NavLink>
+            </div>
+        }
+        else if (rol == "Odontologo")
+        {
+            <div class="nav-section-title px-3 pt-3 pb-1 text-uppercase text-secondary" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">
+                Panel Profesional
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="turnos" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-calendar-week me-2"></i> Mis turnos
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="atender" @onclick="CerrarMenuEnMovil"><i class="bi bi-heart-pulse-fill me-2"></i> Atender Reserva</NavLink></div><div class="nav-item"><NavLink class="nav-link custom-nav-link" href="reservas" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-journal-check me-2"></i> Mis reservas
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="reservar" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-plus-circle me-2"></i> Reservar turno
+                </NavLink>
+            </div>
+        }
+        else if (rol == "Paciente")
+        {
+            <div class="nav-section-title px-3 pt-3 pb-1 text-uppercase text-secondary" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">
+                Paciente
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="reservar" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-calendar-plus me-2"></i> Reservar turno
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="mis-reservas" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-clock-history me-2"></i> Mis reservas
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+<div class="user-footer mt-auto p-3 border-top border-secondary border-opacity-25">
+    @if (nombre is null)
+    {
+        <NavLink class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" href="login" @onclick="CerrarMenuEnMovil">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+        </NavLink>
+    }
+    else
+    {
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2 overflow-hidden">
+                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; min-width: 36px; font-weight: 600;">
+                    @(string.IsNullOrEmpty(nombre) ? "U" : nombre[0].ToString().ToUpper())
+                </div>
+                <div class="user-info overflow-hidden">
+                    <div class="text-white text-truncate fw-semibold small">@nombre</div>
+                    <span class="badge bg-secondary bg-opacity-50 text-light px-1" style="font-size: 0.65rem;">@rol</span>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-link text-secondary text-hover-light p-1" @onclick="LogoutAsync" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right fs-5"></i>
+            </button>
+        </div>
     }
 </div>
 
 @code {
-    [Parameter] public string? Nombre { get; set; }
-    [Parameter] public string? Rol { get; set; }
-    [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback OnLogout { get; set; }
+    [Parameter]
+    public EventCallback OnToggleMenu { get; set; }
 
-    private string Inicial => string.IsNullOrWhiteSpace(Nombre) ? "?" : Nombre.Trim()[0].ToString();
+    private string? nombre;
+    private string? rol;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthChanged;
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
+        nombre = await AuthService.GetNombreAsync();
+        rol = await AuthService.GetRolAsync();
+    }
+
+    private async void OnAuthChanged(bool autenticado)
+    {
+        await CargarAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CerrarMenuEnMovil()
+    {
+        if (OnToggleMenu.HasDelegate)
+        {
+            await OnToggleMenu.InvokeAsync();
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        await CerrarMenuEnMovil();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose() => AuthService.AuthenticationStateChanged -= OnAuthChanged;
 }

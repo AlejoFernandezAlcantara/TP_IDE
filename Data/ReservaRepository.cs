@@ -21,6 +21,8 @@ namespace Data
             return await _context.Reservas
                 .Include(r => r.Paciente)
                 .Include(r => r.Odontologo)
+                .Include(r => r.PracticasRealizadas)
+                    .ThenInclude(p => p.Practica)
                 .ToListAsync();
         }
 
@@ -29,13 +31,17 @@ namespace Data
             return await _context.Reservas
                 .Include(r => r.Paciente)
                 .Include(r => r.Odontologo)
-                .FirstOrDefaultAsync(r =>r.Id == id);
+                .Include(r => r.PracticasRealizadas)
+                    .ThenInclude(p => p.Practica)
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<List<Reserva>> GetByPacienteAsync(int pacienteId)
         {
             return await _context.Reservas
                 .Include(r => r.Odontologo)
+                .Include(r => r.PracticasRealizadas)
+                    .ThenInclude(p => p.Practica)
                 .Where(r => r.PacienteId == pacienteId)
                 .ToListAsync();
         }
@@ -48,21 +54,21 @@ namespace Data
 
         public async Task UpdateAsync(Reserva reserva)
         {
-            var existente = await _context.Reservas.FirstOrDefaultAsync(r => r.Id == reserva.Id);
+            var existente = await _context.Reservas
+                .Include(r => r.PracticasRealizadas)
+                .FirstOrDefaultAsync(r => r.Id == reserva.Id);
 
             if (existente == null)
                 throw new InvalidOperationException("Reserva no encontrada.");
 
             existente.Estado = reserva.Estado;
-            existente.SetObs(reserva.Observaciones ?? string.Empty);
-            existente.SetImp(reserva.Importe ?? 0);
-            existente.SetC(reserva.Coseguro ?? 0);
-
-            if (reserva.FechaRealizacion.HasValue)
-                existente.SetFechaRealizacion();
-
-            if (!string.IsNullOrWhiteSpace(reserva.Resultado))
-                existente.SetResultado(reserva.Resultado);
+            existente.Observaciones = reserva.Observaciones;
+            existente.Importe = reserva.Importe;
+            existente.Coseguro = reserva.Coseguro;
+            existente.ObraSocial = reserva.ObraSocial;
+            existente.NroAfiliado = reserva.NroAfiliado;
+            existente.FechaRealizacion = reserva.FechaRealizacion;
+            existente.Resultado = reserva.Resultado;
 
             await _context.SaveChangesAsync();
         }

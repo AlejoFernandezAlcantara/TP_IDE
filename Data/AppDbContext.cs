@@ -2,9 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data
 {
@@ -16,14 +13,9 @@ namespace Data
 
         public DbSet<Turno> Turnos { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
-        public DbSet<Odontograma> Odontogramas { get; set; }
-        public DbSet<Detalle> Detalles { get; set; }
+        public DbSet<ReservaPractica> ReservaPracticas { get; set; }
         public DbSet<Practica> Practicas { get; set; }
-        public DbSet<Diente> Dientes { get; set; }
-        public DbSet<Cara> Caras { get; set; }
-        public DbSet<DienteCara> DienteCaras { get; set; }
         public DbSet<Mutual> Mutuales { get; set; }
-        public DbSet<PacienteMutual> PacienteMutuales { get; set; }
         public DbSet<OdontologoMutual> OdontologoMutuales { get; set; }
 
         private readonly string _connectionString;
@@ -45,56 +37,25 @@ namespace Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ===================== USUARIO / PACIENTE / ODONTOLOGO / ADMINISTRADOR =====================
-            // No mapeamos Usuario como tabla compartida (TPH): EF exige que las claves
-            // (incluidas alternate keys) se configuren en el tipo raíz, y NroPaciente/Matricula
-            // solo existen en los tipos derivados. En cambio, cada tipo concreto tiene su
-            // propia tabla con su propia clave de negocio como Primary Key.
-            // Usuario sigue existiendo en C# como clase base para reutilizar código (Email,
-            // PasswordHash, Rol), pero EF Core la ignora a nivel de base de datos.
+            // ===================== USUARIOS =====================
             modelBuilder.Ignore<Usuario>();
 
-            modelBuilder.Entity<Paciente>()
-                .HasKey(p => p.NroPaciente);
-            modelBuilder.Entity<Paciente>()
-                .Property(p => p.NroPaciente)
-                .ValueGeneratedOnAdd();
+            modelBuilder.Entity<Paciente>().HasKey(p => p.NroPaciente);
+            modelBuilder.Entity<Paciente>().Property(p => p.NroPaciente).ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<Odontologo>()
-                .HasKey(o => o.Matricula);
+            modelBuilder.Entity<Odontologo>().HasKey(o => o.Matricula);
+            modelBuilder.Entity<Administrador>().HasKey(a => a.Id);
 
-            modelBuilder.Entity<Administrador>()
-                .HasKey(a => a.Id);
-
-            // ===================== ENTIDADES CON PK PROPIA =====================
+            // ===================== CATALOGOS BASICOS =====================
             modelBuilder.Entity<Practica>().HasKey(p => p.CodigoPractica);
-            modelBuilder.Entity<Practica>().Property(p => p.CodigoPractica).ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<Diente>().HasKey(d => d.NroDiente);
-            modelBuilder.Entity<Diente>().Property(d => d.NroDiente).ValueGeneratedNever();
-
-            modelBuilder.Entity<Cara>().HasKey(c => c.IdCara);
-            modelBuilder.Entity<Cara>().Property(c => c.IdCara).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Practica>().Property(p => p.CodigoPractica).ValueGeneratedNever();
 
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
             modelBuilder.Entity<Mutual>().Property(m => m.Cuit).ValueGeneratedNever();
 
-            modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
-            modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
-            // Evita que dos personas reserven el mismo turno a la vez (no cambia el esquema de la BD)
-            modelBuilder.Entity<Turno>().Property(t => t.Estado).IsConcurrencyToken();
-
-
             // ===================== RESERVA =====================
             modelBuilder.Entity<Reserva>().HasKey(r => r.Id);
             modelBuilder.Entity<Reserva>().Property(r => r.Id).ValueGeneratedOnAdd();
-            // Importe y Coseguro son float (columna real en SQL Server): real no admite precision/escala,
-            // por eso no se usa HasPrecision(18, 2) aca.
-
-            // Opcional: evita duplicados de paciente + odontólogo + fecha
-            modelBuilder.Entity<Reserva>()
-                .HasIndex(r => new { r.PacienteId, r.OdontologoMatricula, r.FechaCreacion })
-                .IsUnique();
 
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Paciente)
@@ -107,102 +68,40 @@ namespace Data
                 .WithMany()
                 .HasForeignKey(r => r.OdontologoMatricula)
                 .OnDelete(DeleteBehavior.Restrict);
-            // ===================== TURNO -> RESERVA (opcional) =====================
-            // Borrá el Ignore(t => t.Reserva) y su comentario
+
+            // ===================== RESERVA -> PRACTICAS REALIZADAS =====================
+            modelBuilder.Entity<ReservaPractica>().HasKey(rp => rp.Id);
+            modelBuilder.Entity<ReservaPractica>().Property(rp => rp.Id).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<ReservaPractica>()
+                .HasOne(rp => rp.Reserva)
+                .WithMany(r => r.PracticasRealizadas)
+                .HasForeignKey(rp => rp.ReservaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReservaPractica>()
+                .HasOne(rp => rp.Practica)
+                .WithMany()
+                .HasForeignKey(rp => rp.PracticaCodigo)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ===================== TURNO -> RESERVA =====================
+            modelBuilder.Entity<Turno>().HasKey(t => t.Codigo);
+            modelBuilder.Entity<Turno>().Property(t => t.Codigo).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Turno>().Property(t => t.Estado).IsConcurrencyToken();
+
             modelBuilder.Entity<Turno>()
                 .HasOne(t => t.Reserva)
                 .WithMany()
                 .HasForeignKey(t => t.ReservaId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<Turno>().Ignore(t => t.ReservaPacienteId);
             modelBuilder.Entity<Turno>().Ignore(t => t.ReservaOdontologoMatricula);
             modelBuilder.Entity<Turno>().Ignore(t => t.ReservaFechaCreacion);
 
-            // ===================== ODONTOGRAMA (1:1 con Paciente) =====================
-            modelBuilder.Entity<Odontograma>()
-                .HasKey(o => o.Id);
-            modelBuilder.Entity<Odontograma>()
-                .Property(o => o.Id)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<Odontograma>()
-                .HasIndex(o => o.PacienteId)
-                .IsUnique();
-
-            modelBuilder.Entity<Odontograma>()
-                .HasOne(o => o.Paciente)
-                .WithMany()
-                .HasForeignKey(o => o.PacienteId)
-                .HasPrincipalKey(p => p.NroPaciente)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ===================== DETALLE (Odontograma <-> Practica <-> Diente, + Reserva opcional) =====================
-            modelBuilder.Entity<Detalle>()
-                .HasKey(d => d.Id);
-            modelBuilder.Entity<Detalle>()
-                .Property(d => d.Id)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<Detalle>()
-                .HasOne(d => d.Odontograma)
-                .WithMany(o => o.Detalles)
-                .HasForeignKey(d => d.OdontogramaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Detalle>()
-                .HasOne(d => d.Practica)
-                .WithMany()
-                .HasForeignKey(d => d.PracticaCodigo)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Detalle>()
-                .HasOne(d => d.Diente)
-                .WithMany()
-                .HasForeignKey(d => d.DienteNro)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Detalle>()
-                .HasOne(d => d.Reserva)
-                .WithMany()
-                .HasForeignKey(d => d.ReservaId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // ===================== DIENTECARA (Diente <-> Cara) =====================
-            modelBuilder.Entity<DienteCara>()
-                .HasKey(dc => new { dc.DienteNro, dc.CaraId });
-
-            modelBuilder.Entity<DienteCara>()
-                .HasOne(dc => dc.Diente)
-                .WithMany()
-                .HasForeignKey(dc => dc.DienteNro)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<DienteCara>()
-                .HasOne(dc => dc.Cara)
-                .WithMany()
-                .HasForeignKey(dc => dc.CaraId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ===================== PACIENTEMUTUAL (Paciente <-> Mutual) =====================
-            modelBuilder.Entity<PacienteMutual>()
-                .HasKey(pm => new { pm.PacienteId, pm.MutualCuit });
-
-            modelBuilder.Entity<PacienteMutual>()
-                .HasOne(pm => pm.Paciente)
-                .WithMany()
-                .HasForeignKey(pm => pm.PacienteId)
-                .HasPrincipalKey(p => p.NroPaciente)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<PacienteMutual>()
-                .HasOne(pm => pm.Mutual)
-                .WithMany()
-                .HasForeignKey(pm => pm.MutualCuit)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ===================== ODONTOLOGOMUTUAL (Odontologo <-> Mutual) =====================
+            // ===================== ODONTOLOGOMUTUAL =====================
             modelBuilder.Entity<OdontologoMutual>()
                 .HasKey(om => new { om.OdontologoMatricula, om.MutualCuit });
 
@@ -219,7 +118,5 @@ namespace Data
                 .HasForeignKey(om => om.MutualCuit)
                 .OnDelete(DeleteBehavior.Restrict);
         }
-
-
     }
 }

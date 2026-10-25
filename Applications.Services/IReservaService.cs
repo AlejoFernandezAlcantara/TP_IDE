@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using DTO;
 
@@ -9,8 +8,10 @@ namespace Applications.Services
     {
         Task<List<ReservaDTO>> GetAllAsync();
         Task<List<ReservaDTO>> GetByPacienteAsync(int pacienteId);
+        Task<ReservaDTO?> GetByIdAsync(int id);
         Task CrearAsync(ReservaDTO dto);
         Task ActualizarAsync(ReservaDTO dto);
         Task EliminarAsync(int id);
+        Task AtenderReservaAsync(AtenderReservaDTO dto);
     }
 }

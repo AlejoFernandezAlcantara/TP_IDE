@@ -1,4 +1,4 @@
-    using Applications.Services;
+﻿    using Applications.Services;
 using Data;
 using Domain.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -104,6 +104,8 @@ app.UseAuthorization();
 app.MapOdontologoEndpoints();
 app.MapPacienteEndpoints();
 app.MapReservaEndpoints();
+app.MapPracticaEndpoints();
+app.MapMutualEndpoints();
 app.MapTurnoEndpoints();
 app.MapAuthEndpoints();
 

@@ -1,8 +1,12 @@
 ﻿using Applications.Services;
 using Domain.Model;
 using DTO;
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace API.Auth.Blazor.Server
 {
@@ -14,6 +18,8 @@ namespace API.Auth.Blazor.Server
 		private DateTime _tokenExpiration;
 		private string? _nombre;
 		private string? _rol;
+        private int? _nroPaciente;
+        private string? _matricula;
 
 		public event Action<bool>? AuthenticationStateChanged;
 
@@ -41,6 +47,18 @@ namespace API.Auth.Blazor.Server
 			return autenticado ? _rol : null;
 		}
 
+        public async Task<int?> GetNroPacienteAsync()
+        {
+            var autenticado = await IsAuthenticatedAsync();
+            return autenticado ? _nroPaciente : null;
+        }
+
+        public async Task<string?> GetMatriculaAsync()
+        {
+            var autenticado = await IsAuthenticatedAsync();
+            return autenticado ? _matricula : null;
+        }
+
 		public async Task<bool> LoginAsync(string email, string password)
 		{
 			using var client = new HttpClient { BaseAddress = new Uri(BaseUrl) };
@@ -62,6 +80,18 @@ namespace API.Auth.Blazor.Server
 			var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(_token);
 			_tokenExpiration = jwtToken.ValidTo;
 
+            var nroPacClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "NroPaciente" || c.Type == "nroPaciente")?.Value;
+            if (int.TryParse(nroPacClaim, out int nro))
+            {
+                _nroPaciente = nro;
+            }
+            else
+            {
+                _nroPaciente = null;
+            }
+
+            _matricula = jwtToken.Claims.FirstOrDefault(c => c.Type == "Matricula" || c.Type == "matricula")?.Value;
+
 			AuthenticationStateChanged?.Invoke(true);
 			return true;
 		}
@@ -72,6 +102,8 @@ namespace API.Auth.Blazor.Server
 			_tokenExpiration = default;
 			_nombre = null;
 			_rol = null;
+            _nroPaciente = null;
+            _matricula = null;
 			AuthenticationStateChanged?.Invoke(false);
 			return Task.CompletedTask;
 		}
@@ -81,10 +113,10 @@ namespace API.Auth.Blazor.Server
 			if (!await IsAuthenticatedAsync())
 				await LogoutAsync();
 		}
-        public async Task<Usuario?> ValidarCredencialesAsync(string email, string password)
-        {
-            return null;
-        }
 
+        public Task<Usuario?> ValidarCredencialesAsync(string email, string password)
+        {
+            return Task.FromResult<Usuario?>(null);
+        }
     }
 }
