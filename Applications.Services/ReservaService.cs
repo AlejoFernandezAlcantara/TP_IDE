@@ -44,6 +44,10 @@ namespace Applications.Services
 
         public async Task ActualizarAsync(ReservaDTO dto)
         {
+            var actual = await _repository.GetByIdAsync(dto.Id)
+                ?? throw new InvalidOperationException("Reserva no encontrada.");
+            actual.ValidarModificable();
+
             var reserva = new Reserva(dto.Observaciones ?? string.Empty, dto.Importe ?? 0, dto.Coseguro ?? 0)
             {
                 Id = dto.Id,
@@ -60,7 +64,14 @@ namespace Applications.Services
             await _repository.UpdateAsync(reserva);
         }
 
-        public async Task EliminarAsync(int id) => await _repository.DeleteAsync(id);
+        public async Task EliminarAsync(int id)
+        {
+            var actual = await _repository.GetByIdAsync(id)
+                ?? throw new InvalidOperationException("Reserva no encontrada.");
+            actual.ValidarModificable();
+
+            await _repository.DeleteAsync(id);
+        }
 
         public async Task AtenderReservaAsync(AtenderReservaDTO dto)
         {
@@ -100,6 +111,10 @@ namespace Applications.Services
             NroAfiliado = r.NroAfiliado,
             _pacienteId = r.PacienteId,
             _odontologoMatricula = r.OdontologoMatricula,
+            Turnos = r.Turnos?
+                .OrderBy(t => t.FechaHoraInicio)
+                .Select(t => new TurnoReservaDTO { Codigo = t.Codigo, FechaHoraInicio = t.FechaHoraInicio, Duracion = t.Duracion })
+                .ToList() ?? new(),
             PracticasRealizadas = r.PracticasRealizadas?.Select(p => new ReservaPracticaDTO
             {
                 Id = p.Id,

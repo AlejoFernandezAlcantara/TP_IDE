@@ -30,10 +30,9 @@
                 @Body
             </div>
         </article>
-    </div>
+    </main>
 </div>
 
-@* Va después de @Body para que prevalezca sobre el PageTitle de cada página *@
 <PageTitle>Consultorio Carestia</PageTitle>
 
 <div id="blazor-error-ui">
@@ -48,5 +47,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    public void Dispose()
+    {
+        // Método requerido por IDisposable para que compile correctamente
     }
 }

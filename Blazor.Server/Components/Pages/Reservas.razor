@@ -72,7 +72,7 @@
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
+                        <th>Fecha y hora del turno</th>
                         <th>Paciente</th>
                         @if (rol == "Administrador")
                         {
@@ -90,8 +90,21 @@
                     {
                         <tr @key="r.Id">
                             <td>
-                                <div class="fw-semibold small">@r.FechaCreacion.ToString("dd/MM/yyyy")</div>
-                                <div class="text-muted small">@r.FechaCreacion.ToString("HH:mm") hs</div>
+                                @if (r.Turnos.Count > 0)
+                                {
+                                    @foreach (var tu in r.Turnos)
+                                    {
+                                        <div class="fw-semibold small">
+                                            @tu.FechaHoraInicio.ToString("dd/MM/yyyy")
+                                            <span class="text-muted fw-normal">@tu.FechaHoraInicio.ToString("HH:mm") hs</span>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-muted small"><em>Sin turno asignado</em></div>
+                                }
+                                <div class="text-muted" style="font-size: 0.7rem;">Reservada el @r.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
                             </td>
                             <td>
                                 <div class="fw-bold">@NombrePaciente(r._pacienteId)</div>
@@ -112,7 +125,7 @@
                             </td>
                             <td><span class="badge @ClaseEstado(r.Estado)">@r.Estado</span></td>
                             <td>
-                                <strong>@(r.Importe.HasValue ? $"" : "-")</strong>
+                                <strong>@(r.Importe.HasValue ? $"$ {r.Importe.Value:N2}" : "-")</strong>
                             </td>
                             <td>
                                 @if (r.Estado == EstadoReserva.Completada)
@@ -152,7 +165,13 @@
                                         Cancelar
                                     </button>
                                 }
-                                @if (rol == "Administrador" && (r.Estado == EstadoReserva.Cancelada || r.Estado == EstadoReserva.Completada))
+                                @if (r.Estado == EstadoReserva.Completada)
+                                {
+                                    <span class="badge bg-light text-secondary border" title="Una reserva atendida no se puede editar ni eliminar">
+                                        <i class="bi bi-lock-fill me-1"></i> Atendida
+                                    </span>
+                                }
+                                else if (rol == "Administrador" && r.Estado == EstadoReserva.Cancelada)
                                 {
                                     <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(r)">
                                         <i class="bi bi-trash"></i>
@@ -218,7 +237,7 @@
 
             await Task.WhenAll(rTask, pTask, oTask);
 
-            reservas = (rTask.Result ?? new()).OrderByDescending(r => r.FechaCreacion).ToList();
+            reservas = (rTask.Result ?? new()).OrderByDescending(r => r.PrimerTurno ?? r.FechaCreacion).ToList();
 
             var pList = pTask.Result ?? new();
             pacientes = pList.ToDictionary(p => p.NroPaciente);
@@ -243,16 +262,24 @@
         if (!confirmar)
             return;
 
+        if (r.Estado == EstadoReserva.Completada)
+        {
+            errorMessage = "Una reserva atendida no se puede editar ni eliminar.";
+            return;
+        }
+
         r.Estado = EstadoReserva.Cancelada;
-        bool ok = await ReservaApiClient.ActualizarAsync(r);
+        var (ok, error) = await ReservaApiClient.ActualizarAsync(r);
         if (ok)
         {
             mensaje = "Reserva cancelada.";
+            errorMessage = string.Empty;
             await CargarAsync();
         }
         else
         {
-            errorMessage = "No se pudo cancelar la reserva.";
+            errorMessage = error ?? "No se pudo cancelar la reserva.";
+            await CargarAsync();
         }
     }
 
@@ -263,15 +290,22 @@
         if (!confirmar)
             return;
 
-        bool ok = await ReservaApiClient.EliminarAsync(r.Id);
+        if (r.Estado == EstadoReserva.Completada)
+        {
+            errorMessage = "Una reserva atendida no se puede editar ni eliminar.";
+            return;
+        }
+
+        var (ok, error) = await ReservaApiClient.EliminarAsync(r.Id);
         if (ok)
         {
             mensaje = "Reserva eliminada.";
+            errorMessage = string.Empty;
             await CargarAsync();
         }
         else
         {
-            errorMessage = "No se pudo eliminar la reserva.";
+            errorMessage = error ?? "No se pudo eliminar la reserva.";
         }
     }
 

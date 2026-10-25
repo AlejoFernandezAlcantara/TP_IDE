@@ -13,6 +13,7 @@ namespace Data
         Task UpdateAsync(Turno turno);
         Task DeleteAsync(int codigo);
         Task<Reserva> ReservarAsync(int codigoTurno, int pacienteId);
+        Task<Reserva> ReservarVariosAsync(IReadOnlyCollection<int> codigosTurno, int pacienteId, string? obraSocial, string? nroAfiliado);
         Task CancelarReservaAsync(int codigoTurno);
     }
 }

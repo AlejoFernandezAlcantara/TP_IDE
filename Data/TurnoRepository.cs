@@ -112,6 +112,61 @@ namespace Data
             return reserva;
         }
 
+        // Una sola reserva que agrupa uno o varios turnos del mismo odontólogo
+        public async Task<Reserva> ReservarVariosAsync(IReadOnlyCollection<int> codigosTurno, int pacienteId, string? obraSocial, string? nroAfiliado)
+        {
+            var codigos = (codigosTurno ?? Array.Empty<int>()).Distinct().ToList();
+            if (codigos.Count == 0)
+                throw new InvalidOperationException("Seleccioná al menos un turno.");
+
+            var turnos = await _context.Turnos.Where(t => codigos.Contains(t.Codigo)).ToListAsync();
+
+            if (turnos.Count != codigos.Count)
+                throw new InvalidOperationException("Alguno de los turnos seleccionados no existe.");
+
+            if (turnos.Any(t => t.Estado != EstadoTurno.Disponible))
+                throw new InvalidOperationException("Alguno de los turnos seleccionados ya no está disponible.");
+
+            if (turnos.Any(t => t.FechaHoraInicio < DateTime.Now))
+                throw new InvalidOperationException("No se puede reservar un turno que ya pasó.");
+
+            if (turnos.Select(t => t.OdontologoMatricula).Distinct().Count() > 1)
+                throw new InvalidOperationException("Los turnos de una misma reserva deben ser del mismo odontólogo.");
+
+            if (!await _context.Pacientes.AnyAsync(p => p.NroPaciente == pacienteId))
+                throw new InvalidOperationException("Paciente no encontrado.");
+
+            var cobertura = string.IsNullOrWhiteSpace(obraSocial) ? "Particular" : obraSocial.Trim();
+            if (cobertura != "Particular" && string.IsNullOrWhiteSpace(nroAfiliado))
+                throw new InvalidOperationException($"El número de afiliado es obligatorio para {cobertura}.");
+
+            var reserva = new Reserva(string.Empty, 0, 0)
+            {
+                PacienteId = pacienteId,
+                OdontologoMatricula = turnos[0].OdontologoMatricula,
+                ObraSocial = cobertura,
+                NroAfiliado = cobertura == "Particular" ? null : nroAfiliado!.Trim()
+            };
+            _context.Reservas.Add(reserva);
+
+            foreach (var turno in turnos)
+            {
+                turno.Reserva = reserva;
+                turno.Estado = EstadoTurno.Reservado;
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new InvalidOperationException("Alguno de los turnos ya fue reservado por otra persona.");
+            }
+
+            return reserva;
+        }
+
         public async Task CancelarReservaAsync(int codigoTurno)
         {
             var turno = await _context.Turnos
@@ -123,7 +178,20 @@ namespace Data
                 throw new InvalidOperationException("El turno no tiene una reserva activa.");
 
             if (turno.Reserva != null)
+            {
+                turno.Reserva.ValidarModificable();
                 turno.Reserva.Estado = EstadoReserva.Cancelada;
+
+                // La reserva puede abarcar varios turnos: se liberan todos
+                var delaReserva = await _context.Turnos
+                    .Where(t => t.ReservaId == turno.ReservaId && t.Codigo != turno.Codigo)
+                    .ToListAsync();
+                foreach (var otro in delaReserva)
+                {
+                    otro.Estado = EstadoTurno.Disponible;
+                    otro.ReservaId = null;
+                }
+            }
 
             turno.Estado = EstadoTurno.Disponible;
             turno.Reserva = null;

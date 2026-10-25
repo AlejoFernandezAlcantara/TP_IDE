@@ -71,8 +71,15 @@ namespace WebAPI
                 if (!user.PuedeGestionarTurnosDe(reserva._odontologoMatricula))
                     return Results.Forbid();
 
-                await service.AtenderReservaAsync(dto);
-                return Results.Ok(new { mensaje = "Reserva atendida y completada con éxito." });
+                try
+                {
+                    await service.AtenderReservaAsync(dto);
+                    return Results.Ok(new { mensaje = "Reserva atendida y completada con éxito." });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
@@ -82,15 +89,30 @@ namespace WebAPI
                 if (!user.PuedeGestionarTurnosDe(dto._odontologoMatricula))
                     return Results.Forbid();
 
-                await service.ActualizarAsync(dto);
-                return Results.NoContent();
+                try
+                {
+                    await service.ActualizarAsync(dto);
+                    return Results.NoContent();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            group.MapDelete("/{id}", async (int id, IReservaService service) =>
+            // Una reserva atendida (Completada) no se puede eliminar
+            group.MapDelete("/{id}", async Task<IResult> (int id, IReservaService service) =>
             {
-                await service.EliminarAsync(id);
-                return Results.NoContent();
+                try
+                {
+                    await service.EliminarAsync(id);
+                    return Results.NoContent();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
         }

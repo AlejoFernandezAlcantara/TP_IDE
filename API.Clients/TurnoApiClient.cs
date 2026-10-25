@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+Ôªøusing System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DTO;
 
@@ -11,7 +11,8 @@ namespace API.Clients
         public TurnoApiClient(HttpClient client)
         {
             _client = client;
-            _client.BaseAddress = new Uri("http://localhost:5232/api/");
+            if (_client.BaseAddress == null)
+                _client.BaseAddress = new Uri("http://localhost:5232/api/");
         }
 
         public void SetToken(string? token)
@@ -54,6 +55,12 @@ namespace API.Clients
                 await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId }),
                 "No se pudo reservar el turno.");
 
+        // Una sola reserva con uno o varios turnos del mismo odont√≥logo, con su cobertura
+        public async Task<(bool Ok, string? Error)> ReservarVariosAsync(ReservarTurnosDTO request)
+            => await ResultadoAsync(
+                await _client.PostAsJsonAsync("turnos/reservar", request),
+                "No se pudo reservar el turno.");
+
         public async Task<(bool Ok, string? Error)> CancelarReservaAsync(int codigo)
             => await ResultadoAsync(
                 await _client.PostAsync($"turnos/{codigo}/cancelar-reserva", null),
@@ -64,10 +71,10 @@ namespace API.Clients
                 return (true, null);
 
             if (r.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                return (false, "No tenÈs permiso para realizar esta acciÛn.");
+                return (false, "No ten√©s permiso para realizar esta acci√≥n.");
 
             if (r.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return (false, "Tu sesiÛn expirÛ. VolvÈ a iniciar sesiÛn.");
+                return (false, "Tu sesi√≥n expir√≥. Volv√© a iniciar sesi√≥n.");
 
             try
             {

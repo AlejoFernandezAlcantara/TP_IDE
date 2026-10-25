@@ -66,13 +66,20 @@ else
                     {
                         <tr @key="f.Reserva.Id">
                             <td>
-                                @if (f.Turno is null)
+                                @if (f.Reserva.Turnos.Count > 0)
                                 {
-                                    <span class="text-muted">—</span>
+                                    @foreach (var tu in f.Reserva.Turnos)
+                                    {
+                                        <div>@tu.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")</div>
+                                    }
+                                }
+                                else if (f.Turno is not null)
+                                {
+                                    @f.Turno.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")
                                 }
                                 else
                                 {
-                                    @f.Turno.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")
+                                    <span class="text-muted">—</span>
                                 }
                             </td>
                             <td>@NombreOdontologo(f.Reserva._odontologoMatricula)</td>
@@ -115,7 +122,7 @@ else
     private List<Fila> Filas => reservas
         .Where(r => mostrarCanceladas || r.Estado != EstadoReserva.Cancelada)
         .Select(r => new Fila(r, turnosPorReserva.TryGetValue(r.Id, out var t) ? t : null))
-        .OrderByDescending(f => f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion)
+        .OrderByDescending(f => f.Reserva.PrimerTurno ?? f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion)
         .ToList();
 
     protected override async Task OnInitializedAsync()
@@ -161,7 +168,8 @@ else
         var todosLosTurnos = await TurnoApiClient.GetAllAsync() ?? new List<TurnoDTO>();
         turnosPorReserva = todosLosTurnos
             .Where(t => t.ReservaId.HasValue && ids.Contains(t.ReservaId.Value))
-            .ToDictionary(t => t.ReservaId!.Value);
+            .GroupBy(t => t.ReservaId!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderBy(t => t.FechaHoraInicio).First());
 
         var listaOdontologos = await OdontologoApiClient.GetAllAsync() ?? new List<OdontologoDTO>();
         odontologos = listaOdontologos.ToDictionary(o => o.Matricula);

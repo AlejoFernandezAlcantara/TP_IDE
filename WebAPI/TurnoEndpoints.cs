@@ -12,9 +12,17 @@ namespace WebAPI
         {
             var group = app.MapGroup("/api/turnos").WithTags("Turnos");
 
-            group.MapGet("/", async (ITurnoService service) =>
-                Results.Ok(await service.GetAllAsync()))
-                .RequireAuthorization();
+            // Admin y paciente: todos. Odontólogo: solo los propios.
+            group.MapGet("/", async (ClaimsPrincipal user, ITurnoService service) =>
+            {
+                var turnos = await service.GetAllAsync();
+
+                if (user.IsInRole("Odontologo"))
+                    turnos = turnos.Where(t => t._odontologoMatricula == user.Matricula()).ToList();
+
+                return Results.Ok(turnos);
+            })
+            .RequireAuthorization();
 
             group.MapGet("/{codigo}", async (int codigo, ITurnoService service) =>
             {
@@ -23,9 +31,14 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            group.MapGet("/odontologo/{matricula}", async (string matricula, ITurnoService service) =>
-                Results.Ok(await service.GetByOdontologoAsync(matricula)))
-                .RequireAuthorization();
+            group.MapGet("/odontologo/{matricula}", async Task<IResult> (string matricula, ClaimsPrincipal user, ITurnoService service) =>
+            {
+                if (user.IsInRole("Odontologo") && user.Matricula() != matricula)
+                    return Results.Forbid();
+
+                return Results.Ok(await service.GetByOdontologoAsync(matricula));
+            })
+            .RequireAuthorization();
 
             // Admin: cualquier odontólogo. Odontólogo: solo turnos propios.
             group.MapPost("/", async Task<IResult> (TurnoDTO dto, ClaimsPrincipal user, ITurnoService service) =>
@@ -88,6 +101,15 @@ namespace WebAPI
             {
                 int pacienteId;
 
+                if (user.IsInRole("Odontologo"))
+                {
+                    var turno = await service.GetByCodigoAsync(codigo);
+                    if (turno is null)
+                        return Results.NotFound();
+                    if (turno._odontologoMatricula != user.Matricula())
+                        return Results.Forbid();
+                }
+
                 if (user.IsInRole("Paciente"))
                 {
                     var propio = user.NroPaciente();
@@ -105,6 +127,48 @@ namespace WebAPI
                 try
                 {
                     return Results.Ok(await service.ReservarAsync(codigo, pacienteId));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
+            })
+            .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo", "Paciente"));
+
+            // Una única reserva con uno o varios turnos del mismo odontólogo (con cobertura).
+            // Paciente: siempre para sí mismo. Odontólogo: solo turnos propios. Admin: cualquiera.
+            group.MapPost("/reservar", async Task<IResult> (ReservarTurnosDTO req, ClaimsPrincipal user, ITurnoService service) =>
+            {
+                if (req.TurnoCodigos is null || req.TurnoCodigos.Count == 0)
+                    return Results.BadRequest(new { error = "Seleccioná al menos un turno." });
+
+                if (user.IsInRole("Paciente"))
+                {
+                    var propio = user.NroPaciente();
+                    if (propio is null)
+                        return Results.Forbid();
+                    req.PacienteId = propio.Value;
+                }
+                else if (req.PacienteId <= 0)
+                {
+                    return Results.BadRequest(new { error = "Indicá el paciente." });
+                }
+
+                if (user.IsInRole("Odontologo"))
+                {
+                    foreach (var codigo in req.TurnoCodigos.Distinct())
+                    {
+                        var turno = await service.GetByCodigoAsync(codigo);
+                        if (turno is null)
+                            return Results.NotFound(new { error = $"El turno {codigo} no existe." });
+                        if (turno._odontologoMatricula != user.Matricula())
+                            return Results.Forbid();
+                    }
+                }
+
+                try
+                {
+                    return Results.Ok(await service.ReservarVariosAsync(req));
                 }
                 catch (InvalidOperationException ex)
                 {

@@ -13,6 +13,7 @@ namespace Applications.Services
         Task ActualizarAsync(TurnoDTO dto);
         Task EliminarAsync(int codigo);
         Task<ReservaDTO> ReservarAsync(int codigo, int pacienteId);
+        Task<ReservaDTO> ReservarVariosAsync(ReservarTurnosDTO request);
         Task CancelarReservaAsync(int codigo);
     }
 }
