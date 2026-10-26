@@ -35,9 +35,11 @@
                             <InputSelect @bind-Value="currentReserva.Estado" class="form-select">
                                 <option value="@EstadoReserva.Pendiente">Pendiente</option>
                                 <option value="@EstadoReserva.Confirmada">Confirmada</option>
-                                <option value="@EstadoReserva.Completada">Completada</option>
                             </InputSelect>
-                            <div class="form-text">Para cancelar una reserva usá el botón "Cancelar reserva" de la lista, así el turno vuelve a quedar disponible.</div>
+                            <div class="form-text">
+                                Para cancelar usá el botón "Cancelar reserva" de la lista, así el turno vuelve a quedar disponible.
+                                Para registrar la atención usá "Atender".
+                            </div>
                         </div>
 
                         <div class="row">
@@ -65,12 +67,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Fecha de realización @(currentReserva.Estado == EstadoReserva.Completada ? "*" : "")</label>
+                            <label class="form-label">Fecha de realización</label>
                             <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentReserva.FechaRealizacion" class="form-control" />
-                            @if (validationErrors.ContainsKey("FechaRealizacion"))
-                            {
-                                <div class="text-danger small">@validationErrors["FechaRealizacion"]</div>
-                            }
                         </div>
 
                         <div class="mb-3">
@@ -113,7 +111,6 @@
 
     public Task ShowEditModal(ReservaDTO reserva, string paciente, string odontologo)
     {
-
         currentReserva = new ReservaDTO
         {
             Id = reserva.Id,
@@ -187,12 +184,6 @@
                  && currentReserva.Coseguro > currentReserva.Importe)
         {
             validationErrors["Coseguro"] = "El coseguro no puede ser mayor al importe";
-            isValid = false;
-        }
-
-        if (currentReserva.Estado == EstadoReserva.Completada && currentReserva.FechaRealizacion is null)
-        {
-            validationErrors["FechaRealizacion"] = "Indicá cuándo se realizó la atención";
             isValid = false;
         }
 

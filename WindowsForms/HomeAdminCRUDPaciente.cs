@@ -116,8 +116,8 @@ namespace WindowsForms
                 }
                 else
                 {
-                    var detalle = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error al añadir el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                    var detalle = await ApiErrorHelper.LeerErrorAsync(response);
+                    MessageBox.Show($"No se pudo añadir el paciente.\n\n{detalle}",
                         "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -181,8 +181,8 @@ namespace WindowsForms
                 }
                 else
                 {
-                    var detalle = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error al editar el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                    var detalle = await ApiErrorHelper.LeerErrorAsync(response);
+                    MessageBox.Show($"No se pudo editar el paciente.\n\n{detalle}",
                         "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -234,8 +234,8 @@ namespace WindowsForms
                     }
                     else
                     {
-                        var detalle = await response.Content.ReadAsStringAsync();
-                        MessageBox.Show($"Error al eliminar el paciente.\n\nStatus: {response.StatusCode}\n\nDetalle: {detalle}",
+                        var detalle = await ApiErrorHelper.LeerErrorAsync(response);
+                        MessageBox.Show($"No se pudo eliminar el paciente.\n\n{detalle}",
                             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
