@@ -4,7 +4,7 @@
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip; /* antes: hidden; clip no rompe el sticky del menú */
 }
 
 main.main-content {
@@ -49,10 +49,10 @@ main.main-content {
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
     }
 
-    .sidebar.collapsed {
-        transform: translateX(-100%);
-        box-shadow: none;
-    }
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            box-shadow: none;
+        }
 }
 
 /* Responsive para pantallas medianas y grandes (>= 768px) */
@@ -87,15 +87,15 @@ main.main-content {
     z-index: 2000;
 }
 
-#blazor-error-ui a {
-    color: #b91c1c;
-    font-weight: 600;
-    text-decoration: underline;
-}
+    #blazor-error-ui a {
+        color: #b91c1c;
+        font-weight: 600;
+        text-decoration: underline;
+    }
 
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 1.5rem;
-    top: 0.75rem;
-}
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 1.5rem;
+        top: 0.75rem;
+    }

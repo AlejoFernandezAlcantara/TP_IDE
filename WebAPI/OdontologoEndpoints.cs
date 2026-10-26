@@ -22,9 +22,22 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            group.MapPost("/", async (OdontologoDTO dto, IOdontologoService service) =>
+            group.MapPost("/", async Task<IResult> (OdontologoDTO dto, IOdontologoService service) =>
             {
-                await service.CrearAsync(dto);
+                if (string.IsNullOrWhiteSpace(dto.Password))
+                    return Results.BadRequest(new { error = "La contraseña es obligatoria." });
+
+                try
+                {
+                    await service.CrearAsync(dto);
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new { error = ex.Message });
+                }
+
+                // No devolvemos la contraseña en la respuesta
+                dto.Password = string.Empty;
                 return Results.Created($"/api/odontologos/{dto.Matricula}", dto);
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));

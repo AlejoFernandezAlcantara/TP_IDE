@@ -29,6 +29,7 @@ namespace Applications.Services
             return r != null ? ToDto(r) : null;
         }
 
+        // La reserva se crea sobre los turnos indicados, que quedan bloqueados
         public async Task CrearAsync(ReservaDTO dto)
         {
             var reserva = new Reserva(dto.Observaciones ?? string.Empty, dto.Importe ?? 0, dto.Coseguro ?? 0)
@@ -39,7 +40,7 @@ namespace Applications.Services
                 NroAfiliado = dto.ObraSocial == "Particular" ? null : dto.NroAfiliado
             };
 
-            await _repository.AddAsync(reserva);
+            await _repository.AddConTurnosAsync(reserva, dto.TurnoCodigos);
         }
 
         public async Task ActualizarAsync(ReservaDTO dto)

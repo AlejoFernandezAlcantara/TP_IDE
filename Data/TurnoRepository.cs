@@ -112,7 +112,7 @@ namespace Data
             return reserva;
         }
 
-        // Una sola reserva que agrupa uno o varios turnos del mismo odontólogo
+        // Una sola reserva que agrupa uno o varios turnos seguidos del mismo odontólogo
         public async Task<Reserva> ReservarVariosAsync(IReadOnlyCollection<int> codigosTurno, int pacienteId, string? obraSocial, string? nroAfiliado)
         {
             var codigos = (codigosTurno ?? Array.Empty<int>()).Distinct().ToList();
@@ -133,6 +133,15 @@ namespace Data
             if (turnos.Select(t => t.OdontologoMatricula).Distinct().Count() > 1)
                 throw new InvalidOperationException("Los turnos de una misma reserva deben ser del mismo odontólogo.");
 
+            // Los turnos tienen que estar seguidos: cada uno empieza cuando termina el anterior
+            var ordenados = turnos.OrderBy(t => t.FechaHoraInicio).ToList();
+            for (int i = 0; i < ordenados.Count - 1; i++)
+            {
+                var finActual = ordenados[i].FechaHoraInicio.AddMinutes(ordenados[i].Duracion);
+                if (finActual != ordenados[i + 1].FechaHoraInicio)
+                    throw new InvalidOperationException("Los turnos de una reserva deben estar seguidos, sin huecos ni superposición.");
+            }
+
             if (!await _context.Pacientes.AnyAsync(p => p.NroPaciente == pacienteId))
                 throw new InvalidOperationException("Paciente no encontrado.");
 
@@ -143,13 +152,13 @@ namespace Data
             var reserva = new Reserva(string.Empty, 0, 0)
             {
                 PacienteId = pacienteId,
-                OdontologoMatricula = turnos[0].OdontologoMatricula,
+                OdontologoMatricula = ordenados[0].OdontologoMatricula,
                 ObraSocial = cobertura,
                 NroAfiliado = cobertura == "Particular" ? null : nroAfiliado!.Trim()
             };
             _context.Reservas.Add(reserva);
 
-            foreach (var turno in turnos)
+            foreach (var turno in ordenados)
             {
                 turno.Reserva = reserva;
                 turno.Estado = EstadoTurno.Reservado;

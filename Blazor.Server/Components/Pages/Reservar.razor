@@ -79,7 +79,7 @@ else
 
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Número de Afiliado @(obraSocialSel != "Particular" ? "*" : "")</label>
-                <input type="text" class="form-control" 
+                <input type="text" class="form-control"
                        placeholder="@(obraSocialSel == "Particular" ? "No requerido para Particular" : "Ej: 123456789/01")"
                        disabled="@(obraSocialSel == "Particular")"
                        @bind="nroAfiliado" />
@@ -168,7 +168,7 @@ else
 
                 @if (seleccion.Count == 0)
                 {
-                    <p class="text-muted small">Elegí uno o más turnos de la lista para reservarlos juntos.</p>
+                    <p class="text-muted small">Elegí uno o más turnos seguidos para reservarlos juntos.</p>
                 }
                 else
                 {
@@ -181,12 +181,13 @@ else
                                     <div class="fw-semibold small">@t.FechaHoraInicio.ToString("dd/MM HH:mm") hs</div>
                                     <div class="text-muted" style="font-size: 0.75rem;">@NombreOdontologo(t._odontologoMatricula)</div>
                                 </div>
-                                <button class="btn btn-sm text-danger p-0" @onclick="() => seleccion.Remove(t.Codigo)">
+                                <button class="btn btn-sm text-danger p-0" @onclick="() => Toggle(t.Codigo)">
                                     <i class="bi bi-x-circle"></i>
                                 </button>
                             </li>
                         }
                     </ul>
+                    <p class="small text-muted mb-3">Los turnos deben estar seguidos, sin huecos.</p>
                 }
 
                 <button class="btn btn-primary w-100 py-2 fw-semibold"
@@ -319,23 +320,59 @@ else
     private List<TurnoDTO> TurnosSeleccionados =>
         turnos.Where(t => seleccion.Contains(t.Codigo)).OrderBy(t => t.FechaHoraInicio).ToList();
 
+    // Agrega o quita un turno, manteniendo la reserva válida: mismo odontólogo y turnos seguidos
     private void Toggle(int codigo)
     {
         errorMessage = string.Empty;
 
-        if (seleccion.Remove(codigo))
+        var turno = turnos.FirstOrDefault(t => t.Codigo == codigo);
+        if (turno is null)
             return;
 
+        if (seleccion.Contains(codigo))
+        {
+            // Quitar un turno no puede dejar un hueco en la reserva
+            var restantes = TurnosSeleccionados.Where(t => t.Codigo != codigo).ToList();
+            if (!SonSeguidos(restantes))
+            {
+                errorMessage = "No podés quitar ese turno: dejaría un hueco en la reserva. Quitá primero los turnos de los extremos.";
+                return;
+            }
+
+            seleccion.Remove(codigo);
+            return;
+        }
+
+        var actuales = TurnosSeleccionados;
+
         // Todos los turnos de una misma reserva deben ser del mismo odontólogo
-        var nuevo = turnos.FirstOrDefault(t => t.Codigo == codigo);
-        var actual = TurnosSeleccionados.FirstOrDefault();
-        if (nuevo != null && actual != null && nuevo._odontologoMatricula != actual._odontologoMatricula)
+        if (actuales.Count > 0 && actuales[0]._odontologoMatricula != turno._odontologoMatricula)
         {
             errorMessage = "Una reserva solo puede incluir turnos de un mismo odontólogo. Confirmá la actual y creá otra reserva para el otro profesional.";
             return;
         }
 
+        // Los turnos deben estar seguidos: cada uno empieza cuando termina el anterior
+        var candidatos = actuales.Append(turno).ToList();
+        if (!SonSeguidos(candidatos))
+        {
+            errorMessage = "Los turnos de una reserva deben estar seguidos, sin huecos. Elegí un turno que empiece cuando termina otro de los seleccionados.";
+            return;
+        }
+
         seleccion.Add(codigo);
+    }
+
+    // Verdadero si cada turno empieza exactamente cuando termina el anterior
+    private static bool SonSeguidos(IReadOnlyList<TurnoDTO> lista)
+    {
+        var ordenados = lista.OrderBy(t => t.FechaHoraInicio).ToList();
+        for (int i = 0; i < ordenados.Count - 1; i++)
+        {
+            if (ordenados[i].FechaHoraInicio.AddMinutes(ordenados[i].Duracion) != ordenados[i + 1].FechaHoraInicio)
+                return false;
+        }
+        return true;
     }
 
     private async Task ReservarAsync()
@@ -369,6 +406,12 @@ else
         if (aReservar.Count == 0)
             return;
 
+        if (!SonSeguidos(aReservar))
+        {
+            errorMessage = "Los turnos seleccionados deben estar seguidos, sin huecos.";
+            return;
+        }
+
         procesando = true;
         TurnoApiClient.SetToken(await AuthService.GetTokenAsync());
 
@@ -388,7 +431,7 @@ else
         {
             mensaje = aReservar.Count == 1
                 ? "¡Turno reservado con éxito!"
-                : $"¡Reserva creada con {aReservar.Count} turnos!";
+                : $"¡Reserva creada con {aReservar.Count} turnos seguidos!";
             seleccion.Clear();
             if (obraSocialSel == "Particular")
             {

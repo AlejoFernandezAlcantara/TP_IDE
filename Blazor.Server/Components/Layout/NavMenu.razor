@@ -53,6 +53,12 @@
                     <i class="bi bi-plus-circle me-2"></i> Nueva Reserva
                 </NavLink>
             </div>
+           <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="reportes" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-graph-up me-2"></i> Reportes
+                </NavLink>
+            </div>
+           
         }
         else if (rol == "Odontologo")
         {
@@ -65,6 +71,11 @@
                 </NavLink>
             </div>
             <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="pacientes" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-people-fill me-2"></i> Pacientes
+                </NavLink>
+            </div>
+            <div class="nav-item">
                 <NavLink class="nav-link custom-nav-link" href="atender" @onclick="CerrarMenuEnMovil"><i class="bi bi-heart-pulse-fill me-2"></i> Atender Reserva</NavLink></div><div class="nav-item"><NavLink class="nav-link custom-nav-link" href="reservas" @onclick="CerrarMenuEnMovil">
                     <i class="bi bi-journal-check me-2"></i> Mis reservas
                 </NavLink>
@@ -72,6 +83,11 @@
             <div class="nav-item">
                 <NavLink class="nav-link custom-nav-link" href="reservar" @onclick="CerrarMenuEnMovil">
                     <i class="bi bi-plus-circle me-2"></i> Reservar turno
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link custom-nav-link" href="reportes" @onclick="CerrarMenuEnMovil">
+                    <i class="bi bi-graph-up me-2"></i> Reportes
                 </NavLink>
             </div>
         }

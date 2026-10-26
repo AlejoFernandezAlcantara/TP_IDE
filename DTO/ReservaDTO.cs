@@ -1,7 +1,4 @@
 ﻿using Domain.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DTO
 {
@@ -21,6 +18,9 @@ namespace DTO
 
         public int _pacienteId { get; set; }
         public string _odontologoMatricula { get; set; } = string.Empty;
+
+        // Turnos que se bloquean con esta reserva (seguidos y del mismo odontólogo)
+        public List<int> TurnoCodigos { get; set; } = new();
 
         // Turnos asociados a la reserva (fecha y hora real de la atención)
         public List<TurnoReservaDTO> Turnos { get; set; } = new();

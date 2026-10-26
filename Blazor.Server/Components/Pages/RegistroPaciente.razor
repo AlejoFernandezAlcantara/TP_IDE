@@ -1,0 +1,182 @@
+﻿@page "/registro"
+@using Domain.Model
+@using DTO
+@inject PacienteApiClient PacienteApiClient
+
+<PageTitle>Crear cuenta - DentalCare</PageTitle>
+
+<div class="d-flex justify-content-center py-4">
+    <div class="col-12 col-md-9 col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h4 fw-bold text-dark mb-1">Crear cuenta de paciente</h2>
+                <p class="text-muted small mb-4">Completá tus datos para poder reservar turnos.</p>
+
+                @if (registrado)
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ¡Cuenta creada! Ya podés iniciar sesión con tu email y contraseña.
+                    </div>
+                    <a class="btn btn-primary w-100 py-2 fw-semibold" href="login">Ir a iniciar sesión</a>
+                }
+                else
+                {
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+                        </div>
+                    }
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <input class="form-control" @bind="modelo.Nombre" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido *</label>
+                            <input class="form-control" @bind="modelo.Apellido" @bind:event="oninput" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de documento *</label>
+                            <select class="form-select" @bind="modelo.TipoDni">
+                                <option value="0">DNI</option>
+                                <option value="1">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Número de documento *</label>
+                            <input class="form-control" inputmode="numeric" @bind="modelo.NroDni" @bind:event="oninput" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono *</label>
+                            <input class="form-control" @bind="modelo.Telefono" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Dirección *</label>
+                            <input class="form-control" @bind="modelo.Direccion" @bind:event="oninput" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" placeholder="ejemplo@mail.com"
+                                   @bind="modelo.Email" @bind:event="oninput" autocomplete="email" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" @bind="modelo.Password" @bind:event="oninput"
+                                   autocomplete="new-password" />
+                            <small class="text-muted">Mínimo 6 caracteres.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Repetir contraseña *</label>
+                            <input type="password" class="form-control" @bind="modelo.Confirmar" @bind:event="oninput"
+                                   autocomplete="new-password" />
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 fw-semibold mt-4"
+                            disabled="@procesando"
+                            @onclick="RegistrarAsync">
+                        @if (procesando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Creando cuenta...</span>
+                        }
+                        else
+                        {
+                            <span>Crear cuenta</span>
+                        }
+                    </button>
+
+                    <p class="text-center small mt-3 mb-0">
+                        ¿Ya tenés cuenta? <a href="login">Iniciar sesión</a>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private sealed class Modelo
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Apellido { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string Telefono { get; set; } = string.Empty;
+        public string NroDni { get; set; } = string.Empty;
+        public int TipoDni { get; set; } = 0;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Confirmar { get; set; } = string.Empty;
+    }
+
+    private Modelo modelo = new();
+    private bool procesando;
+    private bool registrado;
+    private string errorMessage = string.Empty;
+
+    private async Task RegistrarAsync()
+    {
+        errorMessage = string.Empty;
+
+        var problema = Validar();
+        if (problema is not null)
+        {
+            errorMessage = problema;
+            return;
+        }
+
+        procesando = true;
+
+        var dto = new PacienteDTO
+        {
+            Nombre = modelo.Nombre.Trim(),
+            Apellido = modelo.Apellido.Trim(),
+            Direccion = modelo.Direccion.Trim(),
+            Telefono = modelo.Telefono.Trim(),
+            NroDni = int.Parse(modelo.NroDni),
+            TipoDni = (tiposEnumerados)modelo.TipoDni,
+            Email = modelo.Email.Trim(),
+            Password = modelo.Password
+        };
+
+        var (ok, error) = await PacienteApiClient.RegistrarAsync(dto);
+
+        procesando = false;
+
+        if (ok)
+            registrado = true;
+        else
+            errorMessage = error ?? "No se pudo crear la cuenta.";
+    }
+
+    private string? Validar()
+    {
+        if (string.IsNullOrWhiteSpace(modelo.Nombre) ||
+            string.IsNullOrWhiteSpace(modelo.Apellido) ||
+            string.IsNullOrWhiteSpace(modelo.Direccion) ||
+            string.IsNullOrWhiteSpace(modelo.Telefono) ||
+            string.IsNullOrWhiteSpace(modelo.Email))
+            return "Completá todos los campos obligatorios.";
+
+        if (!int.TryParse(modelo.NroDni, out var dni) || dni <= 0)
+            return "Ingresá un número de documento válido.";
+
+        if (!modelo.Email.Contains('@'))
+            return "Ingresá un email válido.";
+
+        if (modelo.Password.Length < 6)
+            return "La contraseña debe tener al menos 6 caracteres.";
+
+        if (modelo.Password != modelo.Confirmar)
+            return "Las contraseñas no coinciden.";
+
+        return null;
+    }
+}

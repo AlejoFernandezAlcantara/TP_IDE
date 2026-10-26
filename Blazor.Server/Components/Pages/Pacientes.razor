@@ -20,51 +20,67 @@
 else if (!autorizado)
 {
     <div class="alert alert-warning">
-        Esta sección es solo para administradores. Iniciá sesión con una cuenta de administrador para verla.
+        Esta sección es solo para administradores y odontólogos. Iniciá sesión con una cuenta autorizada para verla.
     </div>
 }
 else if (!string.IsNullOrEmpty(errorMessage))
 {
     <div class="alert alert-danger">@errorMessage</div>
 }
-else if (pacientes.Count == 0)
-{
-    <p>Todavía no hay pacientes cargados. Usá "Agregar paciente" para crear el primero.</p>
-}
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>Nº</th>
-                    <th>Apellido y nombre</th>
-                    <th>Documento</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>Dirección</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in pacientes)
-                {
-                    <tr @key="p.NroPaciente">
-                        <td>@p.NroPaciente</td>
-                        <td>@p.Apellido, @p.Nombre</td>
-                        <td>@p.TipoDni @p.NroDni</td>
-                        <td>@p.Email</td>
-                        <td>@p.Telefono</td>
-                        <td>@p.Direccion</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => modal.ShowEditModal(p)">Editar</button>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(p)">Eliminar</button>
-                        </td>
+    @if (!esAdmin)
+    {
+        <div class="alert alert-info small py-2">
+            Podés registrar pacientes nuevos. La edición y eliminación de pacientes son solo para administradores.
+        </div>
+    }
+
+    @if (pacientes.Count == 0)
+    {
+        <p>Todavía no hay pacientes cargados. Usá "Agregar paciente" para crear el primero.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Apellido y nombre</th>
+                        <th>Documento</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        @if (esAdmin)
+                        {
+                            <th class="text-end">Acciones</th>
+                        }
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @foreach (var p in pacientes)
+                    {
+                        <tr @key="p.NroPaciente">
+                            <td>@p.NroPaciente</td>
+                            <td>@p.Apellido, @p.Nombre</td>
+                            <td>@p.TipoDni @p.NroDni</td>
+                            <td>@p.Email</td>
+                            <td>@p.Telefono</td>
+                            <td>@p.Direccion</td>
+                            @if (esAdmin)
+                            {
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => modal.ShowEditModal(p)">Editar</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(p)">Eliminar</button>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 <PacienteModal @ref="modal" OnPacienteChanged="CargarPacientesAsync" />
@@ -74,12 +90,14 @@ else
     private List<PacienteDTO> pacientes = new();
     private bool loading = true;
     private bool autorizado = false;
+    private bool esAdmin = false;
     private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var rol = await AuthService.GetRolAsync();
-        autorizado = rol == "Administrador";
+        esAdmin = rol == "Administrador";
+        autorizado = esAdmin || rol == "Odontologo";
 
         if (autorizado)
             await CargarPacientesAsync();
@@ -105,6 +123,9 @@ else
 
     private async Task EliminarAsync(PacienteDTO paciente)
     {
+        if (!esAdmin)
+            return;
+
         bool confirmar = await JSRuntime.InvokeAsync<bool>(
             "confirm", $"¿Eliminar a {paciente.Apellido}, {paciente.Nombre}? Esta acción no se puede deshacer.");
 

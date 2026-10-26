@@ -54,12 +54,37 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            group.MapPost("/", async (ReservaDTO dto, IReservaService service) =>
+            // Alta de reserva (siempre sobre turnos seguidos, que quedan bloqueados):
+            // - Admin: para cualquier paciente y cualquier odontólogo.
+            // - Odontólogo: para cualquier paciente, solo en su propia agenda.
+            // - Paciente: solo para sí mismo, con cualquier odontólogo.
+            group.MapPost("/", async Task<IResult> (ReservaDTO dto, ClaimsPrincipal user, IReservaService service) =>
             {
-                await service.CrearAsync(dto);
-                return Results.Created("/api/reservas", dto);
+                if (dto.TurnoCodigos is null || dto.TurnoCodigos.Count == 0)
+                    return Results.BadRequest(new { error = "La reserva debe incluir al menos un turno." });
+
+                if (user.IsInRole("Paciente"))
+                {
+                    var propio = user.NroPaciente();
+                    if (propio is null || dto._pacienteId != propio.Value)
+                        return Results.Forbid();
+                }
+                else if (!user.PuedeGestionarTurnosDe(dto._odontologoMatricula))
+                {
+                    return Results.Forbid();
+                }
+
+                try
+                {
+                    await service.CrearAsync(dto);
+                    return Results.Created("/api/reservas", dto);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
-            .RequireAuthorization();
+            .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo", "Paciente"));
 
             // Atender reserva (Odontograma multipráctica con formato string "14-M, 15-O")
             group.MapPost("/atender", async Task<IResult> (AtenderReservaDTO dto, ClaimsPrincipal user, IReservaService service) =>
@@ -101,7 +126,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // Una reserva atendida (Completada) no se puede eliminar
+            // Eliminar reserva: libera sus turnos. Una reserva atendida no se puede eliminar.
             group.MapDelete("/{id}", async Task<IResult> (int id, IReservaService service) =>
             {
                 try

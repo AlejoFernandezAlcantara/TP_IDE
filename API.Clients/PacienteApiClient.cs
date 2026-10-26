@@ -43,6 +43,26 @@ namespace API.Clients
             return response.IsSuccessStatusCode;
         }
 
+        // Autoregistro público: no envía token
+        public async Task<(bool Ok, string? Error)> RegistrarAsync(PacienteDTO paciente)
+        {
+            var response = await _client.PostAsJsonAsync("pacientes/registro", paciente);
+            if (response.IsSuccessStatusCode)
+                return (true, null);
+
+            try
+            {
+                var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (body != null && body.TryGetValue("error", out var msg) && !string.IsNullOrWhiteSpace(msg))
+                    return (false, msg);
+            }
+            catch
+            {
+            }
+
+            return (false, "No se pudo completar el registro.");
+        }
+
         public async Task<bool> ActualizarAsync(PacienteDTO paciente)
         {
             var response = await _client.PutAsJsonAsync("pacientes", paciente);

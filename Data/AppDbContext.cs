@@ -48,7 +48,7 @@ namespace Data
 
             // ===================== CATALOGOS BASICOS =====================
             modelBuilder.Entity<Practica>().HasKey(p => p.CodigoPractica);
-            modelBuilder.Entity<Practica>().Property(p => p.CodigoPractica).ValueGeneratedNever();
+            modelBuilder.Entity<Practica>().Property(p => p.CodigoPractica).ValueGeneratedOnAdd();
 
             modelBuilder.Entity<Mutual>().HasKey(m => m.Cuit);
             modelBuilder.Entity<Mutual>().Property(m => m.Cuit).ValueGeneratedNever();

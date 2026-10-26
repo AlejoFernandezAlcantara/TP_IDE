@@ -1,0 +1,571 @@
+﻿@page "/reportes"
+@using System.Globalization
+@using System.Net
+@using System.Text
+@using Domain.Model
+@using DTO
+@using API.Clients
+@using Microsoft.AspNetCore.Components.Web
+@inject ReservaApiClient ReservaApiClient
+@inject OdontologoApiClient OdontologoApiClient
+@inject IBlazorAuthService AuthService
+
+<PageTitle>@(esAdmin ? "Reportes" : "Mis reportes")</PageTitle>
+
+<h1 class="mb-3">@(esAdmin ? "Reportes" : "Mis reportes")</h1>
+
+@if (loading)
+{
+    <p><em>Cargando reportes...</em></p>
+}
+else if (!autorizado)
+{
+    <div class="alert alert-warning">
+        Esta sección es solo para administradores y odontólogos.
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(mensajeFiltro))
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-info-circle-fill me-2"></i> @mensajeFiltro
+        </div>
+    }
+
+    <!-- FILTROS -->
+    <div class="card p-4 mb-4 border-0 shadow-sm">
+        <h5 class="card-title fw-bold text-dark mb-3">
+            <i class="bi bi-funnel-fill text-primary me-2"></i> Filtros
+        </h5>
+
+        <div class="row g-3">
+            @if (esAdmin)
+            {
+                <div class="col-md-3">
+                    <label class="form-label">Odontólogo</label>
+                    <select class="form-select" @bind="filtroOdontologo" @bind:after="RecalcularAsync">
+                        <option value="">Todos</option>
+                        @foreach (var o in odontologos)
+                        {
+                            <option value="@o.Matricula">@o.Apellido, @o.Nombre</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="col-md-3">
+                <label class="form-label">Obra social</label>
+                <select class="form-select" @bind="filtroCobertura" @bind:after="RecalcularAsync">
+                    <option value="">Todas</option>
+                    @foreach (var c in coberturas)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Desde</label>
+                <input type="month" class="form-control" value="@desdeTxt" @onchange="OnDesdeCambio" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Hasta</label>
+                <input type="month" class="form-control" value="@hastaTxt" @onchange="OnHastaCambio" />
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-4 mt-3">
+            <span class="fw-semibold small align-self-center">Mostrar en el gráfico:</span>
+
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkReservas" @bind="mostrarReservas" @bind:after="RecalcularAsync" />
+                <label class="form-check-label" for="chkReservas">Reservas por mes</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkAtendidos" @bind="mostrarAtendidos" @bind:after="RecalcularAsync" />
+                <label class="form-check-label" for="chkAtendidos">Turnos atendidos por mes</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkDinero" @bind="mostrarDinero" @bind:after="RecalcularAsync" />
+                <label class="form-check-label" for="chkDinero">Dinero por mes</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkCancel" @bind="mostrarCancelaciones" @bind:after="RecalcularAsync" />
+                <label class="form-check-label" for="chkCancel">Cancelaciones por mes</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- INDICADORES -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100">
+                <span class="text-muted small">Reservas</span>
+                <span class="fs-3 fw-bold text-primary">@totalReservas</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100">
+                <span class="text-muted small">Turnos atendidos</span>
+                <span class="fs-3 fw-bold text-success">@totalAtendidos</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100">
+                <span class="text-muted small">Cancelaciones</span>
+                <span class="fs-3 fw-bold text-danger">@totalCancelaciones</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100">
+                <span class="text-muted small">Dinero facturado</span>
+                <span class="fs-3 fw-bold" style="color:@ColorDinero">@Pesos(totalDinero)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRÁFICO -->
+    <div class="card border-0 shadow-sm p-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-bar-chart-line text-primary me-2"></i> Evolución mensual
+            </h5>
+            <div class="d-flex flex-wrap gap-3 small">
+                @if (mostrarReservas)
+                {
+                    <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:@ColorReservas"></span>Reservas</span>
+                }
+                @if (mostrarAtendidos)
+                {
+                    <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:@ColorAtendidos"></span>Turnos atendidos</span>
+                }
+                @if (mostrarCancelaciones)
+                {
+                    <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:@ColorCancelaciones"></span>Cancelaciones</span>
+                }
+                @if (mostrarDinero)
+                {
+                    <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:@ColorDinero"></span>Dinero (eje derecho)</span>
+                }
+            </div>
+        </div>
+
+        @if (resumen.Count == 0)
+        {
+            <p class="text-muted mb-0">No hay datos para el período seleccionado.</p>
+        }
+        else
+        {
+            <div>@((MarkupString)svgMarkup)</div>
+        }
+    </div>
+
+    <!-- TABLA GENERAL -->
+    <div class="card border-0 shadow-sm p-3 mb-4">
+        <h5 class="fw-bold mb-3">
+            <i class="bi bi-table text-primary me-2"></i>
+            @(esAdmin && string.IsNullOrEmpty(filtroOdontologo) ? "Tabla general (todos los odontólogos)" : "Detalle mensual")
+        </h5>
+
+        @if (resumen.Count == 0)
+        {
+            <p class="text-muted mb-0">Sin datos para mostrar.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th class="text-end">Reservas</th>
+                            <th class="text-end">Turnos atendidos</th>
+                            <th class="text-end">Cancelaciones</th>
+                            <th class="text-end">Dinero</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in resumen)
+                        {
+                            <tr>
+                                <td class="text-capitalize">@Titulo(r.Mes)</td>
+                                <td class="text-end">@r.Reservas</td>
+                                <td class="text-end">@r.Atendidos</td>
+                                <td class="text-end">@r.Cancelaciones</td>
+                                <td class="text-end">@Pesos(r.Dinero)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td>Total</td>
+                            <td class="text-end">@totalReservas</td>
+                            <td class="text-end">@totalAtendidos</td>
+                            <td class="text-end">@totalCancelaciones</td>
+                            <td class="text-end">@Pesos(totalDinero)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- DESGLOSE POR ODONTÓLOGO (solo admin, sin filtro de odontólogo) -->
+    @if (esAdmin && string.IsNullOrEmpty(filtroOdontologo) && desglose.Count > 0)
+    {
+        <div class="card border-0 shadow-sm p-3 mb-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-person-badge text-primary me-2"></i> Desglose por odontólogo
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Odontólogo</th>
+                            <th class="text-end">Reservas</th>
+                            <th class="text-end">Turnos atendidos</th>
+                            <th class="text-end">Cancelaciones</th>
+                            <th class="text-end">Dinero</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in desglose)
+                        {
+                            <tr>
+                                <td>@d.Nombre</td>
+                                <td class="text-end">@d.Reservas</td>
+                                <td class="text-end">@d.Atendidos</td>
+                                <td class="text-end">@d.Cancelaciones</td>
+                                <td class="text-end">@Pesos(d.Dinero)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    // ----- Colores (mismos tonos de Bootstrap que usa la app) -----
+    private const string ColorReservas = "#0d6efd";
+    private const string ColorAtendidos = "#198754";
+    private const string ColorCancelaciones = "#dc3545";
+    private const string ColorDinero = "#c9a227";
+
+    // ----- Geometría del SVG -----
+    private const double Ancho = 960, Alto = 420, MIzq = 80, MDer = 90, MSup = 20, MInf = 50;
+    private const double PlotW = Ancho - MIzq - MDer;
+    private const double PlotH = Alto - MSup - MInf;
+    private const double BaseY = MSup + PlotH;
+
+    private static readonly CultureInfo Es = new("es-AR");
+
+    // ----- Modelos internos -----
+    private sealed record Registro(DateTime Mes, string Matricula, string Cobertura, bool Cancelada, bool Completada, int Turnos, double Importe);
+    private sealed record Resumen(DateTime Mes, int Reservas, int Atendidos, int Cancelaciones, double Dinero);
+    private sealed record Desglose(string Nombre, int Reservas, int Atendidos, int Cancelaciones, double Dinero);
+
+    // ----- Estado -----
+    private List<ReservaDTO> reservas = new();
+    private List<OdontologoDTO> odontologos = new();
+    private Dictionary<string, OdontologoDTO> odontologosPorMatricula = new();
+    private List<string> coberturas = new();
+    private List<Resumen> resumen = new();
+    private List<Desglose> desglose = new();
+    private string svgMarkup = string.Empty;
+
+    private bool loading = true;
+    private bool autorizado;
+    private bool esAdmin;
+    private string? miMatricula;
+    private string errorMessage = string.Empty;
+    private string mensajeFiltro = string.Empty;
+
+    // Filtros
+    private string filtroOdontologo = string.Empty;
+    private string filtroCobertura = string.Empty;
+    private string desdeTxt = string.Empty;   // formato yyyy-MM
+    private string hastaTxt = string.Empty;   // formato yyyy-MM
+
+    // Series visibles en el gráfico
+    private bool mostrarReservas = true;
+    private bool mostrarAtendidos = true;
+    private bool mostrarDinero = true;
+    private bool mostrarCancelaciones = false;
+
+    // Totales (se calculan una vez por recálculo)
+    private int totalReservas;
+    private int totalAtendidos;
+    private int totalCancelaciones;
+    private double totalDinero;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        var token = await AuthService.GetTokenAsync();
+        var rol = await AuthService.GetRolAsync();
+        esAdmin = rol == "Administrador";
+        autorizado = esAdmin || rol == "Odontologo";
+
+        if (!autorizado)
+        {
+            loading = false;
+            return;
+        }
+
+        if (!esAdmin)
+            miMatricula = TokenClaims.Matricula(token) ?? await AuthService.GetMatriculaAsync();
+
+        try
+        {
+            ReservaApiClient.SetToken(token);
+            OdontologoApiClient.SetToken(token);
+
+            var rTask = ReservaApiClient.GetAllAsync();
+            var oTask = OdontologoApiClient.GetAllAsync();
+            await Task.WhenAll(rTask, oTask);
+
+            if (rTask.Result is null)
+                errorMessage = "No se pudieron cargar las reservas.";
+
+            reservas = rTask.Result ?? new();
+            odontologos = oTask.Result ?? new();
+            odontologosPorMatricula = odontologos.ToDictionary(o => o.Matricula, StringComparer.OrdinalIgnoreCase);
+            coberturas = reservas.Select(r => r.ObraSocial ?? "Particular")
+                                 .Append("Particular")
+                                 .Distinct()
+                                 .OrderBy(c => c)
+                                 .ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "No se pudieron cargar los datos: " + ex.Message;
+        }
+
+        if (string.IsNullOrEmpty(desdeTxt) || string.IsNullOrEmpty(hastaTxt))
+        {
+            var hoy = DateTime.Today;
+            desdeTxt = hoy.AddMonths(-11).ToString("yyyy-MM", CultureInfo.InvariantCulture);
+            hastaTxt = hoy.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+        }
+
+        loading = false;
+        await RecalcularAsync();
+    }
+
+    // Handlers de los inputs de mes (el valor llega como texto "yyyy-MM")
+    private async Task OnDesdeCambio(ChangeEventArgs e)
+    {
+        desdeTxt = e.Value?.ToString() ?? string.Empty;
+        await RecalcularAsync();
+    }
+
+    private async Task OnHastaCambio(ChangeEventArgs e)
+    {
+        hastaTxt = e.Value?.ToString() ?? string.Empty;
+        await RecalcularAsync();
+    }
+
+    // Recalcula tabla, totales, desglose y gráfico según los filtros actuales
+    private Task RecalcularAsync()
+    {
+        if (!TryMes(desdeTxt, out var desde) || !TryMes(hastaTxt, out var hasta))
+            return Limpiar("Elegí un período válido.");
+
+        if (desde > hasta)
+            return Limpiar("El mes inicial no puede ser posterior al mes final.");
+
+        int cantidadMeses = (hasta.Year - desde.Year) * 12 + hasta.Month - desde.Month + 1;
+        if (cantidadMeses > 36)
+            return Limpiar("El período máximo es de 36 meses.");
+
+        mensajeFiltro = string.Empty;
+
+        var regs = reservas
+            .Select(ToRegistro)
+            .Where(x => x.Mes >= desde && x.Mes <= hasta)
+            .Where(x => esAdmin
+                ? (string.IsNullOrEmpty(filtroOdontologo) || x.Matricula == filtroOdontologo)
+                : x.Matricula == miMatricula)
+            .Where(x => string.IsNullOrEmpty(filtroCobertura) || x.Cobertura == filtroCobertura)
+            .ToList();
+
+        resumen = Enumerable.Range(0, cantidadMeses)
+            .Select(i => desde.AddMonths(i))
+            .Select(m =>
+            {
+                var g = regs.Where(x => x.Mes == m).ToList();
+                return new Resumen(
+                    m,
+                    g.Count(x => !x.Cancelada),
+                    g.Where(x => x.Completada).Sum(x => x.Turnos),
+                    g.Count(x => x.Cancelada),
+                    g.Where(x => x.Completada).Sum(x => x.Importe));
+            })
+            .ToList();
+
+        totalReservas = resumen.Sum(r => r.Reservas);
+        totalAtendidos = resumen.Sum(r => r.Atendidos);
+        totalCancelaciones = resumen.Sum(r => r.Cancelaciones);
+        totalDinero = resumen.Sum(r => r.Dinero);
+
+        desglose = esAdmin && string.IsNullOrEmpty(filtroOdontologo)
+            ? regs.GroupBy(x => x.Matricula)
+                  .Select(g => new Desglose(
+                      NombreOdontologo(g.Key),
+                      g.Count(x => !x.Cancelada),
+                      g.Where(x => x.Completada).Sum(x => x.Turnos),
+                      g.Count(x => x.Cancelada),
+                      g.Where(x => x.Completada).Sum(x => x.Importe)))
+                  .OrderBy(d => d.Nombre)
+                  .ToList()
+            : new();
+
+        svgMarkup = ConstruirSvg();
+        return Task.CompletedTask;
+    }
+
+    private Task Limpiar(string mensaje)
+    {
+        mensajeFiltro = mensaje;
+        resumen = new();
+        desglose = new();
+        totalReservas = totalAtendidos = totalCancelaciones = 0;
+        totalDinero = 0;
+        svgMarkup = string.Empty;
+        return Task.CompletedTask;
+    }
+
+    // Cada reserva se agrupa por el mes de su primer turno (o de creación si no tiene turnos)
+    private Registro ToRegistro(ReservaDTO r)
+    {
+        var fecha = r.PrimerTurno ?? r.FechaCreacion;
+        return new Registro(
+            new DateTime(fecha.Year, fecha.Month, 1),
+            r._odontologoMatricula,
+            r.ObraSocial ?? "Particular",
+            r.Estado == EstadoReserva.Cancelada,
+            r.Estado == EstadoReserva.Completada,
+            r.Turnos?.Count ?? 0,
+            (double)(r.Importe ?? 0f));
+    }
+
+    // Arma el SVG completo como texto. Así no se usan etiquetas <text> dentro de Razor.
+    private string ConstruirSvg()
+    {
+        if (resumen.Count == 0)
+            return string.Empty;
+
+        int n = resumen.Count;
+        double grupo = PlotW / n;
+
+        int maxCuenta = Math.Max(1, resumen.Max(r => Math.Max(
+            mostrarReservas ? r.Reservas : 0,
+            Math.Max(mostrarAtendidos ? r.Atendidos : 0, mostrarCancelaciones ? r.Cancelaciones : 0))));
+        double escIzq = maxCuenta * 1.15;
+
+        double maxDinero = resumen.Max(r => r.Dinero);
+        double escDer = Math.Max(1, maxDinero) * 1.15;
+
+        var sb = new StringBuilder();
+        sb.Append($"<svg viewBox=\"0 0 {F(Ancho)} {F(Alto)}\" class=\"w-100\" style=\"height:auto;\" role=\"img\" aria-label=\"Gráfico de reportes por mes\">");
+
+        // Grilla y marcas de los ejes
+        for (int g = 0; g <= 4; g++)
+        {
+            double y = BaseY - PlotH * g / 4.0;
+            sb.Append($"<line x1=\"{F(MIzq)}\" x2=\"{F(Ancho - MDer)}\" y1=\"{F(y)}\" y2=\"{F(y)}\" stroke=\"#e9ecef\" />");
+            sb.Append($"<text x=\"{F(MIzq - 8)}\" y=\"{F(y + 4)}\" text-anchor=\"end\" font-size=\"12\" fill=\"#6c757d\">{Enc(Math.Round(escIzq * g / 4.0).ToString("0", Es))}</text>");
+            if (mostrarDinero)
+                sb.Append($"<text x=\"{F(Ancho - MDer + 8)}\" y=\"{F(y + 4)}\" text-anchor=\"start\" font-size=\"12\" fill=\"{ColorDinero}\">{Enc(Pesos(escDer * g / 4.0))}</text>");
+        }
+
+        // Línea base
+        sb.Append($"<line x1=\"{F(MIzq)}\" x2=\"{F(Ancho - MDer)}\" y1=\"{F(BaseY)}\" y2=\"{F(BaseY)}\" stroke=\"#adb5bd\" />");
+
+        // Barras de cantidades
+        var series = new List<(string Nombre, string Color, Func<Resumen, int> Valor)>();
+        if (mostrarReservas) series.Add(("Reservas", ColorReservas, r => r.Reservas));
+        if (mostrarAtendidos) series.Add(("Turnos atendidos", ColorAtendidos, r => r.Atendidos));
+        if (mostrarCancelaciones) series.Add(("Cancelaciones", ColorCancelaciones, r => r.Cancelaciones));
+
+        if (series.Count > 0)
+        {
+            double anchoBarra = grupo * 0.7 / series.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var r = resumen[i];
+                double gx = MIzq + i * grupo + grupo * 0.15;
+
+                for (int j = 0; j < series.Count; j++)
+                {
+                    var s = series[j];
+                    int v = s.Valor(r);
+                    double h = v / escIzq * PlotH;
+                    string tooltip = $"{Titulo(r.Mes)} · {s.Nombre}: {v}";
+                    sb.Append($"<rect x=\"{F(gx + j * anchoBarra)}\" y=\"{F(BaseY - h)}\" width=\"{F(Math.Max(1, anchoBarra - 3))}\" height=\"{F(h)}\" rx=\"3\" fill=\"{s.Color}\"><title>{Enc(tooltip)}</title></rect>");
+                }
+            }
+        }
+
+        // Línea de dinero
+        if (mostrarDinero)
+        {
+            var puntos = new List<string>();
+            var circulos = new StringBuilder();
+            for (int i = 0; i < n; i++)
+            {
+                var r = resumen[i];
+                double x = MIzq + i * grupo + grupo / 2;
+                double y = BaseY - r.Dinero / escDer * PlotH;
+                puntos.Add($"{F(x)},{F(y)}");
+                circulos.Append($"<circle cx=\"{F(x)}\" cy=\"{F(y)}\" r=\"5\" fill=\"{ColorDinero}\"><title>{Enc($"{Titulo(r.Mes)} · Dinero: {Pesos(r.Dinero)}")}</title></circle>");
+            }
+            sb.Append($"<polyline points=\"{string.Join(" ", puntos)}\" fill=\"none\" stroke=\"{ColorDinero}\" stroke-width=\"3\" />");
+            sb.Append(circulos);
+        }
+
+        // Etiquetas del eje X (si hay más de 18 meses, se muestra uno de cada dos)
+        int paso = n > 18 ? 2 : 1;
+        for (int i = 0; i < n; i += paso)
+        {
+            double x = MIzq + i * grupo + grupo / 2;
+            sb.Append($"<text x=\"{F(x)}\" y=\"{F(BaseY + 22)}\" text-anchor=\"middle\" font-size=\"12\" fill=\"#495057\">{Enc(EtiquetaCorta(resumen[i].Mes))}</text>");
+        }
+
+        sb.Append("</svg>");
+        return sb.ToString();
+    }
+
+    private string NombreOdontologo(string matricula)
+        => odontologosPorMatricula.TryGetValue(matricula, out var o) ? $"{o.Apellido}, {o.Nombre}" : matricula;
+
+    private static bool TryMes(string texto, out DateTime fecha)
+        => DateTime.TryParseExact(texto, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out fecha);
+
+    private static string F(double d) => d.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string Enc(string s) => WebUtility.HtmlEncode(s);
+
+    private static string Pesos(double v) => "$ " + v.ToString("N0", Es);
+
+    private static string Titulo(DateTime d) => d.ToString("MMMM yyyy", Es);
+
+    private static string EtiquetaCorta(DateTime d) => d.ToString("MMM yy", Es);
+}

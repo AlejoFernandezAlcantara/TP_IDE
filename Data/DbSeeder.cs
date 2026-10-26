@@ -27,34 +27,33 @@ namespace Data
             // 2. Mutuales
             if (!context.Mutuales.Any())
             {
-                var mutuales = new List<Mutual>
-                {
+                context.Mutuales.AddRange(
                     new Mutual(301111111, "OSDE"),
                     new Mutual(302222222, "Swiss Medical"),
                     new Mutual(303333333, "Galeno"),
                     new Mutual(304444444, "Medifé"),
                     new Mutual(305555555, "IOMA"),
                     new Mutual(306666666, "PAMI")
-                };
-                context.Mutuales.AddRange(mutuales);
+                );
                 context.SaveChanges();
             }
 
-            // 3. Prácticas odontológicas
+            // 3. Prácticas odontológicas (CodigoPractica lo genera la base)
+            var pConsulta = new Practica("Consulta y Diagnóstico", 15000f);
+            var pLimpieza = new Practica("Limpieza y Profilaxis", 22000f);
+            var pObturacion = new Practica("Obturación con Composite (Arreglo)", 28000f);
+            var pExtraccion = new Practica("Extracción Simple", 35000f);
+            var pEndodoncia = new Practica("Tratamiento de Conducto (Endodoncia)", 65000f);
+            var pCorona = new Practica("Corona de Porcelana", 120000f);
+            var pBlanqueo = new Practica("Blanqueamiento Dental", 80000f);
+            var pPerno = new Practica("Perno y Corona", 95000f);
+
             if (!context.Practicas.Any())
             {
-                var practicas = new List<Practica>
-                {
-                    new Practica("Consulta y Diagnóstico", 15000f),
-                    new Practica("Limpieza y Profilaxis", 22000f),
-                    new Practica("Obturación con Composite (Arreglo)", 28000f),
-                    new Practica("Extracción Simple", 35000f),
-                    new Practica("Tratamiento de Conducto (Endodoncia)", 65000f),
-                    new Practica("Corona de Porcelana", 120000f),
-                    new Practica("Blanqueamiento Dental", 80000f),
-                    new Practica("Perno y Corona", 95000f)
-                };
-                context.Practicas.AddRange(practicas);
+                context.Practicas.AddRange(
+                    pConsulta, pLimpieza, pObturacion, pExtraccion,
+                    pEndodoncia, pCorona, pBlanqueo, pPerno
+                );
                 context.SaveChanges();
             }
 
@@ -70,7 +69,7 @@ namespace Data
                 context.Odontologos.AddRange(odo1, odo2, odo3, odo4);
                 context.SaveChanges();
 
-                var mutualesDb = context.Mutuales.ToList();
+                var mutualesDb = context.Mutuales.OrderBy(m => m.Cuit).ToList();
                 if (mutualesDb.Count >= 3)
                 {
                     context.OdontologoMutuales.AddRange(
@@ -85,7 +84,7 @@ namespace Data
                 }
             }
 
-            // 5. Pacientes de prueba (sin atadura fija de obra social)
+            // 5. Pacientes de prueba
             var passPaciente = BCrypt.Net.BCrypt.HashPassword("Paciente123!");
             if (!context.Pacientes.Any())
             {
@@ -101,12 +100,12 @@ namespace Data
             // 6. Reservas y Turnos de prueba
             if (!context.Reservas.Any() && !context.Turnos.Any())
             {
-                var pac = context.Pacientes.First();
-                var pac2 = context.Pacientes.Skip(1).FirstOrDefault() ?? pac;
-                var odo = context.Odontologos.First();
-                var odo2 = context.Odontologos.Skip(1).FirstOrDefault() ?? odo;
+                var pac = context.Pacientes.OrderBy(p => p.NroPaciente).First();
+                var pac2 = context.Pacientes.OrderBy(p => p.NroPaciente).Skip(1).FirstOrDefault() ?? pac;
+                var odo = context.Odontologos.OrderBy(o => o.Matricula).First();
+                var odo2 = context.Odontologos.OrderBy(o => o.Matricula).Skip(1).FirstOrDefault() ?? odo;
 
-                // Reserva 1: Confirmada con Obra Social OSDE
+                // Reserva 1: Confirmada con OSDE
                 var res1 = new Reserva("Dolor de muela constante", 25000f, 5000f)
                 {
                     PacienteId = pac.NroPaciente,
@@ -116,7 +115,7 @@ namespace Data
                     NroAfiliado = "987654321-01"
                 };
 
-                // Reserva 2: Pendiente con Particular
+                // Reserva 2: Pendiente, particular
                 var res2 = new Reserva("Control y limpieza general", 20000f, 0f)
                 {
                     PacienteId = pac2.NroPaciente,
@@ -126,7 +125,7 @@ namespace Data
                     NroAfiliado = null
                 };
 
-                // Reserva 3: Completada (Atendida) con prácticas registradas y formateadas ("14-M, 15-O")
+                // Reserva 3: Completada con prácticas registradas
                 var res3 = new Reserva("Tratamiento finalizado", 63000f, 10000f)
                 {
                     PacienteId = pac.NroPaciente,
@@ -141,30 +140,26 @@ namespace Data
                 context.Reservas.AddRange(res1, res2, res3);
                 context.SaveChanges();
 
-                var practicasDb = context.Practicas.ToList();
-                if (practicasDb.Count >= 2)
-                {
-                    var rp1 = new ReservaPractica
+                // Prácticas realizadas (usa las referencias de arriba, ya con su código generado)
+                context.ReservaPracticas.AddRange(
+                    new ReservaPractica
                     {
                         ReservaId = res3.Id,
-                        PracticaCodigo = practicasDb[2].CodigoPractica, // Obturación
+                        PracticaCodigo = pObturacion.CodigoPractica,
                         DientesCaras = "14-M, 15-O",
-                        Precio = practicasDb[2].Precio,
+                        Precio = pObturacion.Precio,
                         Observaciones = "Arreglo con resina compuesta fotocurable"
-                    };
-
-                    var rp2 = new ReservaPractica
+                    },
+                    new ReservaPractica
                     {
                         ReservaId = res3.Id,
-                        PracticaCodigo = practicasDb[1].CodigoPractica, // Limpieza
+                        PracticaCodigo = pLimpieza.CodigoPractica,
                         DientesCaras = "Todos",
-                        Precio = practicasDb[1].Precio,
+                        Precio = pLimpieza.Precio,
                         Observaciones = "Profilaxis completa"
-                    };
-
-                    context.ReservaPracticas.AddRange(rp1, rp2);
-                    context.SaveChanges();
-                }
+                    }
+                );
+                context.SaveChanges();
 
                 // Turnos
                 var manana = DateTime.Today.AddDays(1);
