@@ -179,9 +179,9 @@ namespace WindowsForms
                 return;
             }
 
-            if (reserva.Estado != EstadoReserva.Pendiente && reserva.Estado != EstadoReserva.Confirmada)
+            if (reserva.Estado != EstadoReserva.Pendiente)
             {
-                MessageBox.Show("Solo se pueden cancelar reservas pendientes o confirmadas.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Solo se pueden cancelar reservas pendientes.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 

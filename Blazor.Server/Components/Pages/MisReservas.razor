@@ -178,7 +178,7 @@ else
     private static bool EsCancelable(Fila f)
         => f.Turno is not null
            && f.Turno.Estado == EstadoTurno.Reservado
-           && (f.Reserva.Estado == EstadoReserva.Pendiente || f.Reserva.Estado == EstadoReserva.Confirmada);
+           && f.Reserva.Estado == EstadoReserva.Pendiente;
 
     private static bool PuedeCancelar(Fila f)
         => EsCancelable(f)
@@ -217,7 +217,6 @@ else
     private static string ClaseEstado(EstadoReserva estado) => estado switch
     {
         EstadoReserva.Pendiente => "bg-warning text-dark",
-        EstadoReserva.Confirmada => "bg-primary",
         EstadoReserva.Completada => "bg-success",
         _ => "bg-secondary"
     };

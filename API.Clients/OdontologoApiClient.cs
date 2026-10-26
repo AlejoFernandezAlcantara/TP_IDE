@@ -37,22 +37,41 @@ namespace API.Clients
             return await response.Content.ReadFromJsonAsync<OdontologoDTO>();
         }
 
-        public async Task<bool> CrearAsync(OdontologoDTO odontologo)
+        public async Task<(bool Ok, string? Error)> CrearAsync(OdontologoDTO odontologo)
         {
             var response = await _client.PostAsJsonAsync("odontologos", odontologo);
-            return response.IsSuccessStatusCode;
+            return await ResultadoAsync(response, "No se pudo guardar el odontólogo.");
         }
 
-        public async Task<bool> ActualizarAsync(OdontologoDTO odontologo)
+        public async Task<(bool Ok, string? Error)> ActualizarAsync(OdontologoDTO odontologo)
         {
             var response = await _client.PutAsJsonAsync("odontologos", odontologo);
-            return response.IsSuccessStatusCode;
+            return await ResultadoAsync(response, "No se pudo guardar el odontólogo.");
         }
 
         public async Task<bool> EliminarAsync(string matricula)
         {
             var response = await _client.DeleteAsync($"odontologos/{matricula}");
             return response.IsSuccessStatusCode;
+        }
+
+        // Toma el campo "error" de la respuesta de la API; si no hay, usa el mensaje por defecto.
+        private static async Task<(bool Ok, string? Error)> ResultadoAsync(HttpResponseMessage response, string mensajePorDefecto)
+        {
+            if (response.IsSuccessStatusCode)
+                return (true, null);
+
+            try
+            {
+                var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (body != null && body.TryGetValue("error", out var msg) && !string.IsNullOrWhiteSpace(msg))
+                    return (false, msg);
+            }
+            catch
+            {
+            }
+
+            return (false, mensajePorDefecto);
         }
     }
 }

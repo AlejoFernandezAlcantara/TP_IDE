@@ -185,13 +185,13 @@
 
             OdontologoApiClient.SetToken(await AuthService.GetTokenAsync());
 
-            bool ok = mode == FormMode.Add
+            var (ok, error) = mode == FormMode.Add
                 ? await OdontologoApiClient.CrearAsync(currentOdontologo)
                 : await OdontologoApiClient.ActualizarAsync(currentOdontologo);
 
             if (!ok)
             {
-                errorMessage = "No se pudo guardar el odontólogo. Revisá los datos (la matrícula no puede repetirse) o volvé a iniciar sesión.";
+                errorMessage = error ?? "No se pudo guardar el odontólogo. Revisá los datos (la matrícula no puede repetirse) o volvé a iniciar sesión.";
                 return;
             }
 

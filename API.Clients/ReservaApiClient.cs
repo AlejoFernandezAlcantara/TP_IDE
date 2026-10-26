@@ -34,10 +34,18 @@ namespace API.Clients
             return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<ReservaDTO>>() : null;
         }
 
+        // Devuelve null solo si la reserva no existe (404). Otros errores se lanzan
+        // para que la pantalla muestre la causa real y no "no se encontró la reserva".
         public async Task<ReservaDTO?> GetByIdAsync(int id)
         {
             var r = await _client.GetAsync($"reservas/{id}");
-            return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<ReservaDTO>() : null;
+            // DIAGNÓSTICO TEMPORAL: se ve en la consola de la app de Blazor
+            Console.WriteLine($"[DIAG] GET {_client.BaseAddress}reservas/{id} -> {(int)r.StatusCode} {r.StatusCode} | token={_client.DefaultRequestHeaders.Authorization != null}");
+            if (r.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+
+            r.EnsureSuccessStatusCode();
+            return await r.Content.ReadFromJsonAsync<ReservaDTO>();
         }
 
         public async Task<List<ReservaDTO>?> GetByPacienteAsync(int pacienteId)

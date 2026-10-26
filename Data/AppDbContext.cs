@@ -29,7 +29,9 @@ namespace Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(_connectionString);
+                // DIAGNÓSTICO TEMPORAL: muestra en la terminal de la API cada SQL y su duración
+                optionsBuilder.UseSqlServer(_connectionString)
+                    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
             }
         }
 

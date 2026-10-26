@@ -70,11 +70,11 @@ namespace WindowsForms
             {
                 this.Text = "Atender Reservas";
                 lblTitulo.Text = "Reservas pendientes de atención";
-                cmbFiltroEstado.Items.AddRange(new object[] { "Por atender", "Pendiente", "Confirmada" });
+                cmbFiltroEstado.Items.AddRange(new object[] { "Por atender", "Pendiente" });
             }
             else
             {
-                cmbFiltroEstado.Items.AddRange(new object[] { "Todos", "Pendiente", "Confirmada", "Completada", "Cancelada" });
+                cmbFiltroEstado.Items.AddRange(new object[] { "Todos", "Pendiente", "Completada", "Cancelada" });
             }
             cmbFiltroEstado.SelectedIndex = 0;
             cmbFiltroEstado.SelectedIndexChanged += (s, e) => FiltrarReservas();
@@ -201,7 +201,7 @@ namespace WindowsForms
             var filtradas = _reservas;
             if (filtro == "Por atender")
             {
-                filtradas = _reservas.Where(r => r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada).ToList();
+                filtradas = _reservas.Where(r => r.Estado == EstadoReserva.Pendiente).ToList();
             }
             else if (filtro != "Todos")
             {

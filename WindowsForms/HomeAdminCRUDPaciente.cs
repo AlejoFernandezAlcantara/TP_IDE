@@ -2,11 +2,13 @@
 using DTO;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace WindowsForms
 {
@@ -21,6 +23,7 @@ namespace WindowsForms
         public HomeAdminCRUDPaciente()
         {
             InitializeComponent();
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
             MinimumSize = new Size(1000, 750);
             cmbTipoDocumento.DataSource = Enum.GetValues(typeof(tiposEnumerados));
 

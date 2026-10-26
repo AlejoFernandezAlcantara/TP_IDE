@@ -105,12 +105,12 @@ namespace Data
                 var odo = context.Odontologos.OrderBy(o => o.Matricula).First();
                 var odo2 = context.Odontologos.OrderBy(o => o.Matricula).Skip(1).FirstOrDefault() ?? odo;
 
-                // Reserva 1: Confirmada con OSDE
+                // Reserva 1: Pendiente con OSDE
                 var res1 = new Reserva("Dolor de muela constante", 25000f, 5000f)
                 {
                     PacienteId = pac.NroPaciente,
                     OdontologoMatricula = odo.Matricula,
-                    Estado = EstadoReserva.Confirmada,
+                    Estado = EstadoReserva.Pendiente,
                     ObraSocial = "OSDE",
                     NroAfiliado = "987654321-01"
                 };
@@ -292,7 +292,7 @@ namespace Data
                     else if (inicio < ahora)
                         estado = EstadoReserva.Completada;
                     else
-                        estado = azar < 0.7 ? EstadoReserva.Confirmada : EstadoReserva.Pendiente;
+                        estado = EstadoReserva.Pendiente;
 
                     // Prácticas presupuestadas; si la reserva se realizó, quedan registradas
                     var elegidas = practicas.OrderBy(_ => rnd.Next()).Take(1 + rnd.Next(3)).ToList();

@@ -188,13 +188,13 @@
 
             PacienteApiClient.SetToken(await AuthService.GetTokenAsync());
 
-            bool ok = mode == FormMode.Add
+            var (ok, error) = mode == FormMode.Add
                 ? await PacienteApiClient.CrearAsync(currentPaciente)
                 : await PacienteApiClient.ActualizarAsync(currentPaciente);
 
             if (!ok)
             {
-                errorMessage = "No se pudo guardar el paciente. Revisá los datos o volvé a iniciar sesión.";
+                errorMessage = error ?? "No se pudo guardar el paciente. Revisá los datos o volvé a iniciar sesión.";
                 return;
             }
 

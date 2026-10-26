@@ -105,9 +105,17 @@ else if (!reservaId.HasValue)
 }
 else if (reserva == null)
 {
-    <div class="alert alert-danger">
-        No se encontró la reserva indicada. Seleccioná una reserva desde la lista.
-    </div>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else
+    {
+        <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>No se encontró la reserva #@reservaId. Puede que ya no exista.</span>
+            <a href="atender" class="btn btn-sm btn-outline-secondary">Ver reservas pendientes</a>
+        </div>
+    }
 }
 else if (reserva.Estado == EstadoReserva.Completada || reserva.Estado == EstadoReserva.Cancelada)
 {
@@ -195,16 +203,26 @@ else
                             <div class="diente-card">
                                 <span class="diente-numero">@diente</span>
                                 <div class="diente-caras-grid">
-                                    <button type="button" class="cara-btn cara-v @(IsCaraSelected(diente, "V") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "V")' title="Vestibular">V</button>
-                                    <button type="button" class="cara-btn cara-m @(IsCaraSelected(diente, "M") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "M")' title="Mesial">M</button>
-                                    <button type="button" class="cara-btn cara-o @(IsCaraSelected(diente, "O") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "O")' title="Oclusal">O</button>
-                                    <button type="button" class="cara-btn cara-d @(IsCaraSelected(diente, "D") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "D")' title="Distal">D</button>
-                                    <button type="button" class="cara-btn cara-l @(IsCaraSelected(diente, "L") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "L")' title="Lingual/Palatina">L</button>
+                                    <button type="button" class="cara-btn cara-v @(IsCaraSelected(diente, "V") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "V")' title="Vestibular">
+                                        V
+                                    </button>
+                                    <button type="button" class="cara-btn cara-m @(IsCaraSelected(diente, "M") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "M")' title="Mesial">
+                                        M
+                                    </button>
+                                    <button type="button" class="cara-btn cara-o @(IsCaraSelected(diente, "O") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "O")' title="Oclusal">
+                                        O
+                                    </button>
+                                    <button type="button" class="cara-btn cara-d @(IsCaraSelected(diente, "D") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "D")' title="Distal">
+                                        D
+                                    </button>
+                                    <button type="button" class="cara-btn cara-l @(IsCaraSelected(diente, "L") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "L")' title="Lingual/Palatina">
+                                        L
+                                    </button>
                                 </div>
                             </div>
                         }
@@ -218,16 +236,26 @@ else
                             <div class="diente-card">
                                 <span class="diente-numero">@diente</span>
                                 <div class="diente-caras-grid">
-                                    <button type="button" class="cara-btn cara-v @(IsCaraSelected(diente, "V") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "V")' title="Vestibular">V</button>
-                                    <button type="button" class="cara-btn cara-m @(IsCaraSelected(diente, "M") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "M")' title="Mesial">M</button>
-                                    <button type="button" class="cara-btn cara-o @(IsCaraSelected(diente, "O") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "O")' title="Oclusal">O</button>
-                                    <button type="button" class="cara-btn cara-d @(IsCaraSelected(diente, "D") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "D")' title="Distal">D</button>
-                                    <button type="button" class="cara-btn cara-l @(IsCaraSelected(diente, "L") ? "selected" : "")" 
-                                            @onclick='() => ToggleCara(diente, "L")' title="Lingual/Palatina">L</button>
+                                    <button type="button" class="cara-btn cara-v @(IsCaraSelected(diente, "V") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "V")' title="Vestibular">
+                                        V
+                                    </button>
+                                    <button type="button" class="cara-btn cara-m @(IsCaraSelected(diente, "M") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "M")' title="Mesial">
+                                        M
+                                    </button>
+                                    <button type="button" class="cara-btn cara-o @(IsCaraSelected(diente, "O") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "O")' title="Oclusal">
+                                        O
+                                    </button>
+                                    <button type="button" class="cara-btn cara-d @(IsCaraSelected(diente, "D") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "D")' title="Distal">
+                                        D
+                                    </button>
+                                    <button type="button" class="cara-btn cara-l @(IsCaraSelected(diente, "L") ? "selected" : "")"
+                                            @onclick='() => ToggleCara(diente, "L")' title="Lingual/Palatina">
+                                        L
+                                    </button>
                                 </div>
                             </div>
                         }
@@ -321,7 +349,7 @@ else
                     <textarea class="form-control" rows="3" placeholder="Detalle clínico de la atención realizada..." @bind="resultadoAtencion"></textarea>
                 </div>
 
-                <button class="btn btn-primary w-100 py-2 fw-semibold" 
+                <button class="btn btn-primary w-100 py-2 fw-semibold"
                         disabled="@(practicasCargadas.Count == 0 || guardando)"
                         @onclick="FinalizarAtencionAsync">
                     @if (guardando)
@@ -403,7 +431,7 @@ else
                 await Task.WhenAll(rTask, pTask);
 
                 pendientes = (rTask.Result ?? new())
-                    .Where(r => r.Estado == EstadoReserva.Pendiente || r.Estado == EstadoReserva.Confirmada)
+                    .Where(r => r.Estado == EstadoReserva.Pendiente)
                     .OrderBy(r => r.PrimerTurno ?? r.FechaCreacion)
                     .ToList();
 
@@ -438,8 +466,12 @@ else
 
             if (reserva != null)
             {
-                paciente = await PacienteApiClient.GetByNroPacienteAsync(reserva._pacienteId);
-                odontologo = await OdontologoApiClient.GetByMatriculaAsync(reserva._odontologoMatricula);
+                // Paciente y odontólogo en paralelo
+                var paTask = PacienteApiClient.GetByNroPacienteAsync(reserva._pacienteId);
+                var oTask = OdontologoApiClient.GetByMatriculaAsync(reserva._odontologoMatricula);
+                await Task.WhenAll(paTask, oTask);
+                paciente = paTask.Result;
+                odontologo = oTask.Result;
             }
         }
         catch (Exception ex)

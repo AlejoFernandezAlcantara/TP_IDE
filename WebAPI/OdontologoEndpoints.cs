@@ -1,4 +1,5 @@
 ﻿using Applications.Services;
+using Data;
 using Domain.Model;
 using DTO;
 using System.Security.Claims;
@@ -22,10 +23,13 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            group.MapPost("/", async Task<IResult> (OdontologoDTO dto, IOdontologoService service) =>
+            group.MapPost("/", async Task<IResult> (OdontologoDTO dto, IOdontologoService service, AppDbContext db) =>
             {
                 if (string.IsNullOrWhiteSpace(dto.Password))
                     return Results.BadRequest(new { error = "La contraseña es obligatoria." });
+
+                if (await PacienteEndpoints.EmailEnUsoAsync(db, dto.Email))
+                    return Results.Conflict(new { error = "Ya existe una cuenta con ese email." });
 
                 try
                 {
@@ -42,10 +46,14 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
 
-            group.MapPut("/", async Task<IResult> (OdontologoDTO dto, ClaimsPrincipal user, IOdontologoService service) =>
+            group.MapPut("/", async Task<IResult> (OdontologoDTO dto, ClaimsPrincipal user, IOdontologoService service, AppDbContext db) =>
             {
                 if (!user.EsAdmin() && user.Matricula() != dto.Matricula)
                     return Results.Forbid();
+
+                // El email no puede pertenecer a otra cuenta (la propia no cuenta)
+                if (await PacienteEndpoints.EmailEnUsoAsync(db, dto.Email, excluirMatricula: dto.Matricula))
+                    return Results.Conflict(new { error = "Ya existe una cuenta con ese email." });
 
                 await service.ActualizarAsync(dto);
                 return Results.NoContent();

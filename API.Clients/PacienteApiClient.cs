@@ -37,16 +37,34 @@ namespace API.Clients
             return await response.Content.ReadFromJsonAsync<PacienteDTO>();
         }
 
-        public async Task<bool> CrearAsync(PacienteDTO paciente)
+        public async Task<(bool Ok, string? Error)> CrearAsync(PacienteDTO paciente)
         {
             var response = await _client.PostAsJsonAsync("pacientes", paciente);
-            return response.IsSuccessStatusCode;
+            return await ResultadoAsync(response, "No se pudo guardar el paciente.");
         }
 
         // eL AUTORREGISTRO NO ENVIA TOKEN
         public async Task<(bool Ok, string? Error)> RegistrarAsync(PacienteDTO paciente)
         {
             var response = await _client.PostAsJsonAsync("pacientes/registro", paciente);
+            return await ResultadoAsync(response, "No se pudo completar el registro.");
+        }
+
+        public async Task<(bool Ok, string? Error)> ActualizarAsync(PacienteDTO paciente)
+        {
+            var response = await _client.PutAsJsonAsync("pacientes", paciente);
+            return await ResultadoAsync(response, "No se pudo guardar el paciente.");
+        }
+
+        public async Task<bool> EliminarAsync(int nroPaciente)
+        {
+            var response = await _client.DeleteAsync($"pacientes/{nroPaciente}");
+            return response.IsSuccessStatusCode;
+        }
+
+        // Toma el campo "error" de la respuesta de la API; si no hay, usa el mensaje por defecto.
+        private static async Task<(bool Ok, string? Error)> ResultadoAsync(HttpResponseMessage response, string mensajePorDefecto)
+        {
             if (response.IsSuccessStatusCode)
                 return (true, null);
 
@@ -60,19 +78,7 @@ namespace API.Clients
             {
             }
 
-            return (false, "No se pudo completar el registro.");
-        }
-
-        public async Task<bool> ActualizarAsync(PacienteDTO paciente)
-        {
-            var response = await _client.PutAsJsonAsync("pacientes", paciente);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<bool> EliminarAsync(int nroPaciente)
-        {
-            var response = await _client.DeleteAsync($"pacientes/{nroPaciente}");
-            return response.IsSuccessStatusCode;
+            return (false, mensajePorDefecto);
         }
     }
 }

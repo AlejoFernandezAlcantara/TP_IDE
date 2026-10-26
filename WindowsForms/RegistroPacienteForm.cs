@@ -87,15 +87,27 @@ namespace WindowsForms
             txtPassword = new TextBox { UseSystemPasswordChar = true };
             txtConfirmar = new TextBox { UseSystemPasswordChar = true };
 
-            AgregarFila(tabla, "Nombre *", txtNombre);
-            AgregarFila(tabla, "Apellido *", txtApellido);
-            AgregarFila(tabla, "Tipo de documento *", cmbTipoDni);
-            AgregarFila(tabla, "Nº de documento *", txtNroDni);
-            AgregarFila(tabla, "Teléfono *", txtTelefono);
-            AgregarFila(tabla, "Dirección *", txtDireccion);
-            AgregarFila(tabla, "Email *", txtEmail);
-            AgregarFila(tabla, "Contraseña *", txtPassword);
-            AgregarFila(tabla, "Repetir contraseña *", txtConfirmar);
+            var filas = new (string Texto, Control Control)[]
+            {
+                ("Nombre *", txtNombre),
+                ("Apellido *", txtApellido),
+                ("Tipo de documento *", cmbTipoDni),
+                ("Nº de documento *", txtNroDni),
+                ("Teléfono *", txtTelefono),
+                ("Dirección *", txtDireccion),
+                ("Email *", txtEmail),
+                ("Contraseña *", txtPassword),
+                ("Repetir contraseña *", txtConfirmar)
+            };
+
+            // Se fija la cantidad de filas una sola vez y después se ubica cada control en su fila
+            tabla.RowStyles.Clear();
+            for (int i = 0; i < filas.Length; i++)
+                tabla.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tabla.RowCount = filas.Length;
+
+            for (int i = 0; i < filas.Length; i++)
+                AgregarFila(tabla, i, filas[i].Texto, filas[i].Control);
 
             // ---------- Pie: ayuda, error y botones ----------
             var pnlPie = new Panel { Dock = DockStyle.Bottom, Height = 120 };
@@ -148,12 +160,8 @@ namespace WindowsForms
             CancelButton = btnCancelar;
         }
 
-        private static void AgregarFila(TableLayoutPanel tabla, string texto, Control control)
+        private static void AgregarFila(TableLayoutPanel tabla, int fila, string texto, Control control)
         {
-            int fila = tabla.RowCount;
-            tabla.RowCount = fila + 1;
-            tabla.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
             tabla.Controls.Add(new Label
             {
                 Text = texto,

@@ -9,18 +9,29 @@ namespace WebAPI
 {
     public static class PacienteEndpoints
     {
-        // CHEQUEAR QUE EL EMAIL NO PUEDA repetirse entre administradores, odontólogos y pacientes
-        private static async Task<bool> EmailEnUsoAsync(AppDbContext db, string email)
+        // Un email no puede repetirse entre administradores, odontólogos y pacientes.
+        // excluirNroPaciente / excluirMatricula: la cuenta que se está editando no cuenta como duplicado.
+        public static async Task<bool> EmailEnUsoAsync(
+            AppDbContext db,
+            string email,
+            int? excluirNroPaciente = null,
+            string? excluirMatricula = null)
         {
             var e = email.Trim().ToLower();
 
             if (await db.Administradores.AnyAsync(a => a.Email.ToLower() == e))
                 return true;
 
-            if (await db.Odontologos.AnyAsync(o => o.Email.ToLower() == e))
+            var odontologos = db.Odontologos.Where(o => o.Email.ToLower() == e);
+            if (excluirMatricula != null)
+                odontologos = odontologos.Where(o => o.Matricula != excluirMatricula);
+            if (await odontologos.AnyAsync())
                 return true;
 
-            return await db.Pacientes.AnyAsync(p => p.Email.ToLower() == e);
+            var pacientes = db.Pacientes.Where(p => p.Email.ToLower() == e);
+            if (excluirNroPaciente.HasValue)
+                pacientes = pacientes.Where(p => p.NroPaciente != excluirNroPaciente.Value);
+            return await pacientes.AnyAsync();
         }
 
         public static void MapPacienteEndpoints(this WebApplication app)
@@ -92,10 +103,14 @@ namespace WebAPI
                 return Results.Created($"/api/pacientes/{dto.NroPaciente}", dto);
             });
 
-            group.MapPut("/", async Task<IResult> (PacienteDTO dto, ClaimsPrincipal user, IPacienteService service) =>
+            group.MapPut("/", async Task<IResult> (PacienteDTO dto, ClaimsPrincipal user, IPacienteService service, AppDbContext db) =>
             {
                 if (!user.EsAdmin() && user.NroPaciente() != dto.NroPaciente)
                     return Results.Forbid();
+
+                // El email no puede pertenecer a otra cuenta (la propia no cuenta)
+                if (await EmailEnUsoAsync(db, dto.Email, excluirNroPaciente: dto.NroPaciente))
+                    return Results.Conflict(new { error = "Ya existe una cuenta con ese email." });
 
                 await service.ActualizarAsync(dto);
                 return Results.NoContent();
@@ -104,8 +119,15 @@ namespace WebAPI
 
             group.MapDelete("/{nroPaciente}", async (int nroPaciente, IPacienteService service) =>
             {
-                await service.EliminarAsync(nroPaciente);
-                return Results.NoContent();
+                try
+                {
+                    await service.EliminarAsync(nroPaciente);
+                    return Results.NoContent();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { error = ex.Message });
+                }
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador"));
         }

@@ -9,12 +9,14 @@ namespace Domain.Model
         Pasaporte
     }
 
+    // Valores fijos: el estado se guarda como número en la base. No renumerar.
+    // Confirmada fue quitada (valor 1). Antes de correr la app, ejecutar:
+    //   UPDATE Reservas SET Estado = 0 WHERE Estado = 1;
     public enum EstadoReserva
     {
-        Pendiente,
-        Confirmada,
-        Cancelada,
-        Completada
+        Pendiente = 0,
+        Cancelada = 2,
+        Completada = 3
     }
 
     public enum EstadoTurno

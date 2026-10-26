@@ -38,7 +38,6 @@
         <select class="form-select form-select-sm" @bind="filtroEstado">
             <option value="">Todos los estados</option>
             <option value="@EstadoReserva.Pendiente">Pendiente</option>
-            <option value="@EstadoReserva.Confirmada">Confirmada</option>
             <option value="@EstadoReserva.Completada">Completada (Terminada)</option>
             <option value="@EstadoReserva.Cancelada">Cancelada</option>
         </select>
@@ -136,7 +135,7 @@
                                             @foreach (var p in r.PracticasRealizadas)
                                             {
                                                 <div class="small bg-white p-1 px-2 border rounded shadow-xs">
-                                                    <strong class="text-dark">@(p.PracticaDetalle ?? $"Práctica #{p.PracticaCodigo}")</strong> 
+                                                    <strong class="text-dark">@(p.PracticaDetalle ?? $"Práctica #{p.PracticaCodigo}")</strong>
                                                     - Piezas: <span class="badge bg-danger-subtle text-danger fw-bold">@p.DientesCaras</span>
                                                 </div>
                                             }
@@ -153,7 +152,7 @@
                                 }
                             </td>
                             <td class="text-end text-nowrap">
-                                @if (r.Estado == EstadoReserva.Confirmada || r.Estado == EstadoReserva.Pendiente)
+                                @if (r.Estado == EstadoReserva.Pendiente)
                                 {
                                     <a class="btn btn-sm btn-success me-1 shadow-sm" href="atender/@r.Id" title="Abrir Odontograma y Atender">
                                         <i class="bi bi-heart-pulse me-1"></i> Atender
@@ -219,9 +218,10 @@
         }
     }
 
-    private async Task CargarAsync()
+    private async Task CargarAsync(bool mostrarCarga = true)
     {
-        loading = true;
+        if (mostrarCarga)
+            loading = true;
         errorMessage = string.Empty;
 
         var token = await AuthService.GetTokenAsync();
@@ -274,13 +274,15 @@
         {
             mensaje = "Reserva cancelada.";
             errorMessage = string.Empty;
-            await CargarAsync();
         }
         else
         {
             errorMessage = error ?? "No se pudo cancelar la reserva.";
-            await CargarAsync();
         }
+
+        // Refresco sin ocultar la tabla y redibujado explícito al terminar
+        await CargarAsync(mostrarCarga: false);
+        StateHasChanged();
     }
 
     private async Task EliminarAsync(ReservaDTO r)
@@ -301,7 +303,8 @@
         {
             mensaje = "Reserva eliminada.";
             errorMessage = string.Empty;
-            await CargarAsync();
+            await CargarAsync(mostrarCarga: false);
+            StateHasChanged();
         }
         else
         {
@@ -318,7 +321,6 @@
     private static string ClaseEstado(EstadoReserva estado) => estado switch
     {
         EstadoReserva.Pendiente => "bg-warning text-dark",
-        EstadoReserva.Confirmada => "bg-primary",
         EstadoReserva.Completada => "bg-success",
         EstadoReserva.Cancelada => "bg-secondary",
         _ => "bg-light text-dark"

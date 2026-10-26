@@ -58,6 +58,13 @@ namespace Data
             if (existente == null)
                 throw new InvalidOperationException("Paciente no encontrado.");
 
+            // Las reservas bloquean el borrado (FK Restrict) para conservar el historial clínico
+            bool tieneReservas = await _context.Reservas.AnyAsync(r => r.PacienteId == nroPaciente);
+            if (tieneReservas)
+                throw new InvalidOperationException(
+                    "No se puede eliminar el paciente porque tiene reservas registradas. " +
+                    "Las reservas atendidas no se pueden borrar para conservar el historial.");
+
             _context.Pacientes.Remove(existente);
             await _context.SaveChangesAsync();
         }

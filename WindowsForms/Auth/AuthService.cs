@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Windows.Forms;
 using DTO;
 
 namespace WindowsForms.Auth
@@ -45,27 +47,36 @@ namespace WindowsForms.Auth
 
         public async Task<bool> LoginAsync(string email, string password)
         {
-            using var client = new HttpClient { BaseAddress = new Uri(BaseUrl) };
+            try
+            {
+                using var client = new HttpClient { BaseAddress = new Uri(BaseUrl) };
 
-            var request = new LoginRequestDTO { Email = email, Password = password };
-            var response = await client.PostAsJsonAsync("auth/login", request);
+                var request = new LoginRequestDTO { Email = email, Password = password };
+                var response = await client.PostAsJsonAsync("auth/login", request);
 
-            if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                    return false;
+
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDTO>();
+                if (loginResponse == null)
+                    return false;
+
+                _currentToken = loginResponse.Token;
+                _currentNombre = loginResponse.Nombre;
+                _currentRol = loginResponse.Rol;
+
+                var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(_currentToken);
+                _tokenExpiration = jwtToken.ValidTo;
+
+                AuthenticationStateChanged?.Invoke(true);
+                return true;
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show("No se pudo conectar al servidor. Verificá que la WebAPI esté corriendo.",
+                    "Error de conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
-
-            var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDTO>();
-            if (loginResponse == null)
-                return false;
-
-            _currentToken = loginResponse.Token;
-            _currentNombre = loginResponse.Nombre;
-            _currentRol = loginResponse.Rol;
-
-            var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(_currentToken);
-            _tokenExpiration = jwtToken.ValidTo;
-
-            AuthenticationStateChanged?.Invoke(true);
-            return true;
+            }
         }
 
         public async Task LogoutAsync()
