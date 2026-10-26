@@ -112,7 +112,6 @@ namespace Data
             return reserva;
         }
 
-        // Una sola reserva que agrupa uno o varios turnos seguidos del mismo odontólogo
         public async Task<Reserva> ReservarVariosAsync(IReadOnlyCollection<int> codigosTurno, int pacienteId, string? obraSocial, string? nroAfiliado)
         {
             var codigos = (codigosTurno ?? Array.Empty<int>()).Distinct().ToList();
@@ -133,7 +132,7 @@ namespace Data
             if (turnos.Select(t => t.OdontologoMatricula).Distinct().Count() > 1)
                 throw new InvalidOperationException("Los turnos de una misma reserva deben ser del mismo odontólogo.");
 
-            // Los turnos tienen que estar seguidos: cada uno empieza cuando termina el anterior
+            // CHEQUEAR LOS TURNOS ESTAN SEGUIDOS
             var ordenados = turnos.OrderBy(t => t.FechaHoraInicio).ToList();
             for (int i = 0; i < ordenados.Count - 1; i++)
             {
@@ -191,7 +190,6 @@ namespace Data
                 turno.Reserva.ValidarModificable();
                 turno.Reserva.Estado = EstadoReserva.Cancelada;
 
-                // La reserva puede abarcar varios turnos: se liberan todos
                 var delaReserva = await _context.Turnos
                     .Where(t => t.ReservaId == turno.ReservaId && t.Codigo != turno.Codigo)
                     .ToListAsync();

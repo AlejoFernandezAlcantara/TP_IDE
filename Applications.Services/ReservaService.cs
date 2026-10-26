@@ -29,7 +29,6 @@ namespace Applications.Services
             return r != null ? ToDto(r) : null;
         }
 
-        // La reserva se crea sobre los turnos indicados, que quedan bloqueados
         public async Task CrearAsync(ReservaDTO dto)
         {
             var reserva = new Reserva(dto.Observaciones ?? string.Empty, dto.Importe ?? 0, dto.Coseguro ?? 0)

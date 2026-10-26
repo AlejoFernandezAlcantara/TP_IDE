@@ -41,6 +41,7 @@ namespace Domain.Model
                 throw new InvalidOperationException("Una reserva atendida no se puede editar ni eliminar.");
         }
 
+
         // Constructor para EF
         public Reserva()
         {

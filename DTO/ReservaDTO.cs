@@ -19,21 +19,20 @@ namespace DTO
         public int _pacienteId { get; set; }
         public string _odontologoMatricula { get; set; } = string.Empty;
 
-        // Turnos que se bloquean con esta reserva (seguidos y del mismo odontólogo)
+        // Turnos que se bloquean con esta reserva
         public List<int> TurnoCodigos { get; set; } = new();
 
-        // Turnos asociados a la reserva (fecha y hora real de la atención)
+        // Turnos asociados a la reserva
         public List<TurnoReservaDTO> Turnos { get; set; } = new();
 
-        // Primer turno reservado (para ordenar / mostrar en listados)
+        // Primer turno reservado (para ordenar/mostrar en listados)
         public DateTime? PrimerTurno => Turnos.Count > 0 ? Turnos.Min(t => t.FechaHoraInicio) : (DateTime?)null;
 
-        // Ej: "26/10/2026 09:00 | 26/10/2026 09:30"
         public string TurnosTexto => Turnos.Count == 0
             ? "-"
             : string.Join(" | ", Turnos.OrderBy(t => t.FechaHoraInicio).Select(t => t.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")));
 
-        // Prácticas realizadas (para ver historial en reservas completadas)
+        // Prácticas realizadas, PARA VER HISTORIAL
         public List<ReservaPracticaDTO> PracticasRealizadas { get; set; } = new();
     }
 

@@ -55,7 +55,6 @@ namespace API.Clients
                 await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId }),
                 "No se pudo reservar el turno.");
 
-        // Una sola reserva con uno o varios turnos del mismo odontólogo, con su cobertura
         public async Task<(bool Ok, string? Error)> ReservarVariosAsync(ReservarTurnosDTO request)
             => await ResultadoAsync(
                 await _client.PostAsJsonAsync("turnos/reservar", request),

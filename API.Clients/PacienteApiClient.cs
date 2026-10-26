@@ -43,7 +43,7 @@ namespace API.Clients
             return response.IsSuccessStatusCode;
         }
 
-        // Autoregistro público: no envía token
+        // eL AUTORREGISTRO NO ENVIA TOKEN
         public async Task<(bool Ok, string? Error)> RegistrarAsync(PacienteDTO paciente)
         {
             var response = await _client.PostAsJsonAsync("pacientes/registro", paciente);

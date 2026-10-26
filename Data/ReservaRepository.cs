@@ -16,7 +16,6 @@ namespace Data
             _context = context;
         }
 
-        // Solo lectura: sin rastreo y en consultas separadas por colección
         public async Task<List<Reserva>> GetAllAsync()
         {
             return await _context.Reservas
@@ -29,8 +28,6 @@ namespace Data
                     .ThenInclude(p => p.Practica)
                 .ToListAsync();
         }
-
-        // Se mantiene rastreada: AtenderReservaAsync necesita guardar cambios sobre esta entidad
         public async Task<Reserva?> GetByIdAsync(int id)
         {
             return await _context.Reservas
@@ -41,8 +38,6 @@ namespace Data
                     .ThenInclude(p => p.Practica)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
-
-        // Solo lectura: sin rastreo y en consultas separadas por colección
         public async Task<List<Reserva>> GetByPacienteAsync(int pacienteId)
         {
             return await _context.Reservas
@@ -62,7 +57,7 @@ namespace Data
             await _context.SaveChangesAsync();
         }
 
-        // Crea la reserva y bloquea sus turnos. Todo o nada.
+        // Crea la reserva y bloquea sus turnos.
         public async Task AddConTurnosAsync(Reserva reserva, IReadOnlyCollection<int> codigosTurno)
         {
             var codigos = (codigosTurno ?? Array.Empty<int>()).Distinct().ToList();
@@ -88,7 +83,7 @@ namespace Data
             if (turnos.Any(t => t.OdontologoMatricula != reserva.OdontologoMatricula))
                 throw new InvalidOperationException("Todos los turnos deben ser del odontólogo indicado en la reserva.");
 
-            // Los turnos tienen que estar seguidos: cada uno empieza cuando termina el anterior
+            // Chequear turnos son uno atras de otro y sin huecos en el medio
             var ordenados = turnos.OrderBy(t => t.FechaHoraInicio).ToList();
             for (int i = 0; i < ordenados.Count - 1; i++)
             {
@@ -154,7 +149,7 @@ namespace Data
             await _context.SaveChangesAsync();
         }
 
-        // Al eliminar una reserva, sus turnos vuelven a quedar disponibles
+        // Al eliminar una reserva los turnos vuelven a quedar disponibles
         public async Task DeleteAsync(int id)
         {
             var existente = await _context.Reservas

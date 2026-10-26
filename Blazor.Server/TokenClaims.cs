@@ -2,10 +2,8 @@
 
 namespace Blazor.Server
 {
-    /// <summary>
-    /// Lee del JWT los datos que el WebAPI agrega al hacer login:
+    /// Lee del JWT los datos que el WebAPI agrega al hacer login
     /// "matricula" (odontólogos) y "nroPaciente" (pacientes).
-    /// </summary>
     public static class TokenClaims
     {
         public static string? Matricula(string? token) => Obtener(token, "matricula");

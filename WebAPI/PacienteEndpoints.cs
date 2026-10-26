@@ -9,7 +9,7 @@ namespace WebAPI
 {
     public static class PacienteEndpoints
     {
-        // El email no puede repetirse entre administradores, odontólogos y pacientes
+        // CHEQUEAR QUE EL EMAIL NO PUEDA repetirse entre administradores, odontólogos y pacientes
         private static async Task<bool> EmailEnUsoAsync(AppDbContext db, string email)
         {
             var e = email.Trim().ToLower();
@@ -41,7 +41,7 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            // Alta de pacientes por personal: Administrador o cualquier Odontólogo
+            // Alta de pacientes por Admin y odontologo
             group.MapPost("/", async Task<IResult> (PacienteDTO dto, IPacienteService service, AppDbContext db) =>
             {
                 if (string.IsNullOrWhiteSpace(dto.Password))
@@ -66,7 +66,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // Autoregistro del propio paciente: no requiere sesión
+            // Autoregistro del propio paciente: no requiere sesión (no hay token)
             group.MapPost("/registro", async Task<IResult> (PacienteDTO dto, IPacienteService service, AppDbContext db) =>
             {
                 if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)

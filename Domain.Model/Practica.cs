@@ -8,7 +8,6 @@ namespace Domain.Model
 {
     public class Practica
     {
-        private static int incCodigoPractica = 0;
         public int CodigoPractica { get; set; }
 
         public string Detalle { get; set; }

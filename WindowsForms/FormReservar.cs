@@ -337,6 +337,16 @@ namespace WindowsForms
                 MessageBox.Show("Una reserva solo puede incluir turnos de un mismo odontólogo.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            var ordenados = seleccionados.OrderBy(t => t.FechaHoraInicio).ToList();
+            for (int i = 0; i < ordenados.Count - 1; i++)
+            {
+                if (ordenados[i].FechaHoraInicio.AddMinutes(ordenados[i].Duracion) != ordenados[i + 1].FechaHoraInicio)
+                {
+                    MessageBox.Show("Los turnos de una reserva deben estar seguidos, sin huecos.",
+                        "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
 
             btnConfirmar.Enabled = false;
             btnConfirmar.Text = "Reservando...";
