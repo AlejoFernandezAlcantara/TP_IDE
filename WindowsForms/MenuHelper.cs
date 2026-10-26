@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace WindowsForms
 {
-    // Arma el menú principal de cada rol como una columna de botones centrada
+    // Arma el menú principal de cada rol como una columna de botones centrada//////
     public static class MenuHelper
     {
         public static Button Boton(string texto, EventHandler onClick)

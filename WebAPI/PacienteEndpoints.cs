@@ -10,7 +10,7 @@ namespace WebAPI
     public static class PacienteEndpoints
     {
         // Un email no puede repetirse entre administradores, odontólogos y pacientes.
-        // excluirNroPaciente / excluirMatricula: la cuenta que se está editando no cuenta como duplicado.
+        
         public static async Task<bool> EmailEnUsoAsync(
             AppDbContext db,
             string email,

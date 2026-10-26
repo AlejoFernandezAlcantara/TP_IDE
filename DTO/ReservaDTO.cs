@@ -2,7 +2,7 @@
 
 namespace DTO
 {
-    public class ReservaDTO
+    public class ReservaDTO //HAY UN POCO DE MANEJO EN ESTE DTO,COMPARTIDO ENTRE LA API, BLAZOR ,Y WINFORMS PARA SIMPLIFICAR
     {
         public int Id { get; set; }
         public DateTime FechaCreacion { get; set; }

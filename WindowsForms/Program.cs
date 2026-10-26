@@ -16,9 +16,7 @@ namespace WindowsForms
             AuthServiceProvider.Register(new AuthService());
             var auth = AuthServiceProvider.Instance;
 
-            // Login -> Home del rol -> (Cerrar sesión) -> Login otra vez.
-            // La aplicación termina si se cierra el login, o si se cierra el Home con la X sin cerrar sesión.
-            // Todo corre en el hilo principal (STA), sin Task.Run.
+            
             while (true)
             {
                 using (var loginForm = new LoginForm())
@@ -48,8 +46,7 @@ namespace WindowsForms
                     Application.Run(home);
                 }
 
-                // "Cerrar sesión" borra el token: en ese caso se vuelve al login.
-                // Si el token sigue vigente, el usuario cerró la ventana con la X: se sale.
+               
                 bool sigueLogueado = auth.IsAuthenticatedAsync().GetAwaiter().GetResult();
                 LimpiarSesion();
                 if (sigueLogueado)

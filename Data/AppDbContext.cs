@@ -29,7 +29,7 @@ namespace Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // DIAGNÓSTICO TEMPORAL: muestra en la terminal de la API cada SQL y su duración
+                // DIAGNÓSTICO TEMPORAL: muestra en la terminal de la API cada SQL y su duración (tejma de duracion de consultas, era problema de ram de pc)
                 optionsBuilder.UseSqlServer(_connectionString)
                     .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
             }

@@ -18,8 +18,7 @@ namespace Data
 
         public async Task<List<Reserva>> GetAllAsync()
         {
-            // Solo lo que usa el DTO (turnos y prácticas). Paciente y Odontólogo se
-            // resuelven en la pantalla, así la consulta trae menos datos.
+            // Solo lo que usa el DTO (turnos y prácticas). Paciente y Odontólogo ,,,resuelven en la pantalla, así la consulta trae menos datos.
             return await _context.Reservas
                 .AsNoTracking()
                 .AsSplitQuery()

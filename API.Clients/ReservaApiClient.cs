@@ -34,8 +34,7 @@ namespace API.Clients
             return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<ReservaDTO>>() : null;
         }
 
-        // Devuelve null solo si la reserva no existe (404). Otros errores se lanzan
-        // para que la pantalla muestre la causa real y no "no se encontró la reserva".
+        // Devuelve null solo si la reserva no existe (404). Otros errores se lanza. SE HIZO PARA VER UN ERROR
         public async Task<ReservaDTO?> GetByIdAsync(int id)
         {
             var r = await _client.GetAsync($"reservas/{id}");

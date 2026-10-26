@@ -49,7 +49,7 @@ namespace API.Clients
         public async Task<(bool Ok, string? Error)> EliminarAsync(int codigo)
             => await ResultadoAsync(await _client.DeleteAsync($"turnos/{codigo}"), "No se pudo eliminar el turno.");
 
-        // Si quien reserva es un paciente, el WebAPI ignora pacienteId y usa el del token
+        // SI EL QUE RESErva es un paciente, el WebAPI ignora pacienteId y usa el del token
         public async Task<(bool Ok, string? Error)> ReservarAsync(int codigo, int pacienteId)
             => await ResultadoAsync(
                 await _client.PostAsJsonAsync($"turnos/{codigo}/reservar", new { PacienteId = pacienteId }),

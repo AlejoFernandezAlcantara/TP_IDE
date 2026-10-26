@@ -95,8 +95,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo"));
 
-            // Paciente: siempre reserva para sí mismo
-            // Admin y odontólogo: indican el paciente en el body.
+            // Paciente: siempre reserva para sí mis Admin y odontólogo: indican el paciente en el body.
             group.MapPost("/{codigo}/reservar", async Task<IResult> (int codigo, ReservarTurnoRequest? req, ClaimsPrincipal user, ITurnoService service) =>
             {
                 int pacienteId;
@@ -135,8 +134,7 @@ namespace WebAPI
             })
             .RequireAuthorization(policy => policy.RequireRole("Administrador", "Odontologo", "Paciente"));
 
-            // Una única reserva con uno o varios turnos del mismo odontólogo (con cobertura).
-            // Paciente: siempre para sí mismo. Odontólogo: solo turnos propios. Admin: cualquiera.
+            // Una única reserva con uno o varios turnos del mismo odontólogo (con cobertura)))) Paciente: siempre para sí mismo. Odontólogo: solo turnos propios. Admin: cualquiera.
             group.MapPost("/reservar", async Task<IResult> (ReservarTurnosDTO req, ClaimsPrincipal user, ITurnoService service) =>
             {
                 if (req.TurnoCodigos is null || req.TurnoCodigos.Count == 0)

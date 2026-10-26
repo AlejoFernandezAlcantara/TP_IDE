@@ -54,10 +54,10 @@ namespace WebAPI
             })
             .RequireAuthorization();
 
-            // Alta de reserva (siempre sobre turnos seguidos, que quedan bloqueados):
-            // - Admin: para cualquier paciente y cualquier odontólogo.
-            // - Odontólogo: para cualquier paciente, solo en su propia agenda.
-            // - Paciente: solo para sí mismo, con cualquier odontólogo.
+            /* Alta de reserva (siempre sobre turnos seguidos, que quedan bloqueados):
+               - Admin: para cualquier paciente y cualquier odontólogo.
+               - Odontólogo: para cualquier paciente, solo en su propia agenda.
+             - Paciente: solo para sí mismo, con cualquier odontólogo.*/
             group.MapPost("/", async Task<IResult> (ReservaDTO dto, ClaimsPrincipal user, IReservaService service) =>
             {
                 if (dto.TurnoCodigos is null || dto.TurnoCodigos.Count == 0)

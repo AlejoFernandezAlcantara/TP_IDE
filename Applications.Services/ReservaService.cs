@@ -48,8 +48,7 @@ namespace Applications.Services
                 ?? throw new InvalidOperationException("Reserva no encontrada.");
             actual.ValidarModificable();
 
-            // Pasar a Completada solo se hace por la atención (AtenderReservaAsync),
-            // que registra prácticas, fecha de realización y libera los turnos.
+            // Pasar a Completada solo se hace por la atención (AtenderReservaAsync), que registra prácticas, fecha de realización y libera los turnos.
             if (dto.Estado == EstadoReserva.Completada && actual.Estado != EstadoReserva.Completada)
                 throw new InvalidOperationException(
                     "Para registrar la atención usá la opción Atender, no la edición de la reserva.");

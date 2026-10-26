@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace WindowsForms
 {
-    // Convierte la respuesta de error de la API en un texto legible para el usuario.
+    // Convierte la respuesta de error de la API en un texto legible para el usuario. (NODEVUELVE EL JASON)
     public static class ApiErrorHelper
     {
         public static async Task<string> LeerErrorAsync(HttpResponseMessage response)

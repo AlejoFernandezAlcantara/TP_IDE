@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Componentes Blazor (un solo registro)
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents(options => options.DetailedErrors = true); // DIAGNÓSTICO: mostrar la excepción real en consola
+    .AddInteractiveServerComponents(options => options.DetailedErrors = true); // DIAGNÓSTICO: mostrar la excepción real en consola (PARA CHUEQUEAR ERROR SE HIZO)
 
 // Autenticación
 builder.Services.AddScoped<IBlazorAuthService, BlazorServerAuthService>();
