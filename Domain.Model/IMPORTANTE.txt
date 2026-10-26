@@ -1,4 +1,4 @@
 ﻿
-SuperAdmin dado de alta harckodeado
+SuperAdmin dado de alta harDkodeado
 email: "admin@clinica.com"
 passwordHash: "Admin123!"
