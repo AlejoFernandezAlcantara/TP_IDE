@@ -75,18 +75,10 @@ namespace WindowsForms
             form.ShowDialog();
         }
 
-        private void buttonCerrarSesion_Click(object sender, EventArgs e)
+        private async void buttonCerrarSesion_Click(object sender, EventArgs e)
         {
-            var authService = AuthServiceProvider.Instance;
-            _ = authService.LogoutAsync();
-
-            Sesion.Nombre = null;
-            Sesion.Rol = null;
-            Sesion.Email = null;
-
-            var login = new LoginForm();
-            login.Show();
-            this.Close();
+            await AuthServiceProvider.Instance.LogoutAsync();
+            Close(); // Program.cs vuelve a mostrar el login
         }
 
         

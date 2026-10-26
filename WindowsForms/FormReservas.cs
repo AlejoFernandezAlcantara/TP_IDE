@@ -45,7 +45,7 @@ namespace WindowsForms
         private void InicializarComponentes()
         {
             this.Text = "Gestión de Reservas e Historial Clínico";
-            this.Size = new Size(1100, 650);
+            this.Size = new Size(1200, 650);
             this.StartPosition = FormStartPosition.CenterParent;
             this.Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             this.BackColor = Color.FromArgb(248, 250, 252);
@@ -79,77 +79,45 @@ namespace WindowsForms
             cmbFiltroEstado.SelectedIndex = 0;
             cmbFiltroEstado.SelectedIndexChanged += (s, e) => FiltrarReservas();
 
-            btnNuevaReserva = new Button
-            {
-                Text = "+ Nueva Reserva",
-                Location = new Point(800, 25),
-                Size = new Size(130, 35),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(37, 99, 235),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
-            };
+            // Los botones van en un FlowLayoutPanel acoplado a la derecha: así siempre quedan visibles
+            // (con Anchor + coordenadas fijas quedaban fuera de pantalla porque el panel todavía no tenía su ancho final)
+            btnAtender = CrearBoton("Atender Reserva", 150, Color.FromArgb(22, 163, 74), Color.White, true);
+            btnAtender.Click += (s, e) => AtenderSeleccionada();
+
+            btnCancelar = CrearBoton("Cancelar Reserva", 130, Color.FromArgb(245, 158, 11), Color.White, true);
+            btnCancelar.Click += async (s, e) => await CancelarSeleccionadaAsync();
+
+            btnEliminar = CrearBoton("Eliminar", 80, Color.FromArgb(220, 38, 38), Color.White, true);
+            btnEliminar.Visible = false; // solo administradores (se habilita al cargar)
+            btnEliminar.Click += async (s, e) => await EliminarSeleccionadaAsync();
+
+            btnNuevaReserva = CrearBoton("+ Nueva Reserva", 130, Color.FromArgb(37, 99, 235), Color.White, true);
+            btnNuevaReserva.Visible = !_modoAtencion; // en "Atender Reservas" no se crean reservas nuevas
             btnNuevaReserva.Click += (s, e) =>
             {
-                var f = new FormReservar();
+                using var f = new FormReservar();
                 if (f.ShowDialog() == DialogResult.OK)
                 {
                     _ = CargarDatosAsync();
                 }
             };
 
-            btnAtender = new Button
-            {
-                Text = "Atender Reserva (Odontograma)",
-                Location = new Point(620, 25),
-                Size = new Size(170, 35),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(22, 163, 74),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
-            };
-            btnAtender.Click += (s, e) => AtenderSeleccionada();
-
-            btnRefrescar = new Button
-            {
-                Text = "Refrescar",
-                Location = new Point(940, 25),
-                Size = new Size(90, 35),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                FlatStyle = FlatStyle.Flat
-            };
+            btnRefrescar = CrearBoton("Refrescar", 90, null, null, false);
             btnRefrescar.Click += async (s, e) => await CargarDatosAsync();
 
-            btnCancelar = new Button
+            var flpBotones = new FlowLayoutPanel
             {
-                Text = "Cancelar Reserva",
-                Location = new Point(480, 25),
-                Size = new Size(130, 35),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(245, 158, 11),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                Padding = new Padding(0, 8, 0, 0),
+                BackColor = Color.White
             };
-            btnCancelar.Click += async (s, e) => await CancelarSeleccionadaAsync();
+            flpBotones.Controls.AddRange(new Control[] { btnAtender, btnCancelar, btnEliminar, btnNuevaReserva, btnRefrescar });
 
-            btnEliminar = new Button
-            {
-                Text = "Eliminar",
-                Location = new Point(390, 25),
-                Size = new Size(80, 35),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(220, 38, 38),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                Visible = false // solo administradores
-            };
-            btnEliminar.Click += async (s, e) => await EliminarSeleccionadaAsync();
-
-            pnlTop.Controls.AddRange(new Control[] { lblTitulo, lblFiltro, cmbFiltroEstado, btnEliminar, btnCancelar, btnAtender, btnNuevaReserva, btnRefrescar });
+            pnlTop.Controls.AddRange(new Control[] { lblTitulo, lblFiltro, cmbFiltroEstado, flpBotones });
 
             dgvReservas = new DataGridView
             {
@@ -182,13 +150,27 @@ namespace WindowsForms
             this.Load += async (s, e) => await CargarDatosAsync();
         }
 
+        private static Button CrearBoton(string texto, int ancho, Color? fondo, Color? letra, bool negrita)
+        {
+            var b = new Button
+            {
+                Text = texto,
+                Size = new Size(ancho, 35),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9f, negrita ? FontStyle.Bold : FontStyle.Regular)
+            };
+            if (fondo.HasValue) b.BackColor = fondo.Value;
+            if (letra.HasValue) b.ForeColor = letra.Value;
+            return b;
+        }
+
         private async Task CargarDatosAsync()
         {
             try
             {
                 var token = await AuthServiceProvider.Instance.GetTokenAsync();
                 _rol = await AuthServiceProvider.Instance.GetRolAsync() ?? string.Empty;
-                btnEliminar.Visible = _rol == "Administrador";
+                btnEliminar.Visible = _rol == "Administrador" && !_modoAtencion;
                 _reservaClient.SetToken(token);
                 _pacienteClient.SetToken(token);
                 _odontologoClient.SetToken(token);

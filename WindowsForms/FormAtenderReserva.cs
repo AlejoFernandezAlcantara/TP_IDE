@@ -79,7 +79,6 @@ namespace WindowsForms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 720,
                 IsSplitterFixed = true,
                 BackColor = Color.FromArgb(226, 232, 240)
             };
@@ -249,7 +248,13 @@ namespace WindowsForms
             this.Controls.Add(splitContainer);
             this.Controls.Add(pnlTop);
 
-            this.Load += async (s, e) => await CargarDatosAsync();
+            // El SplitterDistance se fija recién con el formulario ya dimensionado
+            this.Load += async (s, e) =>
+            {
+                splitContainer.SplitterDistance = 720;
+                ActualizarTotal();
+                await CargarDatosAsync();
+            };
         }
 
         private async Task CargarDatosAsync()
@@ -338,6 +343,11 @@ namespace WindowsForms
             ActualizarTextoPiezas();
         }
 
+        private void ActualizarTotal()
+        {
+            lblTotal.Text = $"Total: $ {_practicasCargadas.Sum(p => p.Precio):N2}";
+        }
+
         private void AgregarPractica()
         {
             if (cmbPracticas.SelectedItem is not PracticaDTO practicaSel)
@@ -358,8 +368,8 @@ namespace WindowsForms
 
             _practicasCargadas.Add(item);
 
-            dgvPracticas.Rows.Add(practicaSel.Detalle, piezasFormateadas, $"");
-            lblTotal.Text = $"Total: ";
+            dgvPracticas.Rows.Add(practicaSel.Detalle, piezasFormateadas, $"$ {item.Precio:N2}");
+            ActualizarTotal();
 
             // Limpiar selección para la próxima práctica
             LimpiarDientes();

@@ -48,7 +48,7 @@ namespace WindowsForms
             chkCanceladas = new CheckBox { Text = "Mostrar canceladas", Location = new Point(15, 45), AutoSize = true };
             chkCanceladas.CheckedChanged += (s, e) => Pintar();
 
-            var btnNueva = new Button { Text = "+ Reservar turno", Location = new Point(620, 25), Size = new Size(140, 35), Anchor = AnchorStyles.Top | AnchorStyles.Right, BackColor = Color.FromArgb(37, 99, 235), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            var btnNueva = new Button { Text = "+ Reservar turno", Size = new Size(140, 35), BackColor = Color.FromArgb(37, 99, 235), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnNueva.Click += async (s, e) =>
             {
                 using var f = new FormReservar();
@@ -56,10 +56,23 @@ namespace WindowsForms
                     await CargarAsync();
             };
 
-            btnCancelar = new Button { Text = "Cancelar reserva", Location = new Point(770, 25), Size = new Size(140, 35), Anchor = AnchorStyles.Top | AnchorStyles.Right, BackColor = Color.FromArgb(245, 158, 11), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnCancelar = new Button { Text = "Cancelar reserva", Size = new Size(140, 35), BackColor = Color.FromArgb(245, 158, 11), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnCancelar.Click += async (s, e) => await CancelarAsync();
 
-            pnlTop.Controls.AddRange(new Control[] { chkCanceladas, btnNueva, btnCancelar });
+            // FlowLayoutPanel acoplado a la derecha: los botones siempre quedan visibles
+            var flpBotones = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                Padding = new Padding(0, 8, 0, 0),
+                BackColor = Color.White
+            };
+            flpBotones.Controls.AddRange(new Control[] { btnNueva, btnCancelar });
+
+            pnlTop.Controls.AddRange(new Control[] { chkCanceladas, flpBotones });
 
             dgv = new DataGridView
             {
@@ -74,6 +87,8 @@ namespace WindowsForms
             dgv.Columns.Add("Turnos", "Fecha y hora del turno");
             dgv.Columns.Add("Odontologo", "Odontólogo");
             dgv.Columns.Add("Estado", "Estado");
+            dgv.Columns.Add("Importe", "Importe");
+            dgv.Columns.Add("Historial", "Prácticas Realizadas (Piezas)");
             dgv.Columns.Add("Resultado", "Resultado");
             dgv.Columns["Id"].Width = 50;
 
@@ -137,7 +152,14 @@ namespace WindowsForms
                 string odo = _odontologos.TryGetValue(r._odontologoMatricula, out var n) ? n : r._odontologoMatricula;
                 string turnos = r.Turnos.Count > 0 ? r.TurnosTexto : "-";
                 string res = string.IsNullOrWhiteSpace(r.Resultado) ? "-" : r.Resultado!;
-                dgv.Rows.Add(r.Id, turnos, odo, r.Estado, res);
+                string imp = r.Importe.HasValue ? $"$ {r.Importe.Value:N2}" : "-";
+                string historial = "-";
+                if (r.Estado == EstadoReserva.Completada && r.PracticasRealizadas?.Count > 0)
+                {
+                    var items = r.PracticasRealizadas.Select(pr => $"{pr.PracticaDetalle ?? $"Práctica #{pr.PracticaCodigo}"} [Piezas: {pr.DientesCaras}]");
+                    historial = string.Join(" | ", items);
+                }
+                dgv.Rows.Add(r.Id, turnos, odo, r.Estado, imp, historial, res);
             }
         }
 

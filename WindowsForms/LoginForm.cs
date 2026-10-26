@@ -1,14 +1,26 @@
-
-
-using WindowsForms.Auth;
+﻿using WindowsForms.Auth;
 
 namespace WindowsForms
 {
     public partial class LoginForm : Form
     {
+        // Enlace "Registrate como paciente": se crea acá para no tocar el Designer.
+        // Se inicializa en el campo (y no en el constructor) porque InitializeComponent()
+        // dispara Resize, y CentrarControles() ya necesita que exista.
+        private readonly LinkLabel lnkRegistro = new LinkLabel
+        {
+            Text = "¿No tenés cuenta? Registrate como paciente",
+            AutoSize = true,
+            Name = "lnkRegistro"
+        };
+
         public LoginForm()
         {
             InitializeComponent();
+
+            lnkRegistro.Location = new Point(0, lblError.Bottom + 12);
+            lnkRegistro.LinkClicked += lnkRegistro_LinkClicked;
+            Controls.Add(lnkRegistro);
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -35,6 +47,19 @@ namespace WindowsForms
             }
         }
 
+        private void lnkRegistro_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using var registro = new RegistroPacienteForm();
+            if (registro.ShowDialog(this) == DialogResult.OK && !string.IsNullOrEmpty(registro.EmailRegistrado))
+            {
+                // Después de registrarse deja el email puesto para ingresar directo
+                txtEmail.Text = registro.EmailRegistrado;
+                txtPassword.Clear();
+                lblError.Text = string.Empty;
+                txtPassword.Focus();
+            }
+        }
+
         private void LoginForm_Load(object sender, EventArgs e)
         {
             CentrarControles();
@@ -47,21 +72,23 @@ namespace WindowsForms
 
         private void CentrarControles()
         {
-            // Los pares label+textbox se centran como fila (mantienen su alineaci�n interna)
+            // Los pares label+textbox se centran como fila (mantienen su alineación interna)
             CentrarFila(label1, txtEmail);
             CentrarFila(label2, txtPassword);
 
             // Los controles sueltos se centran individualmente
             CentrarControl(btnIngresar);
             CentrarControl(lblError);
+            CentrarControl(lnkRegistro);
 
             int gapEmailFila = txtEmail.Top - label1.Top;
             int gapLabel2 = label2.Top - label1.Top;
             int gapPasswordFila = txtPassword.Top - label2.Top;
             int gapBoton = btnIngresar.Top - label2.Top;
             int gapError = lblError.Top - label2.Top;
+            int gapRegistro = lnkRegistro.Top - label2.Top;
 
-            int totalAltura = lblError.Bottom - label1.Top;
+            int totalAltura = lnkRegistro.Bottom - label1.Top;
             int topInicio = (ClientSize.Height - totalAltura) / 2;
 
             label1.Top = topInicio;
@@ -70,6 +97,7 @@ namespace WindowsForms
             txtPassword.Top = label2.Top + gapPasswordFila;
             btnIngresar.Top = label2.Top + gapBoton;
             lblError.Top = label2.Top + gapError;
+            lnkRegistro.Top = label2.Top + gapRegistro;
         }
 
         private void CentrarControl(Control control)

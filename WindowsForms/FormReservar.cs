@@ -93,20 +93,47 @@ namespace WindowsForms
 
             pnlTop.Controls.AddRange(new Control[] { lblTitulo, lblPac, cmbPaciente, lblOS, cmbObraSocial, lblAfil, txtNroAfiliado, lblOdo, cmbOdontologo, lblDesde, dtpDesde });
 
-            var pnlCentral = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20) };
+            // ---------- Pie: resumen + botón confirmar (siempre visible, acoplado abajo) ----------
+            var pnlPie = new Panel { Dock = DockStyle.Bottom, Height = 64, BackColor = Color.White, Padding = new Padding(20, 12, 20, 12) };
+
+            lblResumen = new Label
+            {
+                Text = "Ningún turno seleccionado.",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                ForeColor = Color.FromArgb(100, 116, 139)
+            };
+
+            btnConfirmar = new Button
+            {
+                Text = "Confirmar Reserva",
+                Dock = DockStyle.Right,
+                Width = 200,
+                BackColor = Color.FromArgb(37, 99, 235),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
+            };
+            btnConfirmar.Click += async (s, e) => await ConfirmarReservaAsync();
+
+            // el control con Dock.Fill se agrega primero
+            pnlPie.Controls.Add(lblResumen);
+            pnlPie.Controls.Add(btnConfirmar);
+
+            // ---------- Centro: título + grilla de turnos ----------
+            var pnlCentral = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20, 10, 20, 10) };
+
             var lblSub = new Label
             {
                 Text = "Seleccioná uno o más turnos disponibles (Ctrl/Shift para varios, del mismo odontólogo):",
                 Font = bold,
-                Location = new Point(20, 10),
-                AutoSize = true
+                Dock = DockStyle.Top,
+                Height = 26
             };
 
             dgvTurnos = new DataGridView
             {
-                Location = new Point(20, 35),
-                Size = new Size(840, 300),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Dock = DockStyle.Fill,
                 AllowUserToAddRows = false,
                 ReadOnly = true,
                 MultiSelect = true,
@@ -120,31 +147,11 @@ namespace WindowsForms
             dgvTurnos.Columns.Add("Duracion", "Duración (min)");
             dgvTurnos.SelectionChanged += (s, e) => ActualizarResumen();
 
-            lblResumen = new Label
-            {
-                Text = "Ningún turno seleccionado.",
-                Location = new Point(20, 345),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
-                AutoSize = true,
-                ForeColor = Color.FromArgb(100, 116, 139)
-            };
-
-            btnConfirmar = new Button
-            {
-                Text = "Confirmar Reserva",
-                Location = new Point(680, 342),
-                Size = new Size(180, 38),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
-                BackColor = Color.FromArgb(37, 99, 235),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
-            };
-            btnConfirmar.Click += async (s, e) => await ConfirmarReservaAsync();
-
-            pnlCentral.Controls.AddRange(new Control[] { lblSub, dgvTurnos, lblResumen, btnConfirmar });
+            pnlCentral.Controls.Add(dgvTurnos);
+            pnlCentral.Controls.Add(lblSub);
 
             this.Controls.Add(pnlCentral);
+            this.Controls.Add(pnlPie);
             this.Controls.Add(pnlTop);
 
             this.Load += async (s, e) => await CargarDatosAsync();
