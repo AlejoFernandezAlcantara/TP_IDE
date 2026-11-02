@@ -541,7 +541,7 @@ else
             sb.Append(circulos);
         }
 
-        // Etiquetas del eje X (si hay más de 18 meses, se muestra uno de cada dos)
+        // Etiquetas del eje X (si hay más de 18 meses, se muestra uno de cada dos para q no qde tan largo)
         int paso = n > 18 ? 2 : 1;
         for (int i = 0; i < n; i += paso)
         {

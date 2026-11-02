@@ -50,7 +50,7 @@ builder.Services.AddCors(options =>
 });
 //inyeccion de dependencias para los servicios y repositorios
 // Repositorios
-// Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core 
+// Paciente(usa ado net), Odontologo, Administrador, Reserva y Turno ya usan EF Core 
 builder.Services.AddScoped<AppDbContext>(sp =>
     new AppDbContext(builder.Configuration.GetConnectionString("Default")!));
 
