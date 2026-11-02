@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI
 {
-    public static class PracticaEndpoints
+    public static class PracticaEndpoints //accede a la base de datos para obtener la lista de prácticas y devolverla como JSON
     {
         public static void MapPracticaEndpoints(this WebApplication app)
         {

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI
 {
-    public static class MutualEndpoints
+    public static class MutualEndpoints //accede a la base de datos para obtener la lista de mutuales y devolverla como JSON
     {
         public static void MapMutualEndpoints(this WebApplication app)
         {

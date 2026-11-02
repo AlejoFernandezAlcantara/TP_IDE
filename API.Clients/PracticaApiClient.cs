@@ -21,14 +21,14 @@ namespace API.Clients
             }
         }
 
-        public void SetToken(string? token)
+        public void SetToken(string? token) //guarda en el header de la petición el token de autenticación para que la API lo reconozca
         {
             _client.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
                 ? null
                 : new AuthenticationHeaderValue("Bearer", token);
         }
 
-        public async Task<List<PracticaDTO>?> GetAllAsync()
+        public async Task<List<PracticaDTO>?> GetAllAsync() //si es exitoso, devuelve la lista de prácticas, si no, devuelve null
         {
             var r = await _client.GetAsync("practicas");
             return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<List<PracticaDTO>>() : null;

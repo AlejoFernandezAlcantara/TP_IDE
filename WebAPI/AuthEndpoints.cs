@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Domain.Model;
-
+//endpoint que llama  con post del loginasync el blazorserverauthservice, valida credenciales y devuelve token jwt con claims
 namespace WebAPI
 {
     public static class AuthEndpoints

@@ -7,12 +7,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-
+//campos privados para almacenar el token, la fecha de expiración y los datos del usuario
 namespace API.Auth.Blazor.Server
 {
 	public class BlazorServerAuthService : IBlazorAuthService
     {
-		private const string BaseUrl = "http://localhost:5232/api/";
+		private const string BaseUrl = "http://localhost:5232/api/"; //llamadas http salen de aca
 
 		private string? _token;
 		private DateTime _tokenExpiration;
@@ -23,19 +23,19 @@ namespace API.Auth.Blazor.Server
 
 		public event Action<bool>? AuthenticationStateChanged;
 
-		public Task<bool> IsAuthenticatedAsync()
-		{
+		public Task<bool> IsAuthenticatedAsync() //chequea si el token es válido y no ha expirado
+        {
 			var autenticado = !string.IsNullOrEmpty(_token) && DateTime.UtcNow < _tokenExpiration;
 			return Task.FromResult(autenticado);
 		}
 
-		public async Task<string?> GetTokenAsync()
+		public async Task<string?> GetTokenAsync() //devuelve el token si está autenticado
 		{
 			var autenticado = await IsAuthenticatedAsync();
 			return autenticado ? _token : null;
 		}
 
-		public async Task<string?> GetNombreAsync()
+		public async Task<string?> GetNombreAsync() //devuelve el nombre si está autenticado
 		{
 			var autenticado = await IsAuthenticatedAsync();
 			return autenticado ? _nombre : null;
@@ -59,8 +59,8 @@ namespace API.Auth.Blazor.Server
             return autenticado ? _matricula : null;
         }
 
-		public async Task<bool> LoginAsync(string email, string password)
-		{
+		public async Task<bool> LoginAsync(string email, string password) //post del login, si es exitoso guarda el token y los datos del usuario (usa loginresponse y request en DTO)
+        {
 			using var client = new HttpClient { BaseAddress = new Uri(BaseUrl) };
 
 			var request = new LoginRequestDTO { Email = email, Password = password };
@@ -96,8 +96,8 @@ namespace API.Auth.Blazor.Server
 			return true;
 		}
 
-		public Task LogoutAsync()
-		{
+		public Task LogoutAsync() //borra el token y los datos del usuario, y notifica el cambio de estado de autenticación
+        {
 			_token = null;
 			_tokenExpiration = default;
 			_nombre = null;
@@ -108,12 +108,12 @@ namespace API.Auth.Blazor.Server
 			return Task.CompletedTask;
 		}
 
-		public async Task CheckTokenExpirationAsync()
-		{
+		public async Task CheckTokenExpirationAsync() //si el token ha expirado, hace logout
+        {
 			if (!await IsAuthenticatedAsync())
 				await LogoutAsync();
 		}
-
+        //este método es para validar las credenciales del usuario, pero en este caso no hace nada y devuelve null
         public Task<Usuario?> ValidarCredencialesAsync(string email, string password)
         {
             return Task.FromResult<Usuario?>(null);

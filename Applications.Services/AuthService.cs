@@ -24,7 +24,8 @@ namespace Applications.Services
             _pacienteRepo = pacienteRepo;
             _administradorRepo = administradorRepo;
         }
-
+        //Busca en el repositorio de admin, luego odontolo y luego paciente.. si coincide la pazzword lo devuelve, sino nulll
+        // se podria mejorar haciendo un metodo en el repositorio que busque por email(paciente y odontologo) (como el admin)
         public async Task<Usuario?> ValidarCredencialesAsync(string email, string password)
         {
             Usuario? usuario =

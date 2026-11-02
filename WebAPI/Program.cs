@@ -1,4 +1,4 @@
-﻿    using Applications.Services;
+﻿using Applications.Services;
 using Data;
 using Domain.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,6 +9,7 @@ using WebAPI;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
+//swagger configuration to include JWT authentication
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -18,7 +19,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Ingres� el token JWT (sin la palabra 'Bearer')"
+        Description = "Ingrese el token JWT (sin la palabra 'Bearer')"
     });
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -35,9 +36,9 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+//hasta aca swagger configuration to include JWT authentication
 
-
-const string BlazorCorsPolicy = "BlazorCorsPolicy";
+const string BlazorCorsPolicy = "BlazorCorsPolicy"; //controla el acceso a la API desde el front-end Blazor
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(BlazorCorsPolicy, policy =>
@@ -47,7 +48,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
-
+//inyeccion de dependencias para los servicios y repositorios
 // Repositorios
 // Paciente, Odontologo, Administrador, Reserva y Turno ya usan EF Core 
 builder.Services.AddScoped<AppDbContext>(sp =>
@@ -66,7 +67,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 
-// JWT
+// JWT , configuracion de autenticación y autorización
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -81,10 +82,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(); //autoriza a usuarios autenticados a acceder a los endpoints de la API
 
 var app = builder.Build();
-
+//arranca la base de datos y la llena con datos iniciales(dbseeder)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -100,7 +101,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(BlazorCorsPolicy);
 app.UseAuthentication(); 
 app.UseAuthorization();
-
+//endpoints mapping
 app.MapOdontologoEndpoints();
 app.MapPacienteEndpoints();
 app.MapReservaEndpoints();

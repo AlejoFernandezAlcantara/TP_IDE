@@ -19,7 +19,7 @@ namespace DTO
         public int _pacienteId { get; set; }
         public string _odontologoMatricula { get; set; } = string.Empty;
 
-        // Turnos que se bloquean con esta reserva
+        // Turnos que se bloquean con esta reserva ( codigos)
         public List<int> TurnoCodigos { get; set; } = new();
 
         // Turnos asociados a la reserva

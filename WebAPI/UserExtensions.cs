@@ -2,7 +2,7 @@
 
 namespace WebAPI
 {
-    public static class UserExtensions
+    public static class UserExtensions //extension methods for ClaimsPrincipal to check roles and retrieve user information
     {
         public static bool EsAdmin(this ClaimsPrincipal u) => u.IsInRole("Administrador");
 

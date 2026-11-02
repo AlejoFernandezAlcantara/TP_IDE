@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Applications.Services;
-
+//conecta estado de la sesion con el servicio de autenticacion para obtener el estado de la sesion y notificar cambios
 namespace Blazor.Server
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider

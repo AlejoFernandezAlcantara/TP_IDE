@@ -3,7 +3,7 @@ using Data;
 using Domain.Model;
 using DTO;
 using System.Security.Claims;
-
+//validan entrada y reglas http, llaman al servicio y traducen el resultado a codigo http
 namespace WebAPI
 {
     public static class OdontologoEndpoints

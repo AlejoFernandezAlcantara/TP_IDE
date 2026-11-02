@@ -14,7 +14,7 @@ namespace Domain.Model
         public string PasswordHash { get; protected set; }
         public bool Activo { get; protected set; } = true;
 
-        // DEFINICION DE ROLES
+        // DEFINICION DE ROLES --> se asigna en las clases hijas (Administrador, Odontologo, Paciente)
         public abstract string Rol { get; }
 
         protected Usuario(string email, string passwordHash)

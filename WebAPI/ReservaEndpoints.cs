@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using Applications.Services;
 using DTO;
-
+//validan entrada y reglas http, llaman al servicio y traducen el resultado a codigo http
 namespace WebAPI
 {
     public static class ReservaEndpoints

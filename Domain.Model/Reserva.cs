@@ -14,7 +14,7 @@ namespace Domain.Model
         public DateTime? FechaRealizacion { get; set; }
         public string? Resultado { get; set; }
 
-        // Cobertura específica de esta reserva
+        // Cobertura específica de esta reserva (FK mutual)
         public string ObraSocial { get; set; } = "Particular";
         public string? NroAfiliado { get; set; }
 
@@ -26,11 +26,11 @@ namespace Domain.Model
         public string OdontologoMatricula { get; set; } = string.Empty;
         public Odontologo? Odontologo { get; set; }
 
-        // Prácticas realizadas en la atención con detalle de piezas ("14-M, 15-O")
+        // Prácticas realizadas en la atención con detalle de piezas ("14-M, 15-O") ---> se guarda coleccion de practicas a la reserva
         public ICollection<ReservaPractica> PracticasRealizadas { get; set; } = new List<ReservaPractica>();
 
-        // Turnos asociados a esta reserva (una reserva puede abarcar varios turnos)
-        public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
+        // Turnos asociados a esta reserva (una reserva puede abarcar varios turnos, si estan seguidos en horario)
+        public ICollection<Turno> Turnos { get; set; } = new List<Turno>(); // se guarda coleccion de turnos a la reserva   
 
         public bool EstaAtendida => Estado == EstadoReserva.Completada;
 
