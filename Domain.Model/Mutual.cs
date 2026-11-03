@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Model
 {
     public class Mutual
     {
+        // "Particular" es la cobertura reservada que usan las reservas sin mutual
+        public const string NombreParticular = "Particular";
+
         public int Cuit { get; set; }
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
 
         public Mutual(int cuit, string nombre)
         {
             SetCuit(cuit);
             SetNombre(nombre);
-
         }
+
         public void SetCuit(int cuit)
         {
             if (cuit <= 0)
@@ -25,13 +24,22 @@ namespace Domain.Model
             }
             Cuit = cuit;
         }
+
         public void SetNombre(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre))
             {
                 throw new ArgumentException("El nombre no puede estar vacío.");
             }
-            Nombre = nombre;
+
+            var limpio = nombre.Trim();
+
+            if (string.Equals(limpio, NombreParticular, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"\"{NombreParticular}\" es una cobertura reservada y no puede usarse como nombre de mutual.");
+            }
+
+            Nombre = limpio;
         }
     }
 }

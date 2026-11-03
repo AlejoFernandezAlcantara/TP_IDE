@@ -60,6 +60,7 @@ builder.Services.AddScoped<IAdministradorRepository, AdministradorRepository>();
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 builder.Services.AddScoped<IPracticaRepository, PracticaRepository>();
+builder.Services.AddScoped<IMutualRepository, MutualRepository>();
 
 // Servicios
 builder.Services.AddScoped<IOdontologoService, OdontologoService>();
@@ -68,6 +69,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IPracticaService, PracticaService>();
+builder.Services.AddScoped<IMutualService, MutualService>();
 
 // JWT , configuracion de autenticación y autorización
 var jwtKey = builder.Configuration["Jwt:Key"]!;

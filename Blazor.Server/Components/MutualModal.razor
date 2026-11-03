@@ -1,0 +1,174 @@
+@using Domain.Model
+@inject MutualApiClient MutualApiClient
+@inject IBlazorAuthService AuthService
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(isEdit ? "Editar mutual" : "Nueva mutual")</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="currentMutual" OnValidSubmit="HandleValidSubmit">
+
+                        <div class="mb-3">
+                            <label class="form-label">CUIT *</label>
+                            @if (isEdit)
+                            {
+                                <input type="text" class="form-control" value="@currentMutual.Cuit" readonly />
+                                <div class="form-text">El CUIT identifica a la mutual y no se puede modificar.</div>
+                            }
+                            else
+                            {
+                                <InputNumber @bind-Value="currentMutual.Cuit" class="form-control" placeholder="Sin guiones" />
+                            }
+                            @if (validationErrors.ContainsKey("Cuit"))
+                            {
+                                <div class="text-danger small">@validationErrors["Cuit"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <InputText @bind-Value="currentMutual.Nombre" class="form-control" />
+                            @if (validationErrors.ContainsKey("Nombre"))
+                            {
+                                <div class="text-danger small">@validationErrors["Nombre"]</div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@saving">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                @(isEdit ? "Guardar cambios" : "Crear mutual")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnMutualChanged { get; set; }
+
+    private bool showModal = false;
+    private bool isEdit = false;
+    private MutualDTO currentMutual = new MutualDTO();
+    private bool saving = false;
+    private string errorMessage = string.Empty;
+    private Dictionary<string, string> validationErrors = new Dictionary<string, string>();
+
+    public Task ShowCreateModal()
+    {
+        isEdit = false;
+        currentMutual = new MutualDTO();
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public Task ShowEditModal(MutualDTO mutual)
+    {
+        isEdit = true;
+        currentMutual = new MutualDTO
+        {
+            Cuit = mutual.Cuit,
+            Nombre = mutual.Nombre
+        };
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!ValidateMutual())
+            return;
+
+        try
+        {
+            saving = true;
+            errorMessage = string.Empty;
+
+            currentMutual.Nombre = currentMutual.Nombre.Trim();
+
+            MutualApiClient.SetToken(await AuthService.GetTokenAsync());
+
+            var (okGuardar, errorGuardar) = isEdit
+                ? await MutualApiClient.ActualizarAsync(currentMutual)
+                : await MutualApiClient.CrearAsync(currentMutual);
+
+            if (!okGuardar)
+            {
+                errorMessage = errorGuardar ?? "No se pudo guardar la mutual. Revisá los datos o volvé a iniciar sesión.";
+                return;
+            }
+
+            await OnMutualChanged.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private bool ValidateMutual()
+    {
+        ClearValidationErrors();
+        bool isValid = true;
+
+        if (!isEdit && currentMutual.Cuit <= 0)
+        {
+            validationErrors["Cuit"] = "El CUIT debe ser un número positivo";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentMutual.Nombre))
+        {
+            validationErrors["Nombre"] = "El nombre es obligatorio";
+            isValid = false;
+        }
+        else if (string.Equals(currentMutual.Nombre.Trim(), Mutual.NombreParticular, StringComparison.OrdinalIgnoreCase))
+        {
+            validationErrors["Nombre"] = $"\"{Mutual.NombreParticular}\" es una cobertura reservada";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    private void ClearValidationErrors()
+    {
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        ClearValidationErrors();
+        StateHasChanged();
+    }
+}
