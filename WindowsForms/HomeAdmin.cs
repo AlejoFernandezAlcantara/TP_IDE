@@ -27,7 +27,8 @@ namespace WindowsForms
                 b.Size = new Size(240, 32);
             }
             btnReservas.Text = "Reservas";
-
+            var btnPracticas = MenuHelper.Boton("Prácticas", (s, e) => { using var f = new PracticasForm(); f.ShowDialog(); });
+            var btnMutuales = MenuHelper.Boton("Mutuales", (s, e) => { using var f = new MutualesForm(); f.ShowDialog(); });
             var btnTurnos = MenuHelper.Boton("Turnos", (s, e) => { using var f = new FormTurnos(); f.ShowDialog(); });
             var btnAtender = MenuHelper.Boton("Atender Reservas", (s, e) => { using var f = new FormReservas(modoAtencion: true); f.ShowDialog(); });
             var btnReportes = MenuHelper.Boton("Reportes", (s, e) => { using var f = new FormReportes(); f.ShowDialog(); });
@@ -35,7 +36,7 @@ namespace WindowsForms
             // el Resize original se reemplaza por el apilado del helper
             this.Resize -= HomeAdmin_Resize;
             MenuHelper.Apilar(this, lblBienvenida,
-                ButtonPacientes, buttonOdontologos, btnTurnos, btnReservas, btnAtender, btnReportes, buttonCerrarSesion);
+                ButtonPacientes, buttonOdontologos, btnMutuales, btnTurnos, btnReservas, btnAtender, btnReportes, buttonCerrarSesion);
 
         }
         private void HomeAdmin_Resize(object sender, EventArgs e)
@@ -81,6 +82,6 @@ namespace WindowsForms
             Close(); // Program.cs vuelve a mostrar el login
         }
 
-        
+
     }
 }
