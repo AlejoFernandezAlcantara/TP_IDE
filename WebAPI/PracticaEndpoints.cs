@@ -1,29 +1,55 @@
-﻿using Data;
+﻿using Applications.Services;
 using DTO;
-using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI
 {
-    public static class PracticaEndpoints //accede a la base de datos para obtener la lista de prácticas y devolverla como JSON
+    public static class PracticaEndpoints
     {
         public static void MapPracticaEndpoints(this WebApplication app)
         {
             var group = app.MapGroup("/api/practicas").WithTags("Practicas");
 
-            group.MapGet("/", async (AppDbContext db) =>
-            {
-                var practicas = await db.Practicas
-                    .Select(p => new PracticaDTO
-                    {
-                        CodigoPractica = p.CodigoPractica,
-                        Detalle = p.Detalle,
-                        Precio = p.Precio
-                    })
-                    .ToListAsync();
+            group.MapGet("/", async (IPracticaService service) =>
+                Results.Ok(await service.GetAllAsync()))
+                .RequireAuthorization();
 
-                return Results.Ok(practicas);
+            group.MapGet("/{codigo}", async (int codigo, IPracticaService service) =>
+            {
+                var practica = await service.GetByCodigoAsync(codigo);
+                return practica is null ? Results.NotFound() : Results.Ok(practica);
             })
             .RequireAuthorization();
+
+            group.MapPost("/", (PracticaDTO dto, IPracticaService service) =>
+                Intentar(async () =>
+                {
+                    await service.CrearAsync(dto);
+                    return Results.Created("/api/practicas", dto);
+                }))
+                .RequireAuthorization(policy => policy.RequireRole("Administrador"));
+
+            group.MapPut("/", (PracticaDTO dto, IPracticaService service) =>
+                Intentar(async () =>
+                {
+                    await service.ActualizarAsync(dto);
+                    return Results.NoContent();
+                }))
+                .RequireAuthorization(policy => policy.RequireRole("Administrador"));
+
+            group.MapDelete("/{codigo}", (int codigo, IPracticaService service) =>
+                Intentar(async () =>
+                {
+                    await service.EliminarAsync(codigo);
+                    return Results.NoContent();
+                }))
+                .RequireAuthorization(policy => policy.RequireRole("Administrador"));
+        }
+
+        private static async Task<IResult> Intentar(Func<Task<IResult>> accion)
+        {
+            try { return await accion(); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
         }
     }
 }

@@ -1,0 +1,122 @@
+﻿@page "/practicas"
+@inject PracticaApiClient PracticaApiClient
+@inject IBlazorAuthService AuthService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Prácticas</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Prácticas</h1>
+    @if (autorizado)
+    {
+        <button class="btn btn-primary" @onclick="() => modal.ShowAddModal()">Agregar práctica</button>
+    }
+</div>
+
+@if (loading)
+{
+    <p><em>Cargando prácticas...</em></p>
+}
+else if (!autorizado)
+{
+    <div class="alert alert-warning">
+        Esta sección es solo para administradores. Iniciá sesión con una cuenta de administrador para verla.
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (practicas.Count == 0)
+    {
+        <p>Todavía no hay prácticas cargadas.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Detalle</th>
+                        <th>Precio</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in practicas)
+                    {
+                        <tr @key="p.CodigoPractica">
+                            <td>@p.CodigoPractica</td>
+                            <td>@p.Detalle</td>
+                            <td>@p.Precio.ToString("N2")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => modal.ShowEditModal(p)">Editar</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAsync(p)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<PracticaModal @ref="modal" OnPracticaChanged="CargarAsync" />
+
+@code {
+    private PracticaModal modal = default!;
+    private List<PracticaDTO> practicas = new();
+    private bool loading = true;
+    private bool autorizado = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rol = await AuthService.GetRolAsync();
+        autorizado = rol == "Administrador";
+
+        if (autorizado)
+            await CargarAsync();
+
+        loading = false;
+    }
+
+    private async Task CargarAsync()
+    {
+        errorMessage = string.Empty;
+
+        PracticaApiClient.SetToken(await AuthService.GetTokenAsync());
+        var resultado = await PracticaApiClient.GetAllAsync();
+
+        if (resultado is null)
+        {
+            errorMessage = "No se pudieron cargar las prácticas. Verificá que el WebAPI esté corriendo y que tu sesión siga activa.";
+            return;
+        }
+
+        practicas = resultado;
+    }
+
+    private async Task EliminarAsync(PracticaDTO practica)
+    {
+        errorMessage = string.Empty;
+
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm", $"¿Eliminar la práctica \"{practica.Detalle}\"? Esta acción no se puede deshacer.");
+
+        if (!confirmar)
+            return;
+
+        PracticaApiClient.SetToken(await AuthService.GetTokenAsync());
+        var (ok, error) = await PracticaApiClient.EliminarAsync(practica.CodigoPractica);
+
+        if (ok)
+            await CargarAsync();
+        else
+            errorMessage = error ?? "No se pudo eliminar la práctica.";
+    }
+}

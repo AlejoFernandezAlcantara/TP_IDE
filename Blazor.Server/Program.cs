@@ -26,6 +26,7 @@ builder.Services.AddHttpClient<PracticaApiClient>();
 builder.Services.AddHttpClient<MutualApiClient>();
 builder.Services.AddHttpClient<TurnoApiClient>();
 
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

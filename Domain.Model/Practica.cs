@@ -36,5 +36,10 @@ namespace Domain.Model
             }
             Precio = precio;
         }
+        public void Actualizar(string detalle, float precio)
+        {
+            SetDetalle(detalle);
+            SetPrecio(precio);
+        }
     }
 }

@@ -1,0 +1,169 @@
+﻿@inject PracticaApiClient PracticaApiClient
+@inject IBlazorAuthService AuthService
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(mode == FormMode.Add ? "Agregar práctica" : "Editar práctica")</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="current" OnValidSubmit="HandleValidSubmit">
+
+                        @if (mode == FormMode.Update)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Código</label>
+                                <input type="text" class="form-control" value="@current.CodigoPractica" readonly />
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Detalle *</label>
+                            <InputText @bind-Value="current.Detalle" class="form-control" />
+                            @if (validationErrors.ContainsKey("Detalle"))
+                            {
+                                <div class="text-danger small">@validationErrors["Detalle"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Precio *</label>
+                            <InputNumber @bind-Value="current.Precio" class="form-control" />
+                            @if (validationErrors.ContainsKey("Precio"))
+                            {
+                                <div class="text-danger small">@validationErrors["Precio"]</div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@saving">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                @(mode == FormMode.Add ? "Agregar" : "Guardar cambios")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnPracticaChanged { get; set; }
+
+    private bool showModal = false;
+    private FormMode mode = FormMode.Add;
+    private PracticaDTO current = new PracticaDTO();
+    private bool saving = false;
+    private string errorMessage = string.Empty;
+    private Dictionary<string, string> validationErrors = new();
+
+    public enum FormMode { Add, Update }
+
+    public Task ShowAddModal()
+    {
+        mode = FormMode.Add;
+        current = new PracticaDTO();
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public Task ShowEditModal(PracticaDTO practica)
+    {
+        mode = FormMode.Update;
+        current = new PracticaDTO
+        {
+            CodigoPractica = practica.CodigoPractica,
+            Detalle = practica.Detalle,
+            Precio = practica.Precio
+        };
+        ClearValidationErrors();
+        showModal = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!Validate())
+            return;
+
+        try
+        {
+            saving = true;
+            errorMessage = string.Empty;
+
+            PracticaApiClient.SetToken(await AuthService.GetTokenAsync());
+
+            var (ok, error) = mode == FormMode.Add
+                ? await PracticaApiClient.CrearAsync(current)
+                : await PracticaApiClient.ActualizarAsync(current);
+
+            if (!ok)
+            {
+                errorMessage = error ?? "No se pudo guardar la práctica.";
+                return;
+            }
+
+            await OnPracticaChanged.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private bool Validate()
+    {
+        ClearValidationErrors();
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(current.Detalle))
+        {
+            validationErrors["Detalle"] = "El detalle es obligatorio";
+            isValid = false;
+        }
+
+        if (current.Precio < 0)
+        {
+            validationErrors["Precio"] = "El precio no puede ser negativo";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    private void ClearValidationErrors()
+    {
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        ClearValidationErrors();
+        StateHasChanged();
+    }
+}
