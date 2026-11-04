@@ -1,4 +1,4 @@
-﻿@page "/reservar"
+@page "/reservar"
 @using Domain.Model
 @inject TurnoApiClient TurnoApiClient
 @inject OdontologoApiClient OdontologoApiClient
@@ -93,7 +93,7 @@ else
             {
                 <div class="col-md-4 mt-3">
                     <label class="form-label">Filtrar Odontólogo</label>
-                    <select class="form-select" @bind="matriculaFiltro">
+                    <select class="form-select" @bind="matriculaFiltro" @bind:after="ResetearPaginacion">
                         <option value="">Todos</option>
                         @foreach (var o in odontologos)
                         {
@@ -104,11 +104,11 @@ else
             }
             <div class="col-md-4 mt-3">
                 <label class="form-label">Desde</label>
-                <input type="date" class="form-control" @bind="filtroDesde" />
+                <input type="date" class="form-control" @bind="filtroDesde" @bind:after="ResetearPaginacion" />
             </div>
             <div class="col-md-4 mt-3">
                 <label class="form-label">Hasta</label>
-                <input type="date" class="form-control" @bind="filtroHasta" />
+                <input type="date" class="form-control" @bind="filtroHasta" @bind:after="ResetearPaginacion" />
             </div>
         </div>
     </div>
@@ -129,13 +129,16 @@ else
             }
             else
             {
-                @foreach (var grupo in PorDia)
+                @foreach (var grupo in PaginaActualDias)
                 {
                     <div class="card p-3 mb-3 border-0 shadow-sm">
-                        <h6 class="fw-bold text-dark mb-2">
-                            <i class="bi bi-calendar-event text-secondary me-1"></i>
-                            @NombreDia(grupo.Key.DayOfWeek) @grupo.Key.ToString("dd/MM/yyyy")
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-calendar-event text-secondary me-1"></i>
+                                @NombreDia(grupo.Key.DayOfWeek) @grupo.Key.ToString("dd/MM/yyyy")
+                            </h6>
+                            <span class="badge bg-secondary-subtle text-secondary small">@grupo.Count() disponible(s)</span>
+                        </div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach (var t in grupo)
                             {
@@ -150,6 +153,11 @@ else
                         </div>
                     </div>
                 }
+
+                <Paginador TotalItems="@TotalDias"
+                           @bind-PaginaActual="paginaDiasActual"
+                           @bind-PageSize="diasPorPagina"
+                           OpcionesTamano="@(new int[] { 3, 5, 10, 20 })" />
             }
         </div>
 
@@ -314,8 +322,17 @@ else
             .OrderBy(t => t.FechaHoraInicio)
             .ToList();
 
+    private int paginaDiasActual = 1;
+    private int diasPorPagina = 5;
+    private void ResetearPaginacion() => paginaDiasActual = 1;
+
     private IEnumerable<IGrouping<DateTime, TurnoDTO>> PorDia =>
         TurnosFiltrados.GroupBy(t => t.FechaHoraInicio.Date);
+
+    private int TotalDias => PorDia.Count();
+
+    private IEnumerable<IGrouping<DateTime, TurnoDTO>> PaginaActualDias =>
+        PorDia.Skip((paginaDiasActual - 1) * diasPorPagina).Take(diasPorPagina);
 
     private List<TurnoDTO> TurnosSeleccionados =>
         turnos.Where(t => seleccion.Contains(t.Codigo)).OrderBy(t => t.FechaHoraInicio).ToList();

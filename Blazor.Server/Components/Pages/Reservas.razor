@@ -1,4 +1,4 @@
-﻿@page "/reservas"
+@page "/reservas"
 @using Domain.Model
 @inject ReservaApiClient ReservaApiClient
 @inject TurnoApiClient TurnoApiClient
@@ -33,14 +33,60 @@
 
 @if (mostrar)
 {
-    <div class="card p-3 mb-3 border-0 shadow-sm" style="max-width: 320px;">
-        <label class="form-label small fw-semibold">Filtrar por estado</label>
-        <select class="form-select form-select-sm" @bind="filtroEstado">
-            <option value="">Todos los estados</option>
-            <option value="@EstadoReserva.Pendiente">Pendiente</option>
-            <option value="@EstadoReserva.Completada">Completada (Terminada)</option>
-            <option value="@EstadoReserva.Cancelada">Cancelada</option>
-        </select>
+    <div class="card p-3 mb-3 border-0 shadow-sm bg-light">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Estado</label>
+                <select class="form-select form-select-sm" @bind="filtroEstado" @bind:after="ResetearPaginacion">
+                    <option value="">Todos los estados</option>
+                    <option value="@EstadoReserva.Pendiente">Pendiente</option>
+                    <option value="@EstadoReserva.Completada">Completada (Terminada)</option>
+                    <option value="@EstadoReserva.Cancelada">Cancelada</option>
+                </select>
+            </div>
+            @if (rol == "Administrador")
+            {
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Odontólogo</label>
+                    <select class="form-select form-select-sm" @bind="filtroOdontologo" @bind:after="ResetearPaginacion">
+                        <option value="">Todos los odontólogos</option>
+                        @foreach (var o in odontologos.Values.OrderBy(x => x.Apellido))
+                        {
+                            <option value="@o.Matricula">@o.Apellido, @o.Nombre</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Buscar paciente</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Nombre, apellido o DNI..."
+                       @bind="filtroPaciente" @bind:event="oninput" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Fecha turno desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="filtroFechaDesde" @bind:after="ResetearPaginacion" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Fecha turno hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="filtroFechaHasta" @bind:after="ResetearPaginacion" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Obra Social / Cobertura</label>
+                <select class="form-select form-select-sm" @bind="filtroObraSocial" @bind:after="ResetearPaginacion">
+                    <option value="">Todas las coberturas</option>
+                    <option value="Particular">Particular</option>
+                    @foreach (var os in coberturasDisponibles)
+                    {
+                        <option value="@os">@os</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary btn-sm w-100" type="button" @onclick="LimpiarFiltros">
+                    <i class="bi bi-x-circle me-1"></i> Limpiar filtros
+                </button>
+            </div>
+        </div>
     </div>
 
     @if (!string.IsNullOrEmpty(mensaje))
@@ -85,7 +131,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var r in Filtradas)
+                    @foreach (var r in PaginaActualReservas)
                     {
                         <tr @key="r.Id">
                             <td>
@@ -182,6 +228,10 @@
                 </tbody>
             </table>
         </div>
+
+        <Paginador TotalItems="@Filtradas.Count"
+                   @bind-PaginaActual="paginaActual"
+                   @bind-PageSize="pageSize" />
     }
 }
 
@@ -190,18 +240,92 @@
     private bool loading = true;
     private bool autorizado = false;
     private string filtroEstado = string.Empty;
+    private string filtroOdontologo = string.Empty;
+    private string filtroPaciente = string.Empty;
+    private DateTime? filtroFechaDesde = null;
+    private DateTime? filtroFechaHasta = null;
+    private string filtroObraSocial = string.Empty;
+
+    private int paginaActual = 1;
+    private int pageSize = 10;
+
+    private void ResetearPaginacion() => paginaActual = 1;
+
+    private void LimpiarFiltros()
+    {
+        filtroEstado = string.Empty;
+        filtroOdontologo = string.Empty;
+        filtroPaciente = string.Empty;
+        filtroFechaDesde = null;
+        filtroFechaHasta = null;
+        filtroObraSocial = string.Empty;
+        paginaActual = 1;
+    }
+
     private List<ReservaDTO> reservas = new();
     private Dictionary<int, PacienteDTO> pacientes = new();
     private Dictionary<string, OdontologoDTO> odontologos = new();
+    private List<string> coberturasDisponibles = new();
     private string mensaje = string.Empty;
     private string errorMessage = string.Empty;
 
     private bool mostrar => !loading && autorizado;
 
-    private List<ReservaDTO> Filtradas =>
-        string.IsNullOrEmpty(filtroEstado)
-            ? reservas
-            : reservas.Where(r => r.Estado.ToString() == filtroEstado).ToList();
+    private List<ReservaDTO> Filtradas
+    {
+        get
+        {
+            var query = reservas.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(filtroEstado))
+                query = query.Where(r => r.Estado.ToString() == filtroEstado);
+
+            if (!string.IsNullOrEmpty(filtroOdontologo))
+                query = query.Where(r => string.Equals(r._odontologoMatricula, filtroOdontologo, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrEmpty(filtroObraSocial))
+                query = query.Where(r => string.Equals(r.ObraSocial, filtroObraSocial, StringComparison.OrdinalIgnoreCase));
+
+            if (filtroFechaDesde is not null)
+            {
+                query = query.Where(r =>
+                {
+                    var f = r.PrimerTurno ?? r.FechaCreacion;
+                    return f.Date >= filtroFechaDesde.Value.Date;
+                });
+            }
+
+            if (filtroFechaHasta is not null)
+            {
+                query = query.Where(r =>
+                {
+                    var f = r.PrimerTurno ?? r.FechaCreacion;
+                    return f.Date <= filtroFechaHasta.Value.Date;
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtroPaciente))
+            {
+                var busq = filtroPaciente.Trim();
+                query = query.Where(r =>
+                {
+                    if (r._pacienteId.ToString().Contains(busq)) return true;
+                    if (pacientes.TryGetValue(r._pacienteId, out var p))
+                    {
+                        if (p.Apellido.Contains(busq, StringComparison.OrdinalIgnoreCase)) return true;
+                        if (p.Nombre.Contains(busq, StringComparison.OrdinalIgnoreCase)) return true;
+                        if (p.NroDni.ToString().Contains(busq)) return true;
+                    }
+                    return false;
+                });
+            }
+
+            return query.ToList();
+        }
+    }
+
+    private IEnumerable<ReservaDTO> PaginaActualReservas =>
+        Filtradas.Skip((paginaActual - 1) * pageSize).Take(pageSize);
 
     protected override async Task OnInitializedAsync()
     {
@@ -244,6 +368,7 @@
 
             var oList = oTask.Result ?? new();
             odontologos = oList.ToDictionary(o => o.Matricula, StringComparer.OrdinalIgnoreCase);
+            coberturasDisponibles = reservas.Select(r => r.ObraSocial).Where(s => !string.IsNullOrEmpty(s) && s != "Particular").Distinct().OrderBy(s => s).ToList();
         }
         catch (Exception ex)
         {

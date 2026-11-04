@@ -1,4 +1,4 @@
-﻿@page "/mis-reservas"
+@page "/mis-reservas"
 @using Domain.Model
 @inject ReservaApiClient ReservaApiClient
 @inject TurnoApiClient TurnoApiClient
@@ -37,12 +37,36 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
-    <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="canceladas" @bind="mostrarCanceladas" />
-        <label class="form-check-label" for="canceladas">Mostrar reservas canceladas</label>
+    <div class="card p-3 mb-3 border-0 shadow-sm bg-light">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Odontólogo</label>
+                <select class="form-select form-select-sm" @bind="filtroOdontologo" @bind:after="ResetearPaginacion">
+                    <option value="">Todos los odontólogos</option>
+                    @foreach (var o in odontologos.Values.OrderBy(x => x.Apellido))
+                    {
+                        <option value="@o.Matricula">@o.Apellido, @o.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="filtroDesde" @bind:after="ResetearPaginacion" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="filtroHasta" @bind:after="ResetearPaginacion" />
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="canceladas" @bind="mostrarCanceladas" @bind:after="ResetearPaginacion" />
+                    <label class="form-check-label small" for="canceladas">Ver canceladas</label>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <p class="text-muted">Podés cancelar una reserva hasta @HorasLimiteCancelacion horas antes del turno.</p>
+    <p class="text-muted small">Podés cancelar una reserva hasta @HorasLimiteCancelacion horas antes del turno.</p>
 
     @if (Filas.Count == 0)
     {
@@ -62,7 +86,7 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var f in Filas)
+                    @foreach (var f in PaginaActualFilas)
                     {
                         <tr @key="f.Reserva.Id">
                             <td>
@@ -100,6 +124,10 @@ else
                 </tbody>
             </table>
         </div>
+
+        <Paginador TotalItems="@Filas.Count"
+                   @bind-PaginaActual="paginaActual"
+                   @bind-PageSize="pageSize" />
     }
 }
 
@@ -111,6 +139,14 @@ else
     private bool loading = true;
     private bool autorizado = false;
     private bool mostrarCanceladas = false;
+    private string filtroOdontologo = string.Empty;
+    private DateTime? filtroDesde = null;
+    private DateTime? filtroHasta = null;
+
+    private int paginaActual = 1;
+    private int pageSize = 10;
+    private void ResetearPaginacion() => paginaActual = 1;
+
     private string mensaje = string.Empty;
     private string errorMessage = string.Empty;
 
@@ -119,11 +155,41 @@ else
     private Dictionary<int, TurnoDTO> turnosPorReserva = new();
     private Dictionary<string, OdontologoDTO> odontologos = new();
 
-    private List<Fila> Filas => reservas
-        .Where(r => mostrarCanceladas || r.Estado != EstadoReserva.Cancelada)
-        .Select(r => new Fila(r, turnosPorReserva.TryGetValue(r.Id, out var t) ? t : null))
-        .OrderByDescending(f => f.Reserva.PrimerTurno ?? f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion)
-        .ToList();
+    private List<Fila> Filas
+    {
+        get
+        {
+            var query = reservas
+                .Where(r => mostrarCanceladas || r.Estado != EstadoReserva.Cancelada)
+                .Select(r => new Fila(r, turnosPorReserva.TryGetValue(r.Id, out var t) ? t : null));
+
+            if (!string.IsNullOrEmpty(filtroOdontologo))
+                query = query.Where(f => string.Equals(f.Reserva._odontologoMatricula, filtroOdontologo, StringComparison.OrdinalIgnoreCase));
+
+            if (filtroDesde is not null)
+            {
+                query = query.Where(f =>
+                {
+                    var fecha = f.Reserva.PrimerTurno ?? f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion;
+                    return fecha.Date >= filtroDesde.Value.Date;
+                });
+            }
+
+            if (filtroHasta is not null)
+            {
+                query = query.Where(f =>
+                {
+                    var fecha = f.Reserva.PrimerTurno ?? f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion;
+                    return fecha.Date <= filtroHasta.Value.Date;
+                });
+            }
+
+            return query.OrderByDescending(f => f.Reserva.PrimerTurno ?? f.Turno?.FechaHoraInicio ?? f.Reserva.FechaCreacion).ToList();
+        }
+    }
+
+    private IEnumerable<Fila> PaginaActualFilas =>
+        Filas.Skip((paginaActual - 1) * pageSize).Take(pageSize);
 
     protected override async Task OnInitializedAsync()
     {
